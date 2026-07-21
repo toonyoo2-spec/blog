@@ -89,7 +89,7 @@
 
   .form-grid{
     display:grid;
-    grid-template-columns:90px 1fr 1.1fr 1.2fr 120px 110px 120px;
+    grid-template-columns:90px 1fr 1.8fr 1.1fr 105px 105px 115px;
     gap:10px;
     align-items:end;
   }
@@ -388,6 +388,18 @@ function platformOptions(selected){
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
+// 서버에서 어떤 형식(Date 객체 문자열, ISO 문자열 등)으로 날짜가 오든
+// 항상 "YYYY-MM-DD" 형태로 정리해주는 함수
+function normalizeDate(v){
+  if(!v) return "";
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return String(v); // 파싱 안 되면 원본 그대로
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 // 서버(Apps Script)로 POST 요청 보내는 공통 함수
 async function callApi(action, payload) {
   const res = await fetch(API_URL, {
@@ -503,8 +515,9 @@ function setFilter(f){
 }
 
 function isUrgent(deadline){
-  if(!deadline) return false;
-  const d = new Date(deadline);
+  const clean = normalizeDate(deadline);
+  if(!clean) return false;
+  const d = new Date(clean);
   const today = new Date();
   today.setHours(0,0,0,0);
   const diff = (d - today) / (1000*60*60*24);
@@ -542,11 +555,11 @@ function render(){
     if(orderDiff !== 0) return orderDiff;
 
     if(a.status === "confirm"){
-      const aKey = (a.resvDate || "9999-99-99") + " " + (a.resvTime || "99:99");
-      const bKey = (b.resvDate || "9999-99-99") + " " + (b.resvTime || "99:99");
+      const aKey = (normalizeDate(a.resvDate) || "9999-99-99") + " " + (a.resvTime || "99:99");
+      const bKey = (normalizeDate(b.resvDate) || "9999-99-99") + " " + (b.resvTime || "99:99");
       return aKey.localeCompare(bKey);
     }
-    return (a.deadline || "9999").localeCompare(b.deadline || "9999");
+    return (normalizeDate(a.deadline) || "9999").localeCompare(normalizeDate(b.deadline) || "9999");
   });
 
   const tbody = document.getElementById('tbody');
@@ -562,7 +575,7 @@ function render(){
   tbody.innerHTML = list.map(it => {
     const urgent = it.status === "wait" && isUrgent(it.deadline);
     const resvBlock = it.status === "confirm" ? `
-      <input type="date" class="resv-input" value="${it.resvDate}"
+      <input type="date" class="resv-input" value="${normalizeDate(it.resvDate)}"
         onchange="updateResv('${it.id}','resvDate',this.value)">
       <select class="resv-input" onchange="updateResv('${it.id}','resvTime',this.value)">
         <option value="">시간 선택</option>
@@ -575,7 +588,7 @@ function render(){
         <td data-label="지역"><span class="region-badge">${it.region}</span></td>
         <td data-label="체험단 이름" class="name-cell">${escapeHtml(it.name)}</td>
         <td data-label="제공내역">${escapeHtml(it.provide) || '-'}</td>
-        <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${it.deadline || '-'}</td>
+        <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${normalizeDate(it.deadline) || '-'}</td>
         <td data-label="상태">
           <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
             ${Object.keys(statusMeta).map(k =>
