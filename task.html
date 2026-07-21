@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --ink:#22221f;
+    --sub:#6b6a63;
+    --line:#e1dfd6;
+    --card:#ffffff;
+    --accent:#3a5a52;
+    --accent-soft:#e7ede9;
+    --danger:#b5504a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:32px 20px 60px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .home-btn{
+    display:inline-block;
+    font-size:12.5px;
+    color:var(--sub);
+    text-decoration:none;
+    margin-bottom:8px;
+  }
+  .home-btn:hover{color:var(--accent);}
+  h1{
+    font-size:26px;
+    letter-spacing:-0.02em;
+    margin:0 0 4px;
+  }
+  header p{
+    margin:0;
+    color:var(--sub);
+    font-size:13.5px;
+  }
+
+  .header-actions{display:flex;gap:8px;align-items:center;}
+  button{font-family:inherit;cursor:pointer;}
+
+  .btn{
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:500;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--accent);color:var(--accent);}
+  .btn.primary{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fdfcf9;
+  }
+  .btn.primary:hover{opacity:.9;color:#fdfcf9;}
+  .btn.ghost{border-color:transparent;background:transparent;padding:9px 10px;}
+  .btn.danger{color:var(--danger);}
+  .btn.danger:hover{border-color:var(--danger);color:var(--danger);}
+  .btn.small{padding:6px 11px;font-size:12px;}
+
+  /* ---- Grid of project cards ---- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    cursor:pointer;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    transition:transform .15s, box-shadow .15s, border-color .15s;
+    position:relative;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,34,31,.06);border-color:#cfccbf;}
+  .card .thumb{
+    width:100%;
+    aspect-ratio:16/10;
+    background:var(--accent-soft) linear-gradient(135deg,#eef1ec,#e2e8e1);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--accent);
+    font-size:12px;
+    overflow:hidden;
+  }
+  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card .body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:6px;flex:1;}
+  .card .role{font-size:11.5px;color:var(--accent);font-weight:600;letter-spacing:.02em;}
+  .card h3{margin:0;font-size:16px;letter-spacing:-0.01em;}
+  .card .excerpt{
+    margin:0;
+    font-size:12.5px;
+    color:var(--sub);
+    line-height:1.5;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .card .meta-row{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);}
+  .card .meta-row .dot{width:4px;height:4px;border-radius:50%;background:var(--line);}
+
+  .card .edit-controls{
+    position:absolute;top:10px;right:10px;
+    display:flex;gap:6px;
+    opacity:0;transition:opacity .15s;
+  }
+  .card:hover .edit-controls{opacity:1;}
+  .icon-btn{
+    width:28px;height:28px;border-radius:8px;
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.92);
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;color:var(--ink);
+  }
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .add-card{
+    border:1.5px dashed var(--line);
+    border-radius:14px;
+    background:transparent;
+    display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:8px;
+    color:var(--sub);
+    min-height:190px;
+    font-size:13px;
+  }
+  .add-card:hover{border-color:var(--accent);color:var(--accent);}
+  .add-card .plus{font-size:22px;line-height:1;}
+
+  .empty-state{
+    padding:60px 20px;
+    text-align:center;
+    color:var(--sub);
+    font-size:13.5px;
+    border:1px dashed var(--line);
+    border-radius:14px;
+  }
+
+  /* ---- Detail / edit panel (modal) ---- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(34,34,31,.4);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px;
+    overflow-y:auto;
+    z-index:50;
+  }
+  .overlay.open{display:flex;}
+  .panel{
+    background:var(--card);
+    border-radius:16px;
+    width:100%;max-width:720px;
+    padding:28px 28px 32px;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
+  }
+  .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;}
+  .panel-head .tag{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
+  .close-btn{
+    border:none;background:transparent;color:var(--sub);font-size:20px;line-height:1;
+    padding:4px;border-radius:6px;
+  }
+  .close-btn:hover{color:var(--ink);}
+
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px;font-weight:600;}
+  .field input[type=text], .field input[type=url], .field textarea{
+    width:100%;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fcfbf8;
+    color:var(--ink);
+    resize:vertical;
+  }
+  .field input:focus, .field textarea:focus{outline:none;border-color:var(--accent);}
+  .field textarea{min-height:110px;line-height:1.55;}
+
+  .view-title{font-size:22px;margin:0 0 4px;letter-spacing:-.01em;}
+  .view-role{font-size:13px;color:var(--accent);font-weight:600;margin:0 0 14px;}
+  .view-desc{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;margin:0 0 20px;}
+
+  .notion-block{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:12px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:10px;background:#fcfbf8;margin-bottom:20px;
+  }
+  .notion-block .label{font-size:12.5px;color:var(--sub);word-break:break-all;}
+  .notion-block a{color:var(--accent);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap;}
+  .notion-block a:hover{text-decoration:underline;}
+  .notion-embed{
+    margin-bottom:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden;
+  }
+  .notion-embed iframe{width:100%;height:480px;border:none;display:block;}
+
+  /* image gallery */
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:6px;}
+  .gallery .img-cell{
+    position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--accent-soft);
+  }
+  .gallery .img-cell img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
+  .gallery .img-cell .rm{
+    position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:6px;
+    background:rgba(34,34,31,.7);color:#fff;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;
+  }
+  .upload-tile{
+    aspect-ratio:1/1;border-radius:8px;border:1.5px dashed var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    color:var(--sub);font-size:11px;cursor:pointer;background:transparent;
+  }
+  .upload-tile:hover{border-color:var(--accent);color:var(--accent);}
+  .upload-tile .plus{font-size:18px;line-height:1;}
+  .upload-hint{font-size:11px;color:var(--sub);margin:6px 0 18px;}
+
+  .panel-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;}
+  .panel-footer .left{display:flex;gap:8px;}
+
+  .lightbox{
+    position:fixed;inset:0;background:rgba(20,20,18,.85);display:none;
+    align-items:center;justify-content:center;z-index:80;padding:24px;
+  }
+  .lightbox.open{display:flex;}
+  .lightbox img{max-width:100%;max-height:100%;border-radius:8px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
+    background:var(--ink);color:#fdfcf9;padding:10px 18px;border-radius:8px;font-size:13px;
+    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  #appContent{display:none;}
+  @media (max-width:640px){
+    .panel{padding:22px 18px 26px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="appContent">
+
+  <header>
+    <div>
+      <a href="./index.html" class="home-btn">← 홈</a>
+      <h1>Task</h1>
+      <p>진행 중인 프로젝트 · 각 카드를 열면 소개, 사진, 노션 문서를 볼 수 있어요</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn" id="editModeBtn">편집 모드</button>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+</div>
+
+<!-- 상세/편집 패널 -->
+<div class="overlay" id="overlay">
+  <div class="panel">
+    <div class="panel-head">
+      <span class="tag" id="panelTag">프로젝트</span>
+      <button class="close-btn" id="closeBtn">✕</button>
+    </div>
+
+    <!-- 보기 모드 -->
+    <div id="viewMode">
+      <h2 class="view-title" id="viewTitle"></h2>
+      <p class="view-role" id="viewRole"></p>
+      <p class="view-desc" id="viewDesc"></p>
+      <div id="viewNotionArea"></div>
+      <div class="gallery" id="viewGallery"></div>
+    </div>
+
+    <!-- 편집 모드 -->
+    <div id="editMode" style="display:none;">
+      <div class="field">
+        <label>프로젝트 이름</label>
+        <input type="text" id="fTitle" placeholder="예: 브랜드 리뉴얼 프로젝트">
+      </div>
+      <div class="field">
+        <label>역할 / 한 줄 태그</label>
+        <input type="text" id="fRole" placeholder="예: 기획 · 디자인 · 2024">
+      </div>
+      <div class="field">
+        <label>소개 (텍스트)</label>
+        <textarea id="fDesc" placeholder="어떤 일을 했는지, 어떤 문제를 해결했는지 자유롭게 적어주세요."></textarea>
+      </div>
+      <div class="field">
+        <label>노션 링크</label>
+        <input type="url" id="fNotion" placeholder="https://notion.so/... (웹에 공개된 페이지 URL)">
+      </div>
+      <div class="field">
+        <label>이미지</label>
+        <div class="gallery" id="editGallery"></div>
+        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+        <p class="upload-hint">사진을 눌러 업로드 · 이 브라우저에 저장되며(로컬 저장), 여러 장 추가할 수 있어요</p>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <div class="left">
+        <button class="btn danger small" id="deleteBtn" style="display:none;">프로젝트 삭제</button>
+      </div>
+      <div class="left">
+        <button class="btn small" id="cancelBtn" style="display:none;">취소</button>
+        <button class="btn primary small" id="saveBtn" style="display:none;">저장</button>
+        <button class="btn primary small" id="editThisBtn">이 프로젝트 편집</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox"><img id="lightboxImg" src=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const STORAGE_KEY = 'task_projects_v1';
+  const MAX_IMG_DIM = 1400;   // 업로드 이미지 최대 가로/세로(px), 넘으면 축소
+  const JPEG_QUALITY = 0.82;
+
+  let projects = [];
+  let editModeOn = false;
+  let activeId = null;      // 현재 패널에 열려있는 프로젝트 id
+  let isNewDraft = false;   // 신규 생성 중인지
+  let draftImages = [];     // 편집 중 임시 이미지 배열
+
+  const el = (id) => document.getElementById(id);
+  const grid = el('grid');
+  const overlay = el('overlay');
+
+  function load(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      projects = raw ? JSON.parse(raw) : seedData();
+    }catch(e){
+      projects = seedData();
+    }
+  }
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    }catch(e){
+      showToast('저장 공간이 부족해요. 이미지를 줄여주세요.');
+    }
+  }
+  function seedData(){
+    return [
+      {
+        id: cryptoId(),
+        title: '첫 프로젝트를 추가해보세요',
+        role: '예시 카드',
+        desc: '편집 모드를 켜고 "새 프로젝트" 카드를 눌러 실제 프로젝트로 바꿔주세요. 텍스트, 이미지, 노션 링크를 자유롭게 넣을 수 있어요.',
+        notion: '',
+        images: [],
+        createdAt: Date.now()
+      }
+    ];
+  }
+  function cryptoId(){
+    return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
+
+  function showToast(msg){
+    const t = el('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  /* ---------- 렌더링 ---------- */
+  function render(){
+    grid.innerHTML = '';
+    if(projects.length === 0 && !editModeOn){
+      grid.innerHTML = '<div class="empty-state">아직 등록된 프로젝트가 없어요.</div>';
+    }
+    projects.forEach(p => grid.appendChild(renderCard(p)));
+
+    if(editModeOn){
+      const addCard = document.createElement('button');
+      addCard.className = 'add-card';
+      addCard.innerHTML = '<span class="plus">+</span><span>새 프로젝트</span>';
+      addCard.onclick = () => openPanel(null);
+      grid.appendChild(addCard);
+    }
+  }
+
+  function renderCard(p){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openPanel(p.id, false);
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if(p.images && p.images.length){
+      const img = document.createElement('img');
+      img.src = p.images[0];
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent = 'NO IMAGE';
+    }
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.innerHTML = `
+      <span class="role">${escapeHtml(p.role || '')}</span>
+      <h3>${escapeHtml(p.title || '제목 없음')}</h3>
+      <p class="excerpt">${escapeHtml(p.desc || '')}</p>
+      <div class="meta-row">
+        ${p.notion ? '<span>노션 연결됨</span>' : '<span>노션 미연결</span>'}
+        ${p.images && p.images.length ? `<span class="dot"></span><span>사진 ${p.images.length}장</span>` : ''}
+      </div>
+    `;
+
+    card.appendChild(thumb);
+    card.appendChild(body);
+
+    if(editModeOn){
+      const controls = document.createElement('div');
+      controls.className = 'edit-controls';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn';
+      editBtn.title = '편집';
+      editBtn.textContent = '✎';
+      editBtn.onclick = (e) => { e.stopPropagation(); openPanel(p.id, true); };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = '삭제';
+      delBtn.textContent = '🗑';
+      delBtn.onclick = (e) => { e.stopPropagation(); removeProject(p.id); };
+      controls.appendChild(editBtn);
+      controls.appendChild(delBtn);
+      card.appendChild(controls);
+    }
+    return card;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ---------- 패널 열기/닫기 ---------- */
+  function openPanel(id, startInEdit){
+    isNewDraft = (id === null);
+    activeId = isNewDraft ? cryptoId() : id;
+    const p = isNewDraft
+      ? { id: activeId, title:'', role:'', desc:'', notion:'', images:[], createdAt: Date.now() }
+      : projects.find(x => x.id === id);
+
+    draftImages = (p.images || []).slice();
+
+    el('panelTag').textContent = isNewDraft ? '새 프로젝트' : '프로젝트';
+    el('deleteBtn').style.display = isNewDraft ? 'none' : (editModeOn ? 'inline-block' : 'none');
+
+    if(isNewDraft || startInEdit){
+      enterEditUI(p);
+    } else {
+      enterViewUI(p);
+    }
+    overlay.classList.add('open');
+  }
+
+  function closePanel(){
+    overlay.classList.remove('open');
+    activeId = null;
+    isNewDraft = false;
+    draftImages = [];
+  }
+
+  function enterViewUI(p){
+    el('viewMode').style.display = 'block';
+    el('editMode').style.display = 'none';
+    el('cancelBtn').style.display = 'none';
+    el('saveBtn').style.display = 'none';
+    el('editThisBtn').style.display = editModeOn ? 'inline-block' : 'none';
+    el('deleteBtn').style.display = editModeOn ? 'inline-block' : 'none';
+
+    el('viewTitle').textContent = p.title || '제목 없음';
+    el('viewRole').textContent = p.role || '';
+    el('viewRole').style.display = p.role ? 'block' : 'none';
+    el('viewDesc').textContent = p.desc || '';
+    el('viewDesc').style.display = p.desc ? 'block' : 'none';
+
+    const notionArea = el('viewNotionArea');
+    notionArea.innerHTML = '';
+    if(p.notion){
+      const embeddable = /notion\.(so|site)/.test(p.notion);
+      const block = document.createElement('div');
+      block.className = 'notion-block';
+      block.innerHTML = `<span class="label">${escapeHtml(p.notion)}</span>`;
+      const link = document.createElement('a');
+      link.href = p.notion; link.target = '_blank'; link.rel = 'noopener';
+      link.textContent = '노션에서 열기 →';
+      block.appendChild(link);
+      notionArea.appendChild(block);
+
+      if(embeddable){
+        const embedWrap = document.createElement('div');
+        embedWrap.className = 'notion-embed';
+        embedWrap.innerHTML = `<iframe src="${p.notion}" allowfullscreen></iframe>`;
+        notionArea.appendChild(embedWrap);
+      }
+    }
+
+    const gallery = el('viewGallery');
+    gallery.innerHTML = '';
+    (p.images || []).forEach(src => {
+      const cell = document.createElement('div');
+      cell.className = 'img-cell';
+      const img = document.createElement('img');
+      img.src = src;
+      img.onclick = () => openLightbox(src);
+      cell.appendChild(img);
+      gallery.appendChild(cell);
+    });
+  }
+
+  function enterEditUI(p){
+    el('viewMode').style.display = 'none';
+    el('editMode').style.display = 'block';
+    el('cancelBtn').style.display = 'inline-block';
+    el('saveBtn').style.display = 'inline-block';
+    el('editThisBtn').style.display = 'none';
+    el('deleteBtn').style.display = isNewDraft ? 'none' : 'inline-block';
+
+    el('fTitle').value = p.title || '';
+    el('fRole').value = p.role || '';
+    el('fDesc').value = p.desc || '';
+    el('fNotion').value = p.notion || '';
+
+    renderEditGallery();
+  }
+
+  function renderEditGallery(){
+    const g = el('editGallery');
+    g.innerHTML = '';
+    draftImages.forEach((src, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'img-cell';
+      const img = document.createElement('img');
+      img.src = src;
+      img.onclick = () => openLightbox(src);
+      const rm = document.createElement('button');
+      rm.className = 'rm'; rm.textContent = '✕';
+      rm.onclick = (e) => { e.stopPropagation(); draftImages.splice(idx,1); renderEditGallery(); };
+      cell.appendChild(img);
+      cell.appendChild(rm);
+      g.appendChild(cell);
+    });
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'upload-tile';
+    tile.innerHTML = '<span class="plus">+</span><span>업로드</span>';
+    tile.onclick = () => el('fileInput').click();
+    g.appendChild(tile);
+  }
+
+  /* ---------- 이미지 업로드 (파일 선택 → 리사이즈 → base64) ---------- */
+  el('fileInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    for(const file of files){
+      try{
+        const dataUrl = await resizeImageToDataUrl(file, MAX_IMG_DIM, JPEG_QUALITY);
+        draftImages.push(dataUrl);
+      }catch(err){
+        showToast('이미지를 불러오지 못했어요: ' + file.name);
+      }
+    }
+    e.target.value = '';
+    renderEditGallery();
+  });
+
+  function resizeImageToDataUrl(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read error'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('decode error'));
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > maxDim || height > maxDim){
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function openLightbox(src){
+    el('lightboxImg').src = src;
+    el('lightbox').classList.add('open');
+  }
+  el('lightbox').addEventListener('click', () => el('lightbox').classList.remove('open'));
+
+  /* ---------- 저장 / 삭제 / 취소 ---------- */
+  function saveDraft(){
+    const data = {
+      id: activeId,
+      title: el('fTitle').value.trim(),
+      role: el('fRole').value.trim(),
+      desc: el('fDesc').value.trim(),
+      notion: el('fNotion').value.trim(),
+      images: draftImages.slice(),
+      createdAt: Date.now()
+    };
+    if(!data.title){
+      showToast('프로젝트 이름을 입력해주세요.');
+      return;
+    }
+    if(isNewDraft){
+      projects.unshift(data);
+    } else {
+      const idx = projects.findIndex(x => x.id === activeId);
+      if(idx > -1) projects[idx] = { ...projects[idx], ...data };
+    }
+    save();
+    render();
+    showToast('저장했어요.');
+    closePanel();
+  }
+
+  function removeProject(id){
+    if(!confirm('이 프로젝트를 삭제할까요? 되돌릴 수 없어요.')) return;
+    projects = projects.filter(p => p.id !== id);
+    save();
+    render();
+    if(activeId === id) closePanel();
+  }
+
+  /* ---------- 이벤트 바인딩 ---------- */
+  el('editModeBtn').addEventListener('click', () => {
+    editModeOn = !editModeOn;
+    el('editModeBtn').textContent = editModeOn ? '편집 모드 끄기' : '편집 모드';
+    el('editModeBtn').classList.toggle('primary', editModeOn);
+    render();
+  });
+
+  el('closeBtn').addEventListener('click', closePanel);
+  el('cancelBtn').addEventListener('click', () => {
+    if(isNewDraft){ closePanel(); return; }
+    const p = projects.find(x => x.id === activeId);
+    enterViewUI(p);
+  });
+  el('saveBtn').addEventListener('click', saveDraft);
+  el('editThisBtn').addEventListener('click', () => {
+    const p = projects.find(x => x.id === activeId);
+    draftImages = (p.images || []).slice();
+    enterEditUI(p);
+  });
+  el('deleteBtn').addEventListener('click', () => {
+    if(activeId) removeProject(activeId);
+  });
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closePanel(); });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){
+      if(el('lightbox').classList.contains('open')) el('lightbox').classList.remove('open');
+      else if(overlay.classList.contains('open')) closePanel();
+    }
+  });
+
+  load();
+  render();
+})();
+</script>
+
+<script src="./auth-gate.js"></script>
+</body>
+</html>
