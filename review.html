@@ -347,10 +347,10 @@
           <th>지역</th>
           <th>체험단 이름</th>
           <th>제공내역</th>
-          <th>마감일자</th>
           <th>상태 / 예약일시</th>
           <th>플랫폼</th>
           <th>주소</th>
+          <th>마감일자</th>
           <th></th>
         </tr>
       </thead>
@@ -588,7 +588,6 @@ function render(){
         <td data-label="지역"><span class="region-badge">${it.region}</span></td>
         <td data-label="체험단 이름" class="name-cell">${escapeHtml(it.name)}</td>
         <td data-label="제공내역">${escapeHtml(it.provide) || '-'}</td>
-        <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${normalizeDate(it.deadline) || '-'}</td>
         <td data-label="상태">
           <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
             ${Object.keys(statusMeta).map(k =>
@@ -607,6 +606,7 @@ function render(){
             placeholder="주소 입력"
             onchange="updateAddress('${it.id}', this.value)">
         </td>
+        <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${normalizeDate(it.deadline) || '-'}</td>
         <td data-label=""><button class="del-btn" onclick="deleteItem('${it.id}')">✕</button></td>
       </tr>
     `;
