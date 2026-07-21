@@ -33,7 +33,7 @@
 
         .app-container {
             width: 100%;
-            max-width: 480px;
+            max-width: 520px;
             display: flex;
             flex-direction: column;
             gap: 16px;
@@ -73,7 +73,7 @@
             color: var(--text-main);
         }
 
-        /* 1번 수정 요구사항: 날짜와 시간 입력부 레이아웃 깨짐 방지 */
+        /* 날짜와 시간 입력부 레이아웃 깨짐 방지 */
         .datetime-row {
             display: flex;
             gap: 8px;
@@ -135,7 +135,7 @@
 
         .calendar-cell {
             position: relative;
-            min-height: 65px;
+            min-height: 75px;
             padding: 6px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -145,6 +145,7 @@
             flex-direction: column;
             justify-content: space-between;
             transition: background 0.2s;
+            overflow: hidden;
         }
 
         .calendar-cell:active {
@@ -160,8 +161,8 @@
             opacity: 0.3;
         }
 
-        /* 2번 수정 요구사항: 캘린더 칸 내부 뱃지 (클릭 유도형) */
-        .event-badge-wrap {
+        /* 기본(모바일): 점과 갯수 표시 */
+        .mobile-badge {
             display: flex;
             align-items: center;
             gap: 3px;
@@ -170,18 +171,44 @@
             border-radius: 4px;
             width: fit-content;
         }
-
         .event-dot {
             width: 5px;
             height: 5px;
             background-color: var(--primary-color);
             border-radius: 50%;
         }
-
         .event-count {
             font-size: 10px;
             color: var(--primary-color);
             font-weight: 700;
+        }
+
+        /* PC 버전 전용 일정 텍스트 영역 (기본은 숨김) */
+        .pc-events {
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+        .pc-event-chip {
+            font-size: 10px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 2px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        /* 화면이 넓은 PC 환경(768px 이상)에서는 텍스트 칩을 보여주고 모바일 뱃지를 숨김 */
+        @media (min-width: 768px) {
+            .app-container { max-width: 700px; }
+            .calendar-cell { min-height: 95px; }
+            .mobile-badge { display: none !important; }
+            .pc-events { display: flex; }
         }
 
         /* 모달 팝업 스타일 */
@@ -251,7 +278,7 @@
 <body>
 
 <div class="app-container">
-    <!-- 입력 폼 섹션 (1번 문제 해결 적용) -->
+    <!-- 입력 폼 섹션 -->
     <div class="card">
         <div class="form-group">
             <label class="form-label">상태</label>
@@ -288,7 +315,7 @@
         </div>
     </div>
 
-    <!-- 캘린더 섹션 (2번 문제 해결 적용) -->
+    <!-- 캘린더 섹션 -->
     <div class="card">
         <div class="calendar-header">
             <button class="nav-btn">&lt;</button>
@@ -331,9 +358,12 @@
             <!-- 21일 (일정 1개) -->
             <div class="calendar-cell" onclick="openDateModal('2026년 7월 21일', ['19:00 - [보라]피트니스벨 화정 (예약완료)'])">
                 <span class="day-number">21</span>
-                <div class="event-badge-wrap">
+                <div class="mobile-badge">
                     <span class="event-dot"></span>
                     <span class="event-count">1</span>
+                </div>
+                <div class="pc-events">
+                    <div class="pc-event-chip">19:00 피트니스벨</div>
                 </div>
             </div>
 
@@ -342,9 +372,12 @@
             <!-- 23일 (일정 1개) -->
             <div class="calendar-cell" onclick="openDateModal('2026년 7월 23일', ['19:00 - 체험단 일정'])">
                 <span class="day-number">23</span>
-                <div class="event-badge-wrap">
+                <div class="mobile-badge">
                     <span class="event-dot"></span>
                     <span class="event-count">1</span>
+                </div>
+                <div class="pc-events">
+                    <div class="pc-event-chip">19:00 체험단</div>
                 </div>
             </div>
 
@@ -353,18 +386,25 @@
             <!-- 25일 (일정 2개) -->
             <div class="calendar-cell" onclick="openDateModal('2026년 7월 25일', ['11:00 - 피트니스벨 화정', '14:00 - 우아든동 체험단'])">
                 <span class="day-number">25</span>
-                <div class="event-badge-wrap">
+                <div class="mobile-badge">
                     <span class="event-dot"></span>
                     <span class="event-count">2</span>
+                </div>
+                <div class="pc-events">
+                    <div class="pc-event-chip">11:00 피트니스벨</div>
+                    <div class="pc-event-chip">14:00 우아든동</div>
                 </div>
             </div>
 
             <!-- 26일 (일정 1개) -->
             <div class="calendar-cell" onclick="openDateModal('2026년 7월 26일', ['14:00 - 마감일정'])">
                 <span class="day-number">26</span>
-                <div class="event-badge-wrap">
+                <div class="mobile-badge">
                     <span class="event-dot"></span>
                     <span class="event-count">1</span>
+                </div>
+                <div class="pc-events">
+                    <div class="pc-event-chip">14:00 마감일정</div>
                 </div>
             </div>
 
