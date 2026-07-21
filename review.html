@@ -275,6 +275,106 @@
       margin-bottom:2px;
     }
   }
+
+  /* ---- AI 이미지 자동등록 ---- */
+  .ai-panel{border-color:var(--accent);}
+  .ai-panel h2{justify-content:space-between;}
+  .ai-badge{
+    background:var(--accent);
+    color:#fff;
+    font-size:10.5px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:20px;
+    margin-left:auto;
+  }
+  .ai-desc{
+    font-size:12.5px;
+    color:var(--sub);
+    margin:-6px 0 14px;
+    line-height:1.5;
+  }
+  .ai-upload-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .ai-upload-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:#eef0ec;
+    color:var(--ink);
+    border:1px solid var(--line);
+    padding:9px 16px;
+    border-radius:8px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .ai-upload-btn:hover{border-color:var(--accent);}
+  .ai-upload-btn input{display:none;}
+  .ai-file-name{font-size:12.5px;color:var(--sub);}
+
+  .ai-preview-wrap{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .ai-preview-img{
+    max-width:120px;
+    max-height:120px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    object-fit:cover;
+  }
+  .ai-analyze-btn{
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:7px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .ai-analyze-btn:hover{opacity:0.9;}
+  .ai-analyze-btn:disabled{opacity:0.5;cursor:default;}
+
+  .ai-status{
+    font-size:12.5px;
+    color:var(--sub);
+    margin-bottom:14px;
+  }
+
+  .ai-result-grid{
+    display:grid;
+    grid-template-columns:90px 1fr 1.8fr 1.1fr 140px 140px;
+    gap:10px;
+    align-items:end;
+  }
+  .ai-result-actions{
+    grid-column:1/-1;
+    display:flex;
+    gap:10px;
+    margin-top:4px;
+  }
+  .ai-cancel-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--sub);
+    padding:10px 18px;
+    border-radius:7px;
+    font-size:13.5px;
+    cursor:pointer;
+  }
+  .ai-cancel-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  @media (max-width:820px){
+    .ai-result-grid{grid-template-columns:1fr 1fr;}
+  }
 </style>
 </head>
 <body>
@@ -340,6 +440,67 @@
     </div>
   </div>
 
+  <div class="panel ai-panel">
+    <h2>이미지로 자동등록 <span class="ai-badge">AI</span></h2>
+    <p class="ai-desc">체험단 초대장/안내 캡처를 올리면 지역·주소·제공내역·플랫폼·마감일자를 자동으로 읽어 채워드려요. 내용을 확인한 뒤 등록하세요.</p>
+
+    <div class="ai-upload-row">
+      <label class="ai-upload-btn">
+        📷 이미지 선택
+        <input type="file" id="ai-image-input" accept="image/*" onchange="onAiImageSelected(event)">
+      </label>
+      <span id="ai-file-name" class="ai-file-name"></span>
+    </div>
+
+    <div id="ai-preview-wrap" class="ai-preview-wrap" style="display:none;">
+      <img id="ai-preview-img" class="ai-preview-img">
+      <button class="ai-analyze-btn" id="ai-analyze-btn" onclick="analyzeAiImage()">✨ 분석하기</button>
+    </div>
+
+    <div id="ai-status" class="ai-status" style="display:none;"></div>
+
+    <div id="ai-result" class="ai-result-grid" style="display:none;">
+      <div class="field">
+        <label>지역</label>
+        <select id="ai-region">
+          <option value="서울">서울</option>
+          <option value="경기">경기</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>체험단 이름</label>
+        <input id="ai-name" placeholder="예: OO 맛집 체험단">
+      </div>
+      <div class="field">
+        <label>제공내역</label>
+        <input id="ai-provide">
+      </div>
+      <div class="field">
+        <label>주소 (시/군/구 제외)</label>
+        <input id="ai-address">
+      </div>
+      <div class="field">
+        <label>마감일자</label>
+        <input id="ai-deadline" type="date">
+      </div>
+      <div class="field">
+        <label>플랫폼</label>
+        <select id="ai-platform">
+          <option value="디너의여왕">디너의여왕</option>
+          <option value="리뷰노트">리뷰노트</option>
+          <option value="놀러와체험단">놀러와체험단</option>
+          <option value="레뷰">레뷰</option>
+          <option value="데일리뷰">데일리뷰</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="ai-result-actions">
+        <button class="add-btn" onclick="confirmAiAdd()">+ 이 내용으로 등록하기</button>
+        <button class="ai-cancel-btn" onclick="resetAiPanel()">취소</button>
+      </div>
+    </div>
+  </div>
+
   <div class="panel">
     <div class="toolbar">
       <div class="tabs" id="tabs"></div>
@@ -396,6 +557,106 @@ function platformOptions(selected){
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ===========================================================
+   AI 이미지 자동등록
+   =========================================================== */
+let aiImageBase64 = null;
+let aiImageMediaType = null;
+
+function onAiImageSelected(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  aiImageMediaType = file.type || "image/png";
+  document.getElementById('ai-file-name').textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    aiImageBase64 = evt.target.result.split(',')[1];
+    document.getElementById('ai-preview-img').src = evt.target.result;
+    document.getElementById('ai-preview-wrap').style.display = "flex";
+    document.getElementById('ai-result').style.display = "none";
+    document.getElementById('ai-status').style.display = "none";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyzeAiImage(){
+  if(!aiImageBase64){ alert('이미지를 먼저 선택해주세요.'); return; }
+
+  const statusEl = document.getElementById('ai-status');
+  const btn = document.getElementById('ai-analyze-btn');
+  statusEl.style.display = "block";
+  statusEl.textContent = "이미지를 분석하고 있어요...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "analyzeImage",
+        imageBase64: aiImageBase64,
+        mediaType: aiImageMediaType
+      })
+    });
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error || "분석 실패");
+
+    const r = data.data || {};
+    document.getElementById('ai-region').value = (r.region === "경기") ? "경기" : "서울";
+    document.getElementById('ai-name').value = r.name || "";
+    document.getElementById('ai-provide').value = r.provide || "";
+    document.getElementById('ai-address').value = r.address || "";
+    document.getElementById('ai-deadline').value = normalizeDate(r.deadline) || "";
+    document.getElementById('ai-platform').value = platformList.includes(r.platform) ? r.platform : "기타";
+
+    document.getElementById('ai-result').style.display = "grid";
+    statusEl.style.display = "none";
+  } catch(err) {
+    statusEl.textContent = "분석 실패: " + err.message + " — 아래 항목을 직접 입력해서 등록할 수 있어요.";
+    document.getElementById('ai-result').style.display = "grid";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function confirmAiAdd(){
+  const name = document.getElementById('ai-name').value.trim();
+  if(!name){ alert('체험단 이름을 입력해주세요.'); return; }
+
+  const newItem = {
+    id: uid(),
+    region: document.getElementById('ai-region').value,
+    name,
+    provide: document.getElementById('ai-provide').value.trim(),
+    address: document.getElementById('ai-address').value.trim(),
+    deadline: document.getElementById('ai-deadline').value,
+    status: "wait",
+    platform: document.getElementById('ai-platform').value,
+    resvDate: "", resvTime: ""
+  };
+
+  try {
+    items = await callApi("add", { item: newItem });
+  } catch (err) {
+    alert("저장 실패: " + err.message);
+    return;
+  }
+
+  resetAiPanel();
+  render();
+}
+
+function resetAiPanel(){
+  aiImageBase64 = null;
+  aiImageMediaType = null;
+  document.getElementById('ai-image-input').value = "";
+  document.getElementById('ai-file-name').textContent = "";
+  document.getElementById('ai-preview-wrap').style.display = "none";
+  document.getElementById('ai-result').style.display = "none";
+  document.getElementById('ai-status').style.display = "none";
+}
 
 // 서버에서 어떤 형식(Date 객체 문자열, ISO 문자열 등)으로 날짜가 오든
 // 항상 "YYYY-MM-DD" 형태로 정리해주는 함수
