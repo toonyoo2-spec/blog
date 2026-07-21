@@ -12,8 +12,6 @@
     --line:#e1dfd6;
     --card:#ffffff;
     --accent:#3a5a52;
-    --accent-soft:#e7ede9;
-    --danger:#b5504a;
   }
   *{box-sizing:border-box;}
   body{
@@ -21,18 +19,11 @@
     font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
     background:var(--bg);
     color:var(--ink);
-    padding:32px 20px 60px;
+    padding:32px 20px 80px;
   }
   .wrap{max-width:1180px;margin:0 auto;}
 
-  header{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:16px;
-    margin-bottom:28px;
-    flex-wrap:wrap;
-  }
+  header{margin-bottom:20px;}
   .home-btn{
     display:inline-block;
     font-size:12.5px;
@@ -52,221 +43,206 @@
     font-size:13.5px;
   }
 
-  .header-actions{display:flex;gap:8px;align-items:center;}
-  button{font-family:inherit;cursor:pointer;}
-
-  .btn{
-    border:1px solid var(--line);
+  .panel{
     background:var(--card);
-    color:var(--ink);
-    padding:9px 16px;
-    border-radius:8px;
-    font-size:13px;
-    font-weight:500;
-    transition:border-color .15s, color .15s, background .15s;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:24px;
   }
-  .btn:hover{border-color:var(--accent);color:var(--accent);}
-  .btn.primary{
+  .panel h2{
+    font-size:15px;
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
     background:var(--accent);
-    border-color:var(--accent);
-    color:#fdfcf9;
+    display:inline-block;
   }
-  .btn.primary:hover{opacity:.9;color:#fdfcf9;}
-  .btn.ghost{border-color:transparent;background:transparent;padding:9px 10px;}
-  .btn.danger{color:var(--danger);}
-  .btn.danger:hover{border-color:var(--danger);color:var(--danger);}
-  .btn.small{padding:6px 11px;font-size:12px;}
 
-  /* ---- Grid of project cards ---- */
-  .grid{
+  .section-title{
+    font-size:13px;
+    font-weight:600;
+    color:var(--sub);
+    margin:28px 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+  .notion-section-title{justify-content:space-between;}
+  .refresh-btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--sub);
+    padding:5px 10px;
+    border-radius:20px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .refresh-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  .form-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+    grid-template-columns:1fr 1.4fr;
     gap:16px;
   }
-  .card{
+  .field{margin-bottom:12px;}
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:5px;
+  }
+  input[type=text], input[type=url], textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:80px;}
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+
+  .image-drop{
+    border:1.5px dashed var(--line);
+    border-radius:10px;
+    padding:14px;
+    text-align:center;
+    cursor:pointer;
+    color:var(--sub);
+    font-size:12.5px;
+    position:relative;
+    min-height:160px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    background:#fafaf8;
+  }
+  .image-drop img{
+    max-width:100%;
+    max-height:220px;
+    border-radius:6px;
+    object-fit:cover;
+  }
+  .image-drop input[type=file]{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer;
+  }
+  .upload-status{
+    font-size:11.5px;
+    color:var(--sub);
+    margin-top:6px;
+  }
+
+  .save-btn{
+    margin-top:6px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:10px 22px;
+    border-radius:7px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .save-btn:hover{opacity:0.9;}
+  .save-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+    gap:16px;
+  }
+  .project-card{
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:14px;
+    border-radius:12px;
     overflow:hidden;
-    cursor:pointer;
-    text-align:left;
     display:flex;
     flex-direction:column;
-    transition:transform .15s, box-shadow .15s, border-color .15s;
-    position:relative;
   }
-  .card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(34,34,31,.06);border-color:#cfccbf;}
-  .card .thumb{
+  .project-card .thumb{
     width:100%;
     aspect-ratio:16/10;
-    background:var(--accent-soft) linear-gradient(135deg,#eef1ec,#e2e8e1);
-    display:flex;align-items:center;justify-content:center;
-    color:var(--accent);
-    font-size:12px;
+    background:#eef0ec;
     overflow:hidden;
   }
-  .card .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
-  .card .body{padding:16px 16px 18px;display:flex;flex-direction:column;gap:6px;flex:1;}
-  .card .role{font-size:11.5px;color:var(--accent);font-weight:600;letter-spacing:.02em;}
-  .card h3{margin:0;font-size:16px;letter-spacing:-0.01em;}
-  .card .excerpt{
-    margin:0;
+  .project-card .thumb img{
+    width:100%;height:100%;object-fit:cover;display:block;
+  }
+  .project-card .body{
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    flex:1;
+  }
+  .project-card .title{font-size:15.5px;font-weight:700;}
+  .project-card .desc{
     font-size:12.5px;
     color:var(--sub);
     line-height:1.5;
-    display:-webkit-box;
-    -webkit-line-clamp:2;
-    -webkit-box-orient:vertical;
-    overflow:hidden;
+    white-space:pre-wrap;
+    flex:1;
   }
-  .card .meta-row{margin-top:auto;padding-top:8px;display:flex;align-items:center;gap:6px;font-size:11px;color:var(--sub);}
-  .card .meta-row .dot{width:4px;height:4px;border-radius:50%;background:var(--line);}
-
-  .card .edit-controls{
-    position:absolute;top:10px;right:10px;
-    display:flex;gap:6px;
-    opacity:0;transition:opacity .15s;
+  .card-actions{
+    display:flex;
+    gap:8px;
+    margin-top:8px;
   }
-  .card:hover .edit-controls{opacity:1;}
-  .icon-btn{
-    width:28px;height:28px;border-radius:8px;
-    border:1px solid var(--line);
-    background:rgba(255,255,255,.92);
-    display:flex;align-items:center;justify-content:center;
-    font-size:13px;color:var(--ink);
-  }
-  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-  .add-card{
-    border:1.5px dashed var(--line);
-    border-radius:14px;
-    background:transparent;
-    display:flex;align-items:center;justify-content:center;
-    flex-direction:column;gap:8px;
-    color:var(--sub);
-    min-height:190px;
-    font-size:13px;
-  }
-  .add-card:hover{border-color:var(--accent);color:var(--accent);}
-  .add-card .plus{font-size:22px;line-height:1;}
-
-  .empty-state{
-    padding:60px 20px;
+  .notion-link{
+    flex:1;
     text-align:center;
+    background:#eef0ec;
+    color:var(--ink);
+    text-decoration:none;
+    font-size:12.5px;
+    font-weight:600;
+    padding:8px 10px;
+    border-radius:7px;
+  }
+  .notion-link:hover{background:#e2e6de;}
+  .del-btn{
+    background:none;
+    border:1px solid var(--line);
+    color:var(--sub);
+    cursor:pointer;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:7px;
+  }
+  .del-btn:hover{border-color:#b3452f;color:#b3452f;}
+
+  .empty{
+    text-align:center;
+    padding:50px 0;
     color:var(--sub);
     font-size:13.5px;
-    border:1px dashed var(--line);
-    border-radius:14px;
   }
-
-  /* ---- Detail / edit panel (modal) ---- */
-  .overlay{
-    position:fixed;inset:0;
-    background:rgba(34,34,31,.4);
-    display:none;
-    align-items:flex-start;
-    justify-content:center;
-    padding:40px 16px;
-    overflow-y:auto;
-    z-index:50;
-  }
-  .overlay.open{display:flex;}
-  .panel{
-    background:var(--card);
-    border-radius:16px;
-    width:100%;max-width:720px;
-    padding:28px 28px 32px;
-    box-shadow:0 20px 60px rgba(0,0,0,.18);
-  }
-  .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;}
-  .panel-head .tag{font-size:11px;color:var(--accent);font-weight:700;letter-spacing:.04em;text-transform:uppercase;}
-  .close-btn{
-    border:none;background:transparent;color:var(--sub);font-size:20px;line-height:1;
-    padding:4px;border-radius:6px;
-  }
-  .close-btn:hover{color:var(--ink);}
-
-  .field{margin-bottom:16px;}
-  .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:6px;font-weight:600;}
-  .field input[type=text], .field input[type=url], .field textarea{
-    width:100%;
-    border:1px solid var(--line);
-    border-radius:9px;
-    padding:10px 12px;
-    font-size:14px;
-    font-family:inherit;
-    background:#fcfbf8;
-    color:var(--ink);
-    resize:vertical;
-  }
-  .field input:focus, .field textarea:focus{outline:none;border-color:var(--accent);}
-  .field textarea{min-height:110px;line-height:1.55;}
-
-  .view-title{font-size:22px;margin:0 0 4px;letter-spacing:-.01em;}
-  .view-role{font-size:13px;color:var(--accent);font-weight:600;margin:0 0 14px;}
-  .view-desc{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap;margin:0 0 20px;}
-
-  .notion-block{
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:12px 14px;
-    display:flex;align-items:center;justify-content:space-between;
-    gap:10px;background:#fcfbf8;margin-bottom:20px;
-  }
-  .notion-block .label{font-size:12.5px;color:var(--sub);word-break:break-all;}
-  .notion-block a{color:var(--accent);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap;}
-  .notion-block a:hover{text-decoration:underline;}
-  .notion-embed{
-    margin-bottom:20px;border:1px solid var(--line);border-radius:10px;overflow:hidden;
-  }
-  .notion-embed iframe{width:100%;height:480px;border:none;display:block;}
-
-  /* image gallery */
-  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:6px;}
-  .gallery .img-cell{
-    position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:var(--accent-soft);
-  }
-  .gallery .img-cell img{width:100%;height:100%;object-fit:cover;cursor:zoom-in;}
-  .gallery .img-cell .rm{
-    position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:6px;
-    background:rgba(34,34,31,.7);color:#fff;border:none;font-size:12px;display:flex;align-items:center;justify-content:center;
-  }
-  .upload-tile{
-    aspect-ratio:1/1;border-radius:8px;border:1.5px dashed var(--line);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-    color:var(--sub);font-size:11px;cursor:pointer;background:transparent;
-  }
-  .upload-tile:hover{border-color:var(--accent);color:var(--accent);}
-  .upload-tile .plus{font-size:18px;line-height:1;}
-  .upload-hint{font-size:11px;color:var(--sub);margin:6px 0 18px;}
-
-  .panel-footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;flex-wrap:wrap;}
-  .panel-footer .left{display:flex;gap:8px;}
-
-  .lightbox{
-    position:fixed;inset:0;background:rgba(20,20,18,.85);display:none;
-    align-items:center;justify-content:center;z-index:80;padding:24px;
-  }
-  .lightbox.open{display:flex;}
-  .lightbox img{max-width:100%;max-height:100%;border-radius:8px;}
-
-  .toast{
-    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);
-    background:var(--ink);color:#fdfcf9;padding:10px 18px;border-radius:8px;font-size:13px;
-    opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:100;
-  }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   #appContent{display:none;}
-  
-  /* 📱 모바일 화면 최적화 (640px 이하) */
-  @media (max-width:640px){
-    body{padding:20px 14px 40px;}
-    .panel{padding:20px 16px 24px;}
-    .overlay{padding:20px 10px;}
-    .grid{grid-template-columns:1fr;}
-    .card .edit-controls{opacity:1;} /* 모바일에서는 편집 버튼 항상 노출 */
-    .notion-embed iframe{height:320px;}
+
+  @media (max-width:720px){
+    .form-grid{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -274,438 +250,274 @@
 <div class="wrap" id="appContent">
 
   <header>
-    <div>
-      <a href="./index.html" class="home-btn">← 홈</a>
-      <h1>Task</h1>
-      <p>진행 중인 프로젝트 · 각 카드를 열면 소개, 사진, 노션 문서를 볼 수 있어요</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn" id="editModeBtn">편집 모드</button>
-    </div>
+    <a href="./index.html" class="home-btn">← 홈</a>
+    <h1>Task</h1>
+    <p>진행한 프로젝트를 카드로 정리하고, 노션 상세 페이지로 연결합니다.</p>
   </header>
 
-  <div class="grid" id="grid"></div>
-
-</div>
-
-<!-- 상세/편집 패널 -->
-<div class="overlay" id="overlay">
   <div class="panel">
-    <div class="panel-head">
-      <span class="tag" id="panelTag">프로젝트</span>
-      <button class="close-btn" id="closeBtn">✕</button>
-    </div>
-
-    <!-- 보기 모드 -->
-    <div id="viewMode">
-      <h2 class="view-title" id="viewTitle"></h2>
-      <p class="view-role" id="viewRole"></p>
-      <p class="view-desc" id="viewDesc"></p>
-      <div id="viewNotionArea"></div>
-      <div class="gallery" id="viewGallery"></div>
-    </div>
-
-    <!-- 편집 모드 -->
-    <div id="editMode" style="display:none;">
-      <div class="field">
-        <label>프로젝트 이름</label>
-        <input type="text" id="fTitle" placeholder="예: 브랜드 리뉴얼 프로젝트">
+    <h2>새 프로젝트 추가</h2>
+    <div class="form-grid">
+      <div>
+        <div class="field">
+          <label>썸네일 이미지</label>
+          <div class="image-drop" id="dropZone">
+            <span id="dropLabel">클릭해서 이미지 선택</span>
+            <input type="file" accept="image/*" id="in-image">
+          </div>
+          <div class="upload-status" id="uploadStatus"></div>
+        </div>
       </div>
-      <div class="field">
-        <label>역할 / 한 줄 태그</label>
-        <input type="text" id="fRole" placeholder="예: 기획 · 디자인 · 2024">
-      </div>
-      <div class="field">
-        <label>소개 (텍스트)</label>
-        <textarea id="fDesc" placeholder="어떤 일을 했는지, 어떤 문제를 해결했는지 자유롭게 적어주세요."></textarea>
-      </div>
-      <div class="field">
-        <label>노션 링크</label>
-        <input type="url" id="fNotion" placeholder="https://notion.so/... (웹에 공개된 페이지 URL)">
-      </div>
-      <div class="field">
-        <label>이미지</label>
-        <div class="gallery" id="editGallery"></div>
-        <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-        <p class="upload-hint">사진을 눌러 업로드 · 이 브라우저에 저장되며(로컬 저장), 여러 장 추가할 수 있어요</p>
-      </div>
-    </div>
-
-    <div class="panel-footer">
-      <div class="left">
-        <button class="btn danger small" id="deleteBtn" style="display:none;">프로젝트 삭제</button>
-      </div>
-      <div class="left">
-        <button class="btn small" id="cancelBtn" style="display:none;">취소</button>
-        <button class="btn primary small" id="saveBtn" style="display:none;">저장</button>
-        <button class="btn primary small" id="editThisBtn">이 프로젝트 편집</button>
+      <div>
+        <div class="field">
+          <label>프로젝트 제목</label>
+          <input type="text" id="in-title" placeholder="예: 위베베 시즌3 캠페인">
+        </div>
+        <div class="field">
+          <label>설명</label>
+          <textarea id="in-description" placeholder="어떤 일을 했는지 간단히 적어주세요"></textarea>
+        </div>
+        <div class="field">
+          <label>노션 링크</label>
+          <input type="url" id="in-notion" placeholder="https://notion.so/...">
+        </div>
+        <button class="save-btn" id="saveBtn" onclick="addProject()">+ 추가하기</button>
       </div>
     </div>
   </div>
+
+  <div class="section-title">직접 추가한 프로젝트</div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyMsg" style="display:none;">아직 등록된 프로젝트가 없어요.</div>
+
+  <div class="section-title notion-section-title">
+    노션에서 가져온 프로젝트
+    <button class="refresh-btn" onclick="loadNotionProjects()">↻ 새로고침</button>
+  </div>
+  <div class="grid" id="notionGrid"></div>
+  <div class="empty" id="notionEmptyMsg" style="display:none;">아직 연결된 노션 항목이 없어요.</div>
+  <div class="empty" id="notionErrorMsg" style="display:none;color:#b3452f;"></div>
+
 </div>
 
-<div class="lightbox" id="lightbox"><img id="lightboxImg" src=""></div>
-<div class="toast" id="toast"></div>
-
 <script>
-(function(){
-  const STORAGE_KEY = 'task_projects_v1';
-  const MAX_IMG_DIM = 1400;   // 업로드 이미지 최대 가로/세로(px), 넘으면 축소
-  const JPEG_QUALITY = 0.82;
+/* ===========================================================
+   Apps Script 연동 설정 (review.html과 같은 Apps Script 주소 사용)
+   =========================================================== */
+const API_URL = "여기에_Apps_Script_웹앱_URL_입력";
+const SITE_KEY = "130702"; // ⚠️ Code.gs의 SECRET_KEY와 동일해야 함
+const RESOURCE = "tasks";
 
-  let projects = [];
-  let editModeOn = false;
-  let activeId = null;      // 현재 패널에 열려있는 프로젝트 id
-  let isNewDraft = false;   // 신규 생성 중인지
-  let draftImages = [];     // 편집 중 임시 이미지 배열
+let projects = [];
+let pendingImageUrl = "";
 
-  const el = (id) => document.getElementById(id);
-  const grid = el('grid');
-  const overlay = el('overlay');
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-  function load(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      projects = raw ? JSON.parse(raw) : seedData();
-    }catch(e){
-      projects = seedData();
-    }
-  }
-  function save(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
-    }catch(e){
-      showToast('저장 공간이 부족해요. 이미지를 줄여주세요.');
-    }
-  }
-  function seedData(){
-    return [
-      {
-        id: cryptoId(),
-        title: '첫 프로젝트를 추가해보세요',
-        role: '예시 카드',
-        desc: '편집 모드를 켜고 "새 프로젝트" 카드를 눌러 실제 프로젝트로 바꿔주세요. 텍스트, 이미지, 노션 링크를 자유롭게 넣을 수 있어요.',
-        notion: '',
-        images: [],
-        createdAt: Date.now()
-      }
-    ];
-  }
-  function cryptoId(){
-    return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-  }
-
-  function showToast(msg){
-    const t = el('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(showToast._tm);
-    showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
-  }
-
-  /* ---------- 렌더링 ---------- */
-  function render(){
-    grid.innerHTML = '';
-    if(projects.length === 0 && !editModeOn){
-      grid.innerHTML = '<div class="empty-state">아직 등록된 프로젝트가 없어요.</div>';
-    }
-    projects.forEach(p => grid.appendChild(renderCard(p)));
-
-    if(editModeOn){
-      const addCard = document.createElement('button');
-      addCard.className = 'add-card';
-      addCard.innerHTML = '<span class="plus">+</span><span>새 프로젝트</span>';
-      addCard.onclick = () => openPanel(null);
-      grid.appendChild(addCard);
-    }
-  }
-
-  function renderCard(p){
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => openPanel(p.id, false);
-
-    const thumb = document.createElement('div');
-    thumb.className = 'thumb';
-    if(p.images && p.images.length){
-      const img = document.createElement('img');
-      img.src = p.images[0];
-      thumb.appendChild(img);
-    } else {
-      thumb.textContent = 'NO IMAGE';
-    }
-
-    const body = document.createElement('div');
-    body.className = 'body';
-    body.innerHTML = `
-      <span class="role">${escapeHtml(p.role || '')}</span>
-      <h3>${escapeHtml(p.title || '제목 없음')}</h3>
-      <p class="excerpt">${escapeHtml(p.desc || '')}</p>
-      <div class="meta-row">
-        ${p.notion ? '<span>노션 연결됨</span>' : '<span>노션 미연결</span>'}
-        ${p.images && p.images.length ? `<span class="dot"></span><span>사진 ${p.images.length}장</span>` : ''}
-      </div>
-    `;
-
-    card.appendChild(thumb);
-    card.appendChild(body);
-
-    if(editModeOn){
-      const controls = document.createElement('div');
-      controls.className = 'edit-controls';
-      const editBtn = document.createElement('button');
-      editBtn.className = 'icon-btn';
-      editBtn.title = '편집';
-      editBtn.textContent = '✎';
-      editBtn.onclick = (e) => { e.stopPropagation(); openPanel(p.id, true); };
-      const delBtn = document.createElement('button');
-      delBtn.className = 'icon-btn';
-      delBtn.title = '삭제';
-      delBtn.textContent = '🗑';
-      delBtn.onclick = (e) => { e.stopPropagation(); removeProject(p.id); };
-      controls.appendChild(editBtn);
-      controls.appendChild(delBtn);
-      card.appendChild(controls);
-    }
-    return card;
-  }
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  /* ---------- 패널 열기/닫기 ---------- */
-  function openPanel(id, startInEdit){
-    isNewDraft = (id === null);
-    activeId = isNewDraft ? cryptoId() : id;
-    const p = isNewDraft
-      ? { id: activeId, title:'', role:'', desc:'', notion:'', images:[], createdAt: Date.now() }
-      : projects.find(x => x.id === id);
-
-    draftImages = (p.images || []).slice();
-
-    el('panelTag').textContent = isNewDraft ? '새 프로젝트' : '프로젝트';
-    el('deleteBtn').style.display = isNewDraft ? 'none' : (editModeOn ? 'inline-block' : 'none');
-
-    if(isNewDraft || startInEdit){
-      enterEditUI(p);
-    } else {
-      enterViewUI(p);
-    }
-    overlay.classList.add('open');
-  }
-
-  function closePanel(){
-    overlay.classList.remove('open');
-    activeId = null;
-    isNewDraft = false;
-    draftImages = [];
-  }
-
-  function enterViewUI(p){
-    el('viewMode').style.display = 'block';
-    el('editMode').style.display = 'none';
-    el('cancelBtn').style.display = 'none';
-    el('saveBtn').style.display = 'none';
-    el('editThisBtn').style.display = editModeOn ? 'inline-block' : 'none';
-    el('deleteBtn').style.display = editModeOn ? 'inline-block' : 'none';
-
-    el('viewTitle').textContent = p.title || '제목 없음';
-    el('viewRole').textContent = p.role || '';
-    el('viewRole').style.display = p.role ? 'block' : 'none';
-    el('viewDesc').textContent = p.desc || '';
-    el('viewDesc').style.display = p.desc ? 'block' : 'none';
-
-    const notionArea = el('viewNotionArea');
-    notionArea.innerHTML = '';
-    if(p.notion){
-      const embeddable = /notion\.(so|site)/.test(p.notion);
-      const block = document.createElement('div');
-      block.className = 'notion-block';
-      block.innerHTML = `<span class="label">${escapeHtml(p.notion)}</span>`;
-      const link = document.createElement('a');
-      link.href = p.notion; link.target = '_blank'; link.rel = 'noopener';
-      link.textContent = '노션에서 열기 →';
-      block.appendChild(link);
-      notionArea.appendChild(block);
-
-      if(embeddable){
-        const embedWrap = document.createElement('div');
-        embedWrap.className = 'notion-embed';
-        embedWrap.innerHTML = `<iframe src="${p.notion}" allowfullscreen></iframe>`;
-        notionArea.appendChild(embedWrap);
-      }
-    }
-
-    const gallery = el('viewGallery');
-    gallery.innerHTML = '';
-    (p.images || []).forEach(src => {
-      const cell = document.createElement('div');
-      cell.className = 'img-cell';
-      const img = document.createElement('img');
-      img.src = src;
-      img.onclick = () => openLightbox(src);
-      cell.appendChild(img);
-      gallery.appendChild(cell);
-    });
-  }
-
-  function enterEditUI(p){
-    el('viewMode').style.display = 'none';
-    el('editMode').style.display = 'block';
-    el('cancelBtn').style.display = 'inline-block';
-    el('saveBtn').style.display = 'inline-block';
-    el('editThisBtn').style.display = 'none';
-    el('deleteBtn').style.display = isNewDraft ? 'none' : 'inline-block';
-
-    el('fTitle').value = p.title || '';
-    el('fRole').value = p.role || '';
-    el('fDesc').value = p.desc || '';
-    el('fNotion').value = p.notion || '';
-
-    renderEditGallery();
-  }
-
-  function renderEditGallery(){
-    const g = el('editGallery');
-    g.innerHTML = '';
-    draftImages.forEach((src, idx) => {
-      const cell = document.createElement('div');
-      cell.className = 'img-cell';
-      const img = document.createElement('img');
-      img.src = src;
-      img.onclick = () => openLightbox(src);
-      const rm = document.createElement('button');
-      rm.className = 'rm'; rm.textContent = '✕';
-      rm.onclick = (e) => { e.stopPropagation(); draftImages.splice(idx,1); renderEditGallery(); };
-      cell.appendChild(img);
-      cell.appendChild(rm);
-      g.appendChild(cell);
-    });
-    const tile = document.createElement('button');
-    tile.type = 'button';
-    tile.className = 'upload-tile';
-    tile.innerHTML = '<span class="plus">+</span><span>업로드</span>';
-    tile.onclick = () => el('fileInput').click();
-    g.appendChild(tile);
-  }
-
-  /* ---------- 이미지 업로드 (파일 선택 → 리사이즈 → base64) ---------- */
-  el('fileInput').addEventListener('change', async (e) => {
-    const files = Array.from(e.target.files || []);
-    for(const file of files){
-      try{
-        const dataUrl = await resizeImageToDataUrl(file, MAX_IMG_DIM, JPEG_QUALITY);
-        draftImages.push(dataUrl);
-      }catch(err){
-        showToast('이미지를 불러오지 못했어요: ' + file.name);
-      }
-    }
-    e.target.value = '';
-    renderEditGallery();
+async function callApi(action, payload){
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action, key: SITE_KEY, resource: RESOURCE }, payload))
   });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "요청 실패");
+  return data;
+}
 
-  function resizeImageToDataUrl(file, maxDim, quality){
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error('read error'));
-      reader.onload = () => {
-        const img = new Image();
-        img.onerror = () => reject(new Error('decode error'));
-        img.onload = () => {
-          let { width, height } = img;
-          if(width > maxDim || height > maxDim){
-            const ratio = Math.min(maxDim / width, maxDim / height);
-            width = Math.round(width * ratio);
-            height = Math.round(height * ratio);
-          }
-          const canvas = document.createElement('canvas');
-          canvas.width = width; canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
+async function loadProjects(){
+  try{
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=${RESOURCE}`, { cache:"no-store" });
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.items)) projects = data.items;
+  }catch(e){
+    console.error("불러오기 실패:", e);
   }
+  render();
+}
 
-  function openLightbox(src){
-    el('lightboxImg').src = src;
-    el('lightbox').classList.add('open');
+function escapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function render(){
+  const grid = document.getElementById('grid');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  if(projects.length === 0){
+    grid.innerHTML = "";
+    emptyMsg.style.display = "block";
+    return;
   }
-  el('lightbox').addEventListener('click', () => el('lightbox').classList.remove('open'));
+  emptyMsg.style.display = "none";
 
-  /* ---------- 저장 / 삭제 / 취소 ---------- */
-  function saveDraft(){
-    const data = {
-      id: activeId,
-      title: el('fTitle').value.trim(),
-      role: el('fRole').value.trim(),
-      desc: el('fDesc').value.trim(),
-      notion: el('fNotion').value.trim(),
-      images: draftImages.slice(),
-      createdAt: Date.now()
+  const sorted = projects.slice().sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
+
+  grid.innerHTML = sorted.map(p => `
+    <div class="project-card">
+      <div class="thumb">
+        ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="">` : ''}
+      </div>
+      <div class="body">
+        <div class="title">${escapeHtml(p.title)}</div>
+        <div class="desc">${escapeHtml(p.description)}</div>
+        <div class="card-actions">
+          ${p.notionUrl ? `<a class="notion-link" href="${escapeHtml(p.notionUrl)}" target="_blank" rel="noopener">노션에서 보기 →</a>` : ''}
+          <button class="del-btn" onclick="deleteProject('${p.id}')">삭제</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// 이미지 선택 → 미리보기 + 업로드
+function bindImageInput(){
+  const input = document.getElementById('in-image');
+  input.addEventListener('change', async function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const statusEl = document.getElementById('uploadStatus');
+    const saveBtn = document.getElementById('saveBtn');
+
+    const reader = new FileReader();
+    reader.onload = async function(evt){
+      const dataUrl = evt.target.result;
+      document.getElementById('dropZone').innerHTML =
+        `<img src="${dataUrl}" alt=""><input type="file" accept="image/*" id="in-image">`;
+      bindImageInput();
+
+      statusEl.textContent = "업로드 중...";
+      saveBtn.disabled = true;
+
+      const base64 = dataUrl.split(',')[1];
+      try{
+        const result = await callApi("uploadImage", {
+          filename: file.name,
+          mimeType: file.type,
+          base64: base64
+        });
+        pendingImageUrl = result.url;
+        statusEl.textContent = "업로드 완료 ✓";
+      }catch(err){
+        statusEl.textContent = "업로드 실패: " + err.message;
+        pendingImageUrl = "";
+      }
+      saveBtn.disabled = false;
     };
-    if(!data.title){
-      showToast('프로젝트 이름을 입력해주세요.');
+    reader.readAsDataURL(file);
+  });
+}
+bindImageInput();
+
+async function addProject(){
+  const title = document.getElementById('in-title').value.trim();
+  const description = document.getElementById('in-description').value.trim();
+  const notionUrl = document.getElementById('in-notion').value.trim();
+
+  if(!title){ alert('프로젝트 제목을 입력해주세요.'); return; }
+
+  const newItem = {
+    id: uid(),
+    title, description, notionUrl,
+    imageUrl: pendingImageUrl,
+    updatedAt: new Date().toISOString().slice(0,10)
+  };
+
+  try{
+    const data = await callApi("add", { item: newItem });
+    projects = data.items;
+  }catch(err){
+    alert("저장 실패: " + err.message);
+    return;
+  }
+
+  document.getElementById('in-title').value = "";
+  document.getElementById('in-description').value = "";
+  document.getElementById('in-notion').value = "";
+  document.getElementById('uploadStatus').textContent = "";
+  pendingImageUrl = "";
+  document.getElementById('dropZone').innerHTML =
+    `<span id="dropLabel">클릭해서 이미지 선택</span><input type="file" accept="image/*" id="in-image">`;
+  bindImageInput();
+
+  render();
+}
+
+async function deleteProject(id){
+  if(!confirm('이 프로젝트를 삭제할까요?')) return;
+  try{
+    const data = await callApi("delete", { id });
+    projects = data.items;
+  }catch(err){
+    alert("삭제 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
+loadProjects();
+
+// ===========================================================
+// 노션에서 가져온 프로젝트 (읽기 전용, 노션이 원본)
+// ===========================================================
+let notionProjects = [];
+
+async function loadNotionProjects(){
+  const grid = document.getElementById('notionGrid');
+  const emptyMsg = document.getElementById('notionEmptyMsg');
+  const errorMsg = document.getElementById('notionErrorMsg');
+  errorMsg.style.display = "none";
+
+  try{
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=notion`, { cache:"no-store" });
+    const data = await res.json();
+    if(!data.ok){
+      errorMsg.textContent = "노션 연결 실패: " + data.error;
+      errorMsg.style.display = "block";
+      grid.innerHTML = "";
+      emptyMsg.style.display = "none";
       return;
     }
-    if(isNewDraft){
-      projects.unshift(data);
-    } else {
-      const idx = projects.findIndex(x => x.id === activeId);
-      if(idx > -1) projects[idx] = { ...projects[idx], ...data };
-    }
-    save();
-    render();
-    showToast('저장했어요.');
-    closePanel();
+    notionProjects = Array.isArray(data.items) ? data.items : [];
+  }catch(e){
+    errorMsg.textContent = "노션 연결 실패: " + e.message;
+    errorMsg.style.display = "block";
+    return;
   }
+  renderNotionProjects();
+}
 
-  function removeProject(id){
-    if(!confirm('이 프로젝트를 삭제할까요? 되돌릴 수 없어요.')) return;
-    projects = projects.filter(p => p.id !== id);
-    save();
-    render();
-    if(activeId === id) closePanel();
+function renderNotionProjects(){
+  const grid = document.getElementById('notionGrid');
+  const emptyMsg = document.getElementById('notionEmptyMsg');
+
+  if(notionProjects.length === 0){
+    grid.innerHTML = "";
+    emptyMsg.style.display = "block";
+    return;
   }
+  emptyMsg.style.display = "none";
 
-  /* ---------- 이벤트 바인딩 ---------- */
-  el('editModeBtn').addEventListener('click', () => {
-    editModeOn = !editModeOn;
-    el('editModeBtn').textContent = editModeOn ? '편집 모드 끄기' : '편집 모드';
-    el('editModeBtn').classList.toggle('primary', editModeOn);
-    render();
-  });
+  const sorted = notionProjects.slice().sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
 
-  el('closeBtn').addEventListener('click', closePanel);
-  el('cancelBtn').addEventListener('click', () => {
-    if(isNewDraft){ closePanel(); return; }
-    const p = projects.find(x => x.id === activeId);
-    enterViewUI(p);
-  });
-  el('saveBtn').addEventListener('click', saveDraft);
-  el('editThisBtn').addEventListener('click', () => {
-    const p = projects.find(x => x.id === activeId);
-    draftImages = (p.images || []).slice();
-    enterEditUI(p);
-  });
-  el('deleteBtn').addEventListener('click', () => {
-    if(activeId) removeProject(activeId);
-  });
-  overlay.addEventListener('click', (e) => { if(e.target === overlay) closePanel(); });
-  document.addEventListener('keydown', (e) => {
-    if(e.key === 'Escape'){
-      if(el('lightbox').classList.contains('open')) el('lightbox').classList.remove('open');
-      else if(overlay.classList.contains('open')) closePanel();
-    }
-  });
+  grid.innerHTML = sorted.map(p => `
+    <div class="project-card">
+      <div class="thumb">
+        ${p.imageUrl ? `<img src="${escapeHtml(p.imageUrl)}" alt="">` : ''}
+      </div>
+      <div class="body">
+        <div class="title">${escapeHtml(p.title || '(제목 없음)')}</div>
+        <div class="desc">${escapeHtml(p.description)}</div>
+        <div class="card-actions">
+          ${p.notionUrl ? `<a class="notion-link" href="${escapeHtml(p.notionUrl)}" target="_blank" rel="noopener">노션에서 보기 →</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
 
-  load();
-  render();
-})();
+loadNotionProjects();
+setInterval(loadNotionProjects, 120000); // 2분마다 자동 새로고침
 </script>
 <script src="./auth-gate.js"></script>
 </body>
