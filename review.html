@@ -202,7 +202,6 @@
     white-space:nowrap;
   }
 
-  /* ✨ 수정됨: 텍스트 직접 수정 UI 스타일 추가 */
   .editable-wrap {
     display: flex;
     align-items: center;
@@ -229,7 +228,6 @@
     transition: all 0.2s;
     flex-shrink: 0;
   }
-  /* 마우스 오버 시에만 ✏️ 버튼 표시 */
   .editable-wrap:hover .edit-btn {
     opacity: 1;
   }
@@ -311,26 +309,71 @@
   }
   #appContent{display:none;}
 
+  /* 📱 모바일 반응형 완벽 최적화 (820px 이하 화면) */
   @media (max-width:820px){
+    body{padding:16px 12px 60px;}
     .form-grid{grid-template-columns:1fr 1fr;}
     .summary{grid-template-columns:repeat(2,1fr);}
+    
+    /* 등록 폼 내부그리드 조정 */
+    .ai-result-grid{grid-template-columns:1fr 1fr;}
+
+    /* 테이블을 버리고 카드 스타일로 변환 */
     table, thead, tbody, th, td, tr{display:block;}
     thead{display:none;}
+    
     tbody tr{
+      background:var(--card);
       border:1px solid var(--line);
-      border-radius:10px;
-      margin-bottom:10px;
-      padding:10px 12px;
+      border-radius:12px;
+      margin-bottom:14px;
+      padding:16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+      position:relative;
     }
-    tbody td{border:none;padding:6px 0;}
+    tbody td{
+      border:none;
+      padding:6px 0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    /* 각 항목 이름 라벨 표시 */
     tbody td::before{
       content:attr(data-label);
-      display:block;
-      font-size:11px;
+      font-size:12px;
       color:var(--sub);
-      margin-bottom:2px;
+      font-weight:600;
+      flex-shrink:0;
+      width:90px;
     }
-    .editable-wrap .edit-btn { opacity: 1; } /* 모바일에서는 터치가 어려우므로 항상 표시 */
+    tbody td input, tbody td select {
+      max-width: 65%;
+    }
+    .editable-wrap {
+      width: 65%;
+      justify-content: flex-end;
+    }
+    .editable-wrap .edit-btn { opacity: 1; } /* 모바일에서는 항상 수정 버튼 노출 */
+    
+    /* 상단 요약 카드 및 툴바 정렬 */
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .io-btns{justify-content:flex-end;}
+    
+    /* 삭제 버튼을 카드 우측 상단으로 이동 */
+    .del-wrap {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+    }
+    tbody td:last-child {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      padding: 0;
+    }
+    tbody td:last-child::before { display: none; }
+    .resv-row { width: 65%; }
   }
 
   /* ---- AI 이미지 자동등록 ---- */
@@ -601,10 +644,7 @@
 /* ===========================================================
    Apps Script 연동 설정
    =========================================================== */
-// ⬇️ 구글 Apps Script 배포 후 발급된 웹앱 URL로 반드시 교체하세요
 const API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
-
-// ⚠️ Apps Script(Code.gs)의 SECRET_KEY와 반드시 동일해야 합니다.
 const SITE_KEY = "130702";
 
 let items = [];
@@ -863,39 +903,29 @@ async function updateContact(id, value){
   render();
 }
 
-/* ✨ 텍스트 직접 수정 시작 함수 */
 function startInlineEdit(btn, id, field) {
   const wrap = btn.closest('.editable-wrap');
   const span = wrap.querySelector('.val-span');
   const currentValue = span.textContent;
-  
-  // 큰 따옴표가 있는 경우 HTML 속성 충돌을 막기 위해 치환
   const safeValue = currentValue.replace(/"/g, '&quot;');
 
-  // 기존 텍스트와 버튼을 숨기고 입력칸(input)으로 교체
   wrap.innerHTML = `
     <input type="text" class="resv-input" style="width:100%; border:1px solid var(--accent); outline:none;" 
            value="${safeValue}" 
            onblur="saveInlineEdit('${id}', '${field}', this.value)" 
            onkeydown="if(event.key === 'Enter') this.blur()">
   `;
-  
-  // 인풋박스에 포커스 주기
   const input = wrap.querySelector('input');
   input.focus();
 }
 
-/* ✨ 텍스트 직접 수정 저장 함수 */
 async function saveInlineEdit(id, field, value) {
   const it = items.find(i => i.id === id);
   if (!it) return;
-  
-  // 수정된 내용이 없으면 그냥 화면을 다시 그림 (취소 효과)
   if (it[field] === value) {
     render();
     return;
   }
-  
   const updated = Object.assign({}, it, { [field]: value });
   try {
     items = await callApi("update", { item: updated });
@@ -982,24 +1012,19 @@ function render(){
     return `
       <tr>
         <td data-label="지역"><span class="region-badge">${it.region}</span></td>
-        
-        <!-- ✨ 수정됨: 체험단 이름 직접 수정 UI -->
         <td data-label="체험단 이름" class="name-cell">
           <div class="editable-wrap">
             <span class="val-span">${escapeHtml(it.name)}</span>
             <button class="edit-btn" onclick="startInlineEdit(this, '${it.id}', 'name')" title="수정하기">✏️</button>
           </div>
         </td>
-        
-        <!-- ✨ 수정됨: 제공내역 직접 수정 UI -->
         <td data-label="제공내역">
           <div class="editable-wrap">
             <span class="val-span">${escapeHtml(it.provide) || ''}</span>
             <button class="edit-btn" onclick="startInlineEdit(this, '${it.id}', 'provide')" title="수정하기">✏️</button>
           </div>
         </td>
-        
-        <td data-label="상태" style="min-width: 155px;">
+        <td data-label="상태 / 예약일시" style="min-width: 155px;">
           <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
             ${Object.keys(statusMeta).map(k =>
               `<option value="${k}" ${k===it.status?'selected':''}>${statusMeta[k].label}</option>`
