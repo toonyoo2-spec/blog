@@ -95,7 +95,6 @@
     display:inline-block;
   }
 
-  /* ✨ 수정됨: 8칸 그리드로 확장 */
   .form-grid{
     display:grid;
     grid-template-columns:80px 1.2fr 1.5fr 1fr 1fr 110px 105px 115px;
@@ -187,8 +186,10 @@
     border-bottom:1px solid var(--line);
     white-space:nowrap;
   }
+  
+  /* ✨ 수정됨: 테이블 셀 패딩을 줄여 전체 높이 압축 */
   tbody td{
-    padding:12px 10px;
+    padding:8px 8px;
     border-bottom:1px solid var(--line);
     vertical-align:middle;
   }
@@ -203,13 +204,16 @@
   }
   .name-cell{font-weight:600;}
   .deadline-cell.urgent{color:#b3452f;font-weight:600;}
+  
+  /* ✨ 수정됨: 상태 셀 크기 축소 */
   .status-select{
-    font-size:12.5px;
-    padding:6px 8px;
+    font-size:12px;
+    padding:4px 6px;
     border-radius:6px;
     border:1px solid transparent;
     font-weight:600;
     cursor:pointer;
+    width:100%;
   }
   .status-wait{background:var(--wait-bg);color:var(--wait-ink);}
   .status-confirm{background:var(--conf-bg);color:var(--conf-ink);}
@@ -217,8 +221,8 @@
   .status-end{background:var(--end-bg);color:var(--end-ink);}
 
   .platform-select{
-    font-size:12.5px;
-    padding:6px 8px;
+    font-size:12px;
+    padding:4px 6px;
     border-radius:6px;
     border:1px solid var(--line);
     background:#f5f4f0;
@@ -227,17 +231,36 @@
   }
 
   .address-input, .contact-input {
-    font-size:12.5px;
-    padding:6px 8px;
+    font-size:12px;
+    padding:4px 6px;
     min-width:110px;
   }
 
-  .resv-input{
-    font-size:12px;
-    padding:5px 6px;
-    margin-top:5px;
-    width:100%;
+  /* ✨ 수정됨: 예약일시를 한 줄로(나란히) 배치하는 레이아웃 */
+  .resv-row {
+    display:flex;
+    gap:4px;
+    margin-top:4px;
   }
+  .resv-input {
+    font-size:11px;
+    padding:4px;
+    border:1px solid var(--line);
+    border-radius:4px;
+  }
+  .date-short {
+    width:70px;
+    flex-shrink:0;
+  }
+  /* ✨ 브라우저 단에서 달력 년도(YYYY) 숨기기 */
+  .date-short::-webkit-datetime-edit-year-field { 
+    display: none; 
+  }
+  .time-short {
+    flex-grow:1;
+    min-width:65px;
+  }
+
   .del-btn{
     background:none;
     border:none;
@@ -350,7 +373,6 @@
     margin-bottom:14px;
   }
 
-  /* ✨ 수정됨: 7칸 그리드로 확장 */
   .ai-result-grid{
     display:grid;
     grid-template-columns:80px 1.2fr 1.5fr 1fr 1fr 110px 115px;
@@ -414,7 +436,6 @@
         <label>주소</label>
         <input id="in-address" placeholder="예: 서울시 강남구 ...">
       </div>
-      <!-- ✨ 예약문의 필드 추가됨 -->
       <div class="field">
         <label>예약문의</label>
         <input id="in-contact" placeholder="예: 010-1234-5678">
@@ -486,7 +507,6 @@
         <label>주소 (시/군/구 제외)</label>
         <input id="ai-address">
       </div>
-      <!-- ✨ 예약문의 폼 추가됨 -->
       <div class="field">
         <label>예약문의</label>
         <input id="ai-contact">
@@ -532,7 +552,7 @@
           <th>상태 / 예약일시</th>
           <th>플랫폼</th>
           <th>주소</th>
-          <th>예약문의</th> <!-- ✨ 추가됨 -->
+          <th>예약문의</th>
           <th>마감일자</th>
           <th></th>
         </tr>
@@ -625,7 +645,7 @@ async function analyzeAiImage(){
     document.getElementById('ai-name').value = r.name || "";
     document.getElementById('ai-provide').value = r.provide || "";
     document.getElementById('ai-address').value = r.address || "";
-    document.getElementById('ai-contact').value = r.contact || ""; // ✨ 매핑 추가
+    document.getElementById('ai-contact').value = r.contact || "";
     document.getElementById('ai-deadline').value = normalizeDate(r.deadline) || "";
     document.getElementById('ai-platform').value = platformList.includes(r.platform) ? r.platform : "기타";
 
@@ -649,7 +669,7 @@ async function confirmAiAdd(){
     name,
     provide: document.getElementById('ai-provide').value.trim(),
     address: document.getElementById('ai-address').value.trim(),
-    contact: document.getElementById('ai-contact').value.trim(), // ✨ 전송 추가
+    contact: document.getElementById('ai-contact').value.trim(),
     deadline: document.getElementById('ai-deadline').value,
     status: "wait",
     platform: document.getElementById('ai-platform').value,
@@ -677,19 +697,16 @@ function resetAiPanel(){
   document.getElementById('ai-status').style.display = "none";
 }
 
-// 서버에서 어떤 형식(Date 객체 문자열, ISO 문자열 등)으로 날짜가 오든
-// 항상 "YYYY-MM-DD" 형태로 정리해주는 함수
 function normalizeDate(v){
   if(!v) return "";
   const d = new Date(v);
-  if(isNaN(d.getTime())) return String(v); // 파싱 안 되면 원본 그대로
+  if(isNaN(d.getTime())) return String(v);
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
 
-// 서버(Apps Script)로 POST 요청 보내는 공통 함수
 async function callApi(action, payload) {
   const res = await fetch(API_URL, {
     method: "POST",
@@ -706,7 +723,7 @@ async function addItem(){
   const name = document.getElementById('in-name').value.trim();
   const provide = document.getElementById('in-provide').value.trim();
   const address = document.getElementById('in-address').value.trim();
-  const contact = document.getElementById('in-contact').value.trim(); // ✨ 추가
+  const contact = document.getElementById('in-contact').value.trim();
   const deadline = document.getElementById('in-deadline').value;
   const status = document.getElementById('in-status').value;
   const platform = document.getElementById('in-platform').value;
@@ -715,7 +732,7 @@ async function addItem(){
 
   const newItem = {
     id: uid(),
-    region, name, provide, address, contact, deadline, status, platform, // ✨ contact 추가
+    region, name, provide, address, contact, deadline, status, platform,
     resvDate: "", resvTime: ""
   };
 
@@ -729,7 +746,7 @@ async function addItem(){
   document.getElementById('in-name').value = "";
   document.getElementById('in-provide').value = "";
   document.getElementById('in-address').value = "";
-  document.getElementById('in-contact').value = ""; // ✨ 초기화 추가
+  document.getElementById('in-contact').value = "";
   document.getElementById('in-deadline').value = "";
   document.getElementById('in-status').value = "wait";
   document.getElementById('in-platform').value = "디너의여왕";
@@ -800,7 +817,6 @@ async function updateAddress(id, value){
   render();
 }
 
-// ✨ 연락처 업데이트 함수 추가
 async function updateContact(id, value){
   const it = items.find(i => i.id === id);
   if (!it) return;
@@ -830,7 +846,6 @@ function isUrgent(deadline){
 }
 
 function render(){
-  // summary
   const counts = { wait:0, confirm:0, done:0, end:0 };
   items.forEach(it => counts[it.status]++);
   document.getElementById('summary').innerHTML = `
@@ -840,7 +855,6 @@ function render(){
     <div class="sum-card end"><div class="num">${counts.end}</div><div class="lbl">종료</div></div>
   `;
 
-  // tabs
   const tabDefs = [
     {key:"all", label:`전체 (${items.length})`},
     {key:"wait", label:`예약대기 (${counts.wait})`},
@@ -852,7 +866,6 @@ function render(){
     `<button class="tab ${filter===t.key?'active':''}" onclick="setFilter('${t.key}')">${t.label}</button>`
   ).join('');
 
-  // rows
   let list = filter === "all" ? items.slice() : items.filter(it => it.status === filter);
   const statusOrder = { confirm:0, wait:1, done:2, end:3 };
   list.sort((a,b) => {
@@ -879,13 +892,17 @@ function render(){
 
   tbody.innerHTML = list.map(it => {
     const urgent = it.status === "wait" && isUrgent(it.deadline);
+    
+    // ✨ 수정됨: 예약완료 시 입력칸을 한 줄로 압축한 resv-row 적용
     const resvBlock = it.status === "confirm" ? `
-      <input type="date" class="resv-input" value="${normalizeDate(it.resvDate)}"
-        onchange="updateResv('${it.id}','resvDate',this.value)">
-      <select class="resv-input" onchange="updateResv('${it.id}','resvTime',this.value)">
-        <option value="">시간 선택</option>
-        ${hourOptions(it.resvTime)}
-      </select>
+      <div class="resv-row">
+        <input type="date" class="resv-input date-short" value="${normalizeDate(it.resvDate)}"
+          onchange="updateResv('${it.id}','resvDate',this.value)">
+        <select class="resv-input time-short" onchange="updateResv('${it.id}','resvTime',this.value)">
+          <option value="">시간</option>
+          ${hourOptions(it.resvTime)}
+        </select>
+      </div>
     ` : "";
 
     return `
@@ -893,7 +910,7 @@ function render(){
         <td data-label="지역"><span class="region-badge">${it.region}</span></td>
         <td data-label="체험단 이름" class="name-cell">${escapeHtml(it.name)}</td>
         <td data-label="제공내역">${escapeHtml(it.provide) || '-'}</td>
-        <td data-label="상태">
+        <td data-label="상태" style="min-width: 155px;">
           <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
             ${Object.keys(statusMeta).map(k =>
               `<option value="${k}" ${k===it.status?'selected':''}>${statusMeta[k].label}</option>`
@@ -911,7 +928,6 @@ function render(){
             placeholder="주소 입력"
             onchange="updateAddress('${it.id}', this.value)">
         </td>
-        <!-- ✨ 예약문의 테이블 열 추가됨 -->
         <td data-label="예약문의">
           <input class="contact-input" value="${escapeHtml(it.contact || '')}"
             placeholder="연락처 등"
@@ -980,7 +996,6 @@ async function loadInitialData(){
   }
   render();
 
-  // 다른 사람이 시트나 다른 창에서 수정한 내용을 주기적으로 반영 (10초마다)
   setInterval(async () => {
     try {
       const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
