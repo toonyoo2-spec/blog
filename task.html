@@ -157,7 +157,6 @@
     font-size:13.5px;
     border:1px dashed var(--line);
     border-radius:14px;
-    grid-column: 1 / -1;
   }
 
   /* ---- Detail / edit panel (modal) ---- */
@@ -257,6 +256,8 @@
     opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:100;
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  #appContent{display:none;}
   
   /* 📱 모바일 화면 최적화 (640px 이하) */
   @media (max-width:640px){
@@ -264,13 +265,13 @@
     .panel{padding:20px 16px 24px;}
     .overlay{padding:20px 10px;}
     .grid{grid-template-columns:1fr;}
-    .card .edit-controls{opacity:1;}
+    .card .edit-controls{opacity:1;} /* 모바일에서는 편집 버튼 항상 노출 */
     .notion-embed iframe{height:320px;}
   }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="appContent">
 
   <header>
     <div>
@@ -326,7 +327,7 @@
         <label>이미지</label>
         <div class="gallery" id="editGallery"></div>
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
-        <p class="upload-hint">사진을 눌러 업로드 · 새로운 스프레드시트와 연동되어 저장되며, 여러 장 추가할 수 있어요</p>
+        <p class="upload-hint">사진을 눌러 업로드 · 이 브라우저에 저장되며(로컬 저장), 여러 장 추가할 수 있어요</p>
       </div>
     </div>
 
@@ -347,400 +348,364 @@
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===========================================================
-   Apps Script 연동 설정 (새로운 스프레드시트 웹 앱 URL 적용)
-   =========================================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbz0vp13-9SmWkA0DBCquK1ii0oiR2Af8AoWeMM5Tg0IjhEULueXCI6Pjwt3kvTwEyTA9g/exec";
-const SITE_KEY = "130702";
+(function(){
+  const STORAGE_KEY = 'task_projects_v1';
+  const MAX_IMG_DIM = 1400;   // 업로드 이미지 최대 가로/세로(px), 넘으면 축소
+  const JPEG_QUALITY = 0.82;
 
-let projects = [];
-let editModeOn = false;
-let activeId = null;
-let isNewDraft = false;
-let draftImages = [];
+  let projects = [];
+  let editModeOn = false;
+  let activeId = null;      // 현재 패널에 열려있는 프로젝트 id
+  let isNewDraft = false;   // 신규 생성 중인지
+  let draftImages = [];     // 편집 중 임시 이미지 배열
 
-const MAX_IMG_DIM = 1200;
-const JPEG_QUALITY = 0.8;
+  const el = (id) => document.getElementById(id);
+  const grid = el('grid');
+  const overlay = el('overlay');
 
-const el = (id) => document.getElementById(id);
-const grid = el('grid');
-const overlay = el('overlay');
-
-function showToast(msg){
-  const t = el('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(showToast._tm);
-  showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
-}
-
-function uid(){ 
-  return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); 
-}
-
-/* ---------- API 통신 함수 ---------- */
-async function callApi(action, payload) {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(Object.assign({ action, key: SITE_KEY }, payload))
-  });
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error || "요청 실패");
-  return data.items;
-}
-
-/* ---------- 렌더링 ---------- */
-function render(){
-  grid.innerHTML = '';
-  if(projects.length === 0 && !editModeOn){
-    grid.innerHTML = '<div class="empty-state">아직 등록된 프로젝트가 없어요.</div>';
-  }
-  projects.forEach(p => grid.appendChild(renderCard(p)));
-
-  if(editModeOn){
-    const addCard = document.createElement('button');
-    addCard.className = 'add-card';
-    addCard.innerHTML = '<span class="plus">+</span><span>새 프로젝트</span>';
-    addCard.onclick = () => openPanel(null);
-    grid.appendChild(addCard);
-  }
-}
-
-function renderCard(p){
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.onclick = () => openPanel(p.id, false);
-
-  const thumb = document.createElement('div');
-  thumb.className = 'thumb';
-  if(p.images && p.images.length){
-    const img = document.createElement('img');
-    img.src = p.images[0];
-    thumb.appendChild(img);
-  } else {
-    thumb.textContent = 'NO IMAGE';
-  }
-
-  const body = document.createElement('div');
-  body.className = 'body';
-  body.innerHTML = `
-    <span class="role">${escapeHtml(p.role || '')}</span>
-    <h3>${escapeHtml(p.title || '제목 없음')}</h3>
-    <p class="excerpt">${escapeHtml(p.desc || '')}</p>
-    <div class="meta-row">
-      ${p.notion ? '<span>노션 연결됨</span>' : '<span>노션 미연결</span>'}
-      ${p.images && p.images.length ? `<span class="dot"></span><span>사진 ${p.images.length}장</span>` : ''}
-    </div>
-  `;
-
-  card.appendChild(thumb);
-  card.appendChild(body);
-
-  if(editModeOn){
-    const controls = document.createElement('div');
-    controls.className = 'edit-controls';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'icon-btn';
-    editBtn.title = '편집';
-    editBtn.textContent = '✎';
-    editBtn.onclick = (e) => { e.stopPropagation(); openPanel(p.id, true); };
-    const delBtn = document.createElement('button');
-    delBtn.className = 'icon-btn';
-    delBtn.title = '삭제';
-    delBtn.textContent = '🗑';
-    delBtn.onclick = (e) => { e.stopPropagation(); removeProject(p.id); };
-    controls.appendChild(editBtn);
-    controls.appendChild(delBtn);
-    card.appendChild(controls);
-  }
-  return card;
-}
-
-function escapeHtml(s){
-  return String(s || "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-/* ---------- 패널 열기/닫기 ---------- */
-function openPanel(id, startInEdit){
-  isNewDraft = (id === null);
-  activeId = isNewDraft ? uid() : id;
-  const p = isNewDraft
-    ? { id: activeId, title:'', role:'', desc:'', notion:'', images:[], createdAt: Date.now() }
-    : projects.find(x => x.id === id);
-
-  if(!p) return;
-  draftImages = (p.images || []).slice();
-
-  el('panelTag').textContent = isNewDraft ? '새 프로젝트' : '프로젝트';
-  el('deleteBtn').style.display = isNewDraft ? 'none' : (editModeOn ? 'inline-block' : 'none');
-
-  if(isNewDraft || startInEdit){
-    enterEditUI(p);
-  } else {
-    enterViewUI(p);
-  }
-  overlay.classList.add('open');
-}
-
-function closePanel(){
-  overlay.classList.remove('open');
-  activeId = null;
-  isNewDraft = false;
-  draftImages = [];
-}
-
-function enterViewUI(p){
-  el('viewMode').style.display = 'block';
-  el('editMode').style.display = 'none';
-  el('cancelBtn').style.display = 'none';
-  el('saveBtn').style.display = 'none';
-  el('editThisBtn').style.display = editModeOn ? 'inline-block' : 'none';
-  el('deleteBtn').style.display = editModeOn ? 'inline-block' : 'none';
-
-  el('viewTitle').textContent = p.title || '제목 없음';
-  el('viewRole').textContent = p.role || '';
-  el('viewRole').style.display = p.role ? 'block' : 'none';
-  el('viewDesc').textContent = p.desc || '';
-  el('viewDesc').style.display = p.desc ? 'block' : 'none';
-
-  const notionArea = el('viewNotionArea');
-  notionArea.innerHTML = '';
-  if(p.notion){
-    const embeddable = /notion\.(so|site)/.test(p.notion);
-    const block = document.createElement('div');
-    block.className = 'notion-block';
-    block.innerHTML = `<span class="label">${escapeHtml(p.notion)}</span>`;
-    const link = document.createElement('a');
-    link.href = p.notion; link.target = '_blank'; link.rel = 'noopener';
-    link.textContent = '노션에서 열기 →';
-    block.appendChild(link);
-    notionArea.appendChild(block);
-
-    if(embeddable){
-      const embedWrap = document.createElement('div');
-      embedWrap.className = 'notion-embed';
-      embedWrap.innerHTML = `<iframe src="${p.notion}" allowfullscreen></iframe>`;
-      notionArea.appendChild(embedWrap);
-    }
-  }
-
-  const gallery = el('viewGallery');
-  gallery.innerHTML = '';
-  (p.images || []).forEach(src => {
-    const cell = document.createElement('div');
-    cell.className = 'img-cell';
-    const img = document.createElement('img');
-    img.src = src;
-    img.onclick = () => openLightbox(src);
-    cell.appendChild(img);
-    gallery.appendChild(cell);
-  });
-}
-
-function enterEditUI(p){
-  el('viewMode').style.display = 'none';
-  el('editMode').style.display = 'block';
-  el('cancelBtn').style.display = 'inline-block';
-  el('saveBtn').style.display = 'inline-block';
-  el('editThisBtn').style.display = 'none';
-  el('deleteBtn').style.display = isNewDraft ? 'none' : 'inline-block';
-
-  el('fTitle').value = p.title || '';
-  el('fRole').value = p.role || '';
-  el('fDesc').value = p.desc || '';
-  el('fNotion').value = p.notion || '';
-
-  renderEditGallery();
-}
-
-function renderEditGallery(){
-  const g = el('editGallery');
-  g.innerHTML = '';
-  draftImages.forEach((src, idx) => {
-    const cell = document.createElement('div');
-    cell.className = 'img-cell';
-    const img = document.createElement('img');
-    img.src = src;
-    img.onclick = () => openLightbox(src);
-    const rm = document.createElement('button');
-    rm.type = 'button';
-    rm.className = 'rm'; rm.textContent = '✕';
-    rm.onclick = (e) => { e.stopPropagation(); draftImages.splice(idx,1); renderEditGallery(); };
-    cell.appendChild(img);
-    cell.appendChild(rm);
-    g.appendChild(cell);
-  });
-  const tile = document.createElement('button');
-  tile.type = 'button';
-  tile.className = 'upload-tile';
-  tile.innerHTML = '<span class="plus">+</span><span>업로드</span>';
-  tile.onclick = () => {
-    let input = el('fileInput');
-    if(!input){
-      input = document.createElement('input');
-      input.type = 'file';
-      input.id = 'fileInput';
-      input.accept = 'image/*';
-      input.multiple = true;
-      input.style.display = 'none';
-      input.onchange = handleImageUpload;
-      document.body.appendChild(input);
-    }
-    input.click();
-  };
-  g.appendChild(tile);
-}
-
-async function handleImageUpload(e){
-  const files = Array.from(e.target.files || []);
-  for(const file of files){
+  function load(){
     try{
-      const dataUrl = await resizeImageToDataUrl(file, MAX_IMG_DIM, JPEG_QUALITY);
-      draftImages.push(dataUrl);
-    }catch(err){
-      showToast('이미지를 불러오지 못했어요: ' + file.name);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      projects = raw ? JSON.parse(raw) : seedData();
+    }catch(e){
+      projects = seedData();
     }
   }
-  e.target.value = '';
-  renderEditGallery();
-}
-
-function resizeImageToDataUrl(file, maxDim, quality){
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('read error'));
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('decode error'));
-      img.onload = () => {
-        let { width, height } = img;
-        if(width > maxDim || height > maxDim){
-          const ratio = Math.min(maxDim / width, maxDim / height);
-          width = Math.round(width * ratio);
-          height = Math.round(height * ratio);
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
-function openLightbox(src){
-  el('lightboxImg').src = src;
-  el('lightbox').classList.add('open');
-}
-el('lightbox').addEventListener('click', () => el('lightbox').classList.remove('open'));
-
-/* ---------- 서버 동기화 저장 / 삭제 ---------- */
-async function saveDraft(){
-  const title = el('fTitle').value.trim();
-  if(!title){
-    showToast('프로젝트 이름을 입력해주세요.');
-    return;
-  }
-
-  const itemData = {
-    id: activeId,
-    title: title,
-    role: el('fRole').value.trim(),
-    desc: el('fDesc').value.trim(),
-    notion: el('fNotion').value.trim(),
-    images: draftImages.slice(),
-    createdAt: Date.now()
-  };
-
-  const action = isNewDraft ? "add" : "update";
-  
-  try {
-    showToast('저장 중...');
-    projects = await callApi(action, { item: itemData });
-    render();
-    showToast('저장 완료!');
-    closePanel();
-  } catch (err) {
-    alert("저장 실패: " + err.message);
-  }
-}
-
-async function removeProject(id){
-  if(!confirm('이 프로젝트를 삭제할까요? 구글 스프레드시트에서도 삭제됩니다.')) return;
-  try {
-    projects = await callApi("delete", { id });
-    render();
-    showToast('삭제 완료');
-    if(activeId === id) closePanel();
-  } catch (err) {
-    alert("삭제 실패: " + err.message);
-  }
-}
-
-/* ---------- 초기 데이터 로드 ---------- */
-async function loadInitialData(){
-  try{
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
-    const data = await res.json();
-    if (data.ok && Array.isArray(data.items)) {
-      projects = data.items;
+  function save(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    }catch(e){
+      showToast('저장 공간이 부족해요. 이미지를 줄여주세요.');
     }
-  }catch(e){
-    console.error("데이터 로드 실패:", e);
   }
-  render();
-
-  // 10초마다 자동 동기화
-  setInterval(async () => {
-    try {
-      const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
-      const data = await res.json();
-      if (data.ok && Array.isArray(data.items)) {
-        projects = data.items;
-        render();
+  function seedData(){
+    return [
+      {
+        id: cryptoId(),
+        title: '첫 프로젝트를 추가해보세요',
+        role: '예시 카드',
+        desc: '편집 모드를 켜고 "새 프로젝트" 카드를 눌러 실제 프로젝트로 바꿔주세요. 텍스트, 이미지, 노션 링크를 자유롭게 넣을 수 있어요.',
+        notion: '',
+        images: [],
+        createdAt: Date.now()
       }
-    } catch (e) { /* 조용히 무시 */ }
-  }, 10000);
-}
-
-/* ---------- 이벤트 바인딩 ---------- */
-el('editModeBtn').addEventListener('click', () => {
-  editModeOn = !editModeOn;
-  el('editModeBtn').textContent = editModeOn ? '편집 모드 끄기' : '편집 모드';
-  el('editModeBtn').classList.toggle('primary', editModeOn);
-  render();
-});
-
-el('closeBtn').addEventListener('click', closePanel);
-el('cancelBtn').addEventListener('click', () => {
-  if(isNewDraft){ closePanel(); return; }
-  const p = projects.find(x => x.id === activeId);
-  if(p) enterViewUI(p);
-});
-el('saveBtn').addEventListener('click', saveDraft);
-el('editThisBtn').addEventListener('click', () => {
-  const p = projects.find(x => x.id === activeId);
-  if(!p) return;
-  draftImages = (p.images || []).slice();
-  enterEditUI(p);
-});
-el('deleteBtn').addEventListener('click', () => {
-  if(activeId) removeProject(activeId);
-});
-overlay.addEventListener('click', (e) => { if(e.target === overlay) closePanel(); });
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape'){
-    if(el('lightbox').classList.contains('open')) el('lightbox').classList.remove('open');
-    else if(overlay.classList.contains('open')) closePanel();
+    ];
   }
-});
+  function cryptoId(){
+    return 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  }
 
-// 시작 시 스프레드시트 데이터 불러오기
-loadInitialData();
+  function showToast(msg){
+    const t = el('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  /* ---------- 렌더링 ---------- */
+  function render(){
+    grid.innerHTML = '';
+    if(projects.length === 0 && !editModeOn){
+      grid.innerHTML = '<div class="empty-state">아직 등록된 프로젝트가 없어요.</div>';
+    }
+    projects.forEach(p => grid.appendChild(renderCard(p)));
+
+    if(editModeOn){
+      const addCard = document.createElement('button');
+      addCard.className = 'add-card';
+      addCard.innerHTML = '<span class="plus">+</span><span>새 프로젝트</span>';
+      addCard.onclick = () => openPanel(null);
+      grid.appendChild(addCard);
+    }
+  }
+
+  function renderCard(p){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openPanel(p.id, false);
+
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb';
+    if(p.images && p.images.length){
+      const img = document.createElement('img');
+      img.src = p.images[0];
+      thumb.appendChild(img);
+    } else {
+      thumb.textContent = 'NO IMAGE';
+    }
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    body.innerHTML = `
+      <span class="role">${escapeHtml(p.role || '')}</span>
+      <h3>${escapeHtml(p.title || '제목 없음')}</h3>
+      <p class="excerpt">${escapeHtml(p.desc || '')}</p>
+      <div class="meta-row">
+        ${p.notion ? '<span>노션 연결됨</span>' : '<span>노션 미연결</span>'}
+        ${p.images && p.images.length ? `<span class="dot"></span><span>사진 ${p.images.length}장</span>` : ''}
+      </div>
+    `;
+
+    card.appendChild(thumb);
+    card.appendChild(body);
+
+    if(editModeOn){
+      const controls = document.createElement('div');
+      controls.className = 'edit-controls';
+      const editBtn = document.createElement('button');
+      editBtn.className = 'icon-btn';
+      editBtn.title = '편집';
+      editBtn.textContent = '✎';
+      editBtn.onclick = (e) => { e.stopPropagation(); openPanel(p.id, true); };
+      const delBtn = document.createElement('button');
+      delBtn.className = 'icon-btn';
+      delBtn.title = '삭제';
+      delBtn.textContent = '🗑';
+      delBtn.onclick = (e) => { e.stopPropagation(); removeProject(p.id); };
+      controls.appendChild(editBtn);
+      controls.appendChild(delBtn);
+      card.appendChild(controls);
+    }
+    return card;
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  /* ---------- 패널 열기/닫기 ---------- */
+  function openPanel(id, startInEdit){
+    isNewDraft = (id === null);
+    activeId = isNewDraft ? cryptoId() : id;
+    const p = isNewDraft
+      ? { id: activeId, title:'', role:'', desc:'', notion:'', images:[], createdAt: Date.now() }
+      : projects.find(x => x.id === id);
+
+    draftImages = (p.images || []).slice();
+
+    el('panelTag').textContent = isNewDraft ? '새 프로젝트' : '프로젝트';
+    el('deleteBtn').style.display = isNewDraft ? 'none' : (editModeOn ? 'inline-block' : 'none');
+
+    if(isNewDraft || startInEdit){
+      enterEditUI(p);
+    } else {
+      enterViewUI(p);
+    }
+    overlay.classList.add('open');
+  }
+
+  function closePanel(){
+    overlay.classList.remove('open');
+    activeId = null;
+    isNewDraft = false;
+    draftImages = [];
+  }
+
+  function enterViewUI(p){
+    el('viewMode').style.display = 'block';
+    el('editMode').style.display = 'none';
+    el('cancelBtn').style.display = 'none';
+    el('saveBtn').style.display = 'none';
+    el('editThisBtn').style.display = editModeOn ? 'inline-block' : 'none';
+    el('deleteBtn').style.display = editModeOn ? 'inline-block' : 'none';
+
+    el('viewTitle').textContent = p.title || '제목 없음';
+    el('viewRole').textContent = p.role || '';
+    el('viewRole').style.display = p.role ? 'block' : 'none';
+    el('viewDesc').textContent = p.desc || '';
+    el('viewDesc').style.display = p.desc ? 'block' : 'none';
+
+    const notionArea = el('viewNotionArea');
+    notionArea.innerHTML = '';
+    if(p.notion){
+      const embeddable = /notion\.(so|site)/.test(p.notion);
+      const block = document.createElement('div');
+      block.className = 'notion-block';
+      block.innerHTML = `<span class="label">${escapeHtml(p.notion)}</span>`;
+      const link = document.createElement('a');
+      link.href = p.notion; link.target = '_blank'; link.rel = 'noopener';
+      link.textContent = '노션에서 열기 →';
+      block.appendChild(link);
+      notionArea.appendChild(block);
+
+      if(embeddable){
+        const embedWrap = document.createElement('div');
+        embedWrap.className = 'notion-embed';
+        embedWrap.innerHTML = `<iframe src="${p.notion}" allowfullscreen></iframe>`;
+        notionArea.appendChild(embedWrap);
+      }
+    }
+
+    const gallery = el('viewGallery');
+    gallery.innerHTML = '';
+    (p.images || []).forEach(src => {
+      const cell = document.createElement('div');
+      cell.className = 'img-cell';
+      const img = document.createElement('img');
+      img.src = src;
+      img.onclick = () => openLightbox(src);
+      cell.appendChild(img);
+      gallery.appendChild(cell);
+    });
+  }
+
+  function enterEditUI(p){
+    el('viewMode').style.display = 'none';
+    el('editMode').style.display = 'block';
+    el('cancelBtn').style.display = 'inline-block';
+    el('saveBtn').style.display = 'inline-block';
+    el('editThisBtn').style.display = 'none';
+    el('deleteBtn').style.display = isNewDraft ? 'none' : 'inline-block';
+
+    el('fTitle').value = p.title || '';
+    el('fRole').value = p.role || '';
+    el('fDesc').value = p.desc || '';
+    el('fNotion').value = p.notion || '';
+
+    renderEditGallery();
+  }
+
+  function renderEditGallery(){
+    const g = el('editGallery');
+    g.innerHTML = '';
+    draftImages.forEach((src, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'img-cell';
+      const img = document.createElement('img');
+      img.src = src;
+      img.onclick = () => openLightbox(src);
+      const rm = document.createElement('button');
+      rm.className = 'rm'; rm.textContent = '✕';
+      rm.onclick = (e) => { e.stopPropagation(); draftImages.splice(idx,1); renderEditGallery(); };
+      cell.appendChild(img);
+      cell.appendChild(rm);
+      g.appendChild(cell);
+    });
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'upload-tile';
+    tile.innerHTML = '<span class="plus">+</span><span>업로드</span>';
+    tile.onclick = () => el('fileInput').click();
+    g.appendChild(tile);
+  }
+
+  /* ---------- 이미지 업로드 (파일 선택 → 리사이즈 → base64) ---------- */
+  el('fileInput').addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files || []);
+    for(const file of files){
+      try{
+        const dataUrl = await resizeImageToDataUrl(file, MAX_IMG_DIM, JPEG_QUALITY);
+        draftImages.push(dataUrl);
+      }catch(err){
+        showToast('이미지를 불러오지 못했어요: ' + file.name);
+      }
+    }
+    e.target.value = '';
+    renderEditGallery();
+  });
+
+  function resizeImageToDataUrl(file, maxDim, quality){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('read error'));
+      reader.onload = () => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('decode error'));
+        img.onload = () => {
+          let { width, height } = img;
+          if(width > maxDim || height > maxDim){
+            const ratio = Math.min(maxDim / width, maxDim / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function openLightbox(src){
+    el('lightboxImg').src = src;
+    el('lightbox').classList.add('open');
+  }
+  el('lightbox').addEventListener('click', () => el('lightbox').classList.remove('open'));
+
+  /* ---------- 저장 / 삭제 / 취소 ---------- */
+  function saveDraft(){
+    const data = {
+      id: activeId,
+      title: el('fTitle').value.trim(),
+      role: el('fRole').value.trim(),
+      desc: el('fDesc').value.trim(),
+      notion: el('fNotion').value.trim(),
+      images: draftImages.slice(),
+      createdAt: Date.now()
+    };
+    if(!data.title){
+      showToast('프로젝트 이름을 입력해주세요.');
+      return;
+    }
+    if(isNewDraft){
+      projects.unshift(data);
+    } else {
+      const idx = projects.findIndex(x => x.id === activeId);
+      if(idx > -1) projects[idx] = { ...projects[idx], ...data };
+    }
+    save();
+    render();
+    showToast('저장했어요.');
+    closePanel();
+  }
+
+  function removeProject(id){
+    if(!confirm('이 프로젝트를 삭제할까요? 되돌릴 수 없어요.')) return;
+    projects = projects.filter(p => p.id !== id);
+    save();
+    render();
+    if(activeId === id) closePanel();
+  }
+
+  /* ---------- 이벤트 바인딩 ---------- */
+  el('editModeBtn').addEventListener('click', () => {
+    editModeOn = !editModeOn;
+    el('editModeBtn').textContent = editModeOn ? '편집 모드 끄기' : '편집 모드';
+    el('editModeBtn').classList.toggle('primary', editModeOn);
+    render();
+  });
+
+  el('closeBtn').addEventListener('click', closePanel);
+  el('cancelBtn').addEventListener('click', () => {
+    if(isNewDraft){ closePanel(); return; }
+    const p = projects.find(x => x.id === activeId);
+    enterViewUI(p);
+  });
+  el('saveBtn').addEventListener('click', saveDraft);
+  el('editThisBtn').addEventListener('click', () => {
+    const p = projects.find(x => x.id === activeId);
+    draftImages = (p.images || []).slice();
+    enterEditUI(p);
+  });
+  el('deleteBtn').addEventListener('click', () => {
+    if(activeId) removeProject(activeId);
+  });
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) closePanel(); });
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){
+      if(el('lightbox').classList.contains('open')) el('lightbox').classList.remove('open');
+      else if(overlay.classList.contains('open')) closePanel();
+    }
+  });
+
+  load();
+  render();
+})();
 </script>
 <script src="./auth-gate.js"></script>
 </body>
