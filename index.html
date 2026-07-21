@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KWAN 도구 허브</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --ink:#22221f;
+    --sub:#6b6a63;
+    --line:#e1dfd6;
+    --card:#ffffff;
+    --accent:#3a5a52;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:48px 20px 80px;
+  }
+  .wrap{max-width:960px;margin:0 auto;}
+
+  header{margin-bottom:36px;}
+  h1{
+    font-size:28px;
+    letter-spacing:-0.02em;
+    margin:0 0 6px;
+  }
+  header p{
+    margin:0;
+    color:var(--sub);
+    font-size:14px;
+  }
+
+  .section-title{
+    font-size:13px;
+    font-weight:600;
+    color:var(--sub);
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
+    gap:14px;
+    margin-bottom:40px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    text-decoration:none;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(34,34,31,0.07);
+    border-color:var(--accent);
+  }
+  .card .icon{
+    font-size:22px;
+    width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    background:#eef0ec;
+    border-radius:10px;
+  }
+  .card .title{font-size:15.5px;font-weight:700;}
+  .card .desc{font-size:12.5px;color:var(--sub);line-height:1.4;}
+
+  .card.empty{
+    border-style:dashed;
+    align-items:center;
+    justify-content:center;
+    color:var(--sub);
+    font-size:13px;
+    text-align:center;
+    min-height:110px;
+  }
+
+  footer{
+    margin-top:30px;
+    font-size:12px;
+    color:var(--sub);
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+  footer code{
+    background:#eeece5;
+    padding:1px 5px;
+    border-radius:4px;
+  }
+  #appContent{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap" id="appContent">
+
+  <header>
+    <h1>KWAN 도구 허브</h1>
+    <p>업무·개인용 도구 모음. 필요할 때 하나씩 열어서 씁니다.</p>
+  </header>
+
+  <div class="section-title">체험단 / 콘텐츠</div>
+  <div class="grid">
+    <a class="card" href="./review.html">
+      <div class="icon">📋</div>
+      <div class="title">체험단 관리</div>
+      <div class="desc">지역·제공내역·마감일·상태·예약일시·플랫폼까지 한 번에 관리</div>
+    </a>
+
+    <div class="card empty">+ 다음 도구 추가 예정</div>
+  </div>
+
+  <footer>
+    이 페이지(<code>index.html</code>)와 도구 파일들(예: <code>체험단관리.html</code>)을
+    같은 폴더에 넣어두면, index.html만 열어서 전체를 한 화면에서 이동할 수 있습니다.
+    새 도구를 만들면 위 grid 안에 카드(<code>&lt;a class="card"&gt;</code>)만 하나 추가하면 됩니다.
+  </footer>
+
+</div>
+<script src="./auth-gate.js"></script>
+</body>
+</html>
