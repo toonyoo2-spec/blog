@@ -1,365 +1,405 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KWAN 도구 허브</title>
-<style>
-  :root{
-    --bg:#f6f5f1;
-    --ink:#22221f;
-    --sub:#6b6a63;
-    --line:#e1dfd6;
-    --card:#ffffff;
-    --accent:#3a5a52;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KWAN 도구 허브</title>
+    <style>
+        :root {
+            --primary-color: #3a5a52;
+            --primary-light: #e7ede9;
+            --bg-color: #f6f5f1;
+            --card-bg: #ffffff;
+            --text-main: #22221f;
+            --text-sub: #6b6a63;
+            --border-color: #e1dfd6;
+            --radius: 14px;
+        }
 
-    --wait-bg:#fdf3d9;   --wait-ink:#8a6d16;
-    --conf-bg:#e2eef5;   --conf-ink:#1f5c82;
-    --done-bg:#e3ede4;   --done-ink:#2f6b3c;
-    --end-bg:#ececea;    --end-ink:#78766e;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
-    background:var(--bg);
-    color:var(--ink);
-    padding:48px 20px 80px;
-  }
-  .wrap{max-width:960px;margin:0 auto;}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-  header{margin-bottom:36px;}
-  h1{
-    font-size:28px;
-    letter-spacing:-0.02em;
-    margin:0 0 6px;
-  }
-  header p{
-    margin:0;
-    color:var(--sub);
-    font-size:14px;
-  }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 32px 20px 60px;
+        }
 
-  .section-title{
-    font-size:13px;
-    font-weight:600;
-    color:var(--sub);
-    margin:0 0 12px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .section-title::before{
-    content:"";
-    width:6px;height:6px;border-radius:50%;
-    background:var(--accent);
-    display:inline-block;
-  }
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+        }
 
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));
-    gap:14px;
-    margin-bottom:40px;
-  }
+        /* 허브 상단 타이틀 영역 */
+        header {
+            margin-bottom: 28px;
+        }
+        h1 {
+            font-size: 26px;
+            letter-spacing: -0.02em;
+            margin: 0 0 6px;
+        }
+        header p {
+            margin: 0;
+            color: var(--text-sub);
+            font-size: 13.5px;
+        }
 
-  .card{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:20px;
-    text-decoration:none;
-    color:var(--ink);
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    transition:transform .12s ease, box-shadow .12s ease;
-  }
-  .card:hover{
-    transform:translateY(-2px);
-    box-shadow:0 6px 16px rgba(34,34,31,0.07);
-    border-color:var(--accent);
-  }
-  .card .icon{
-    font-size:22px;
-    width:42px;height:42px;
-    display:flex;align-items:center;justify-content:center;
-    background:#eef0ec;
-    border-radius:10px;
-  }
-  .card .title{font-size:15.5px;font-weight:700;}
-  .card .desc{font-size:12.5px;color:var(--sub);line-height:1.4;}
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 28px 0 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::before {
+            content: "";
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--primary-color);
+            display: inline-block;
+        }
 
-  .card.empty{
-    border-style:dashed;
-    align-items:center;
-    justify-content:center;
-    color:var(--sub);
-    font-size:13px;
-    text-align:center;
-    min-height:110px;
-  }
+        /* 허브 카드 그리드 */
+        .hub-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .hub-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+        }
+        .hub-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34,34,31,.06);
+            border-color: #cfccbf;
+        }
+        .hub-card h3 {
+            font-size: 16px;
+            margin: 0;
+        }
+        .hub-card p {
+            font-size: 12.5px;
+            color: var(--text-sub);
+            line-height: 1.5;
+            margin: 0;
+        }
 
-  footer{
-    margin-top:30px;
-    font-size:12px;
-    color:var(--sub);
-    border-top:1px solid var(--line);
-    padding-top:16px;
-  }
-  footer code{
-    background:#eeece5;
-    padding:1px 5px;
-    border-radius:4px;
-  }
-  #appContent{display:none;}
+        /* 캘린더 감싸는 카드 컨테이너 */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
 
-  /* ---- 캘린더 ---- */
-  .cal-panel{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:20px;
-  }
-  .cal-header{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:18px;
-    margin-bottom:14px;
-  }
-  .cal-nav-btn{
-    border:1px solid var(--line);
-    background:#fff;
-    color:var(--sub);
-    width:30px;height:30px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:15px;
-    line-height:1;
-  }
-  .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
-  .cal-title{font-size:15.5px;font-weight:700;min-width:110px;text-align:center;}
+        /* 캘린더 영역 */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .calendar-header h2 {
+            font-size: 18px;
+            color: #111;
+            margin: 0;
+        }
+        .nav-btn {
+            background: #f1f3f5;
+            border: none;
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+        }
 
-  .cal-legend{
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-    justify-content:center;
-    margin-bottom:16px;
-    font-size:12px;
-    color:var(--sub);
-  }
-  .cal-legend span{display:flex;align-items:center;gap:5px;}
-  .cal-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
-  .dot.wait{background:var(--wait-ink);}
-  .dot.confirm{background:var(--conf-ink);}
-  .dot.done{background:var(--done-ink);}
-  .dot.end{background:var(--end-ink);}
+        .weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+        }
 
-  .cal-grid{
-    display:grid;
-    grid-template-columns:repeat(7,1fr);
-    gap:6px;
-  }
-  .cal-dow{
-    text-align:center;
-    font-size:11.5px;
-    color:var(--sub);
-    padding-bottom:6px;
-    font-weight:600;
-  }
-  .cal-cell{
-    min-height:82px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    padding:6px 6px;
-    background:#fdfcfa;
-    display:flex;
-    flex-direction:column;
-    gap:3px;
-    overflow:hidden;
-  }
-  .cal-cell.other-month{background:transparent;border-color:transparent;}
-  .cal-cell.today{border-color:var(--accent);}
-  .cal-daynum{font-size:11.5px;color:var(--sub);}
-  .cal-cell.today .cal-daynum{color:var(--accent);font-weight:700;}
-  .cal-event{
-    font-size:10.5px;
-    padding:2px 5px;
-    border-radius:4px;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    cursor:default;
-  }
-  .cal-event.wait{background:var(--wait-bg);color:var(--wait-ink);}
-  .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
-  .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
-  .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
-  .cal-event-time{font-weight:700;margin-right:3px;}
-  .cal-empty-msg{
-    text-align:center;
-    padding:30px 0;
-    color:var(--sub);
-    font-size:13px;
-  }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
 
-  /* 📱 모바일 화면 최적화 (640px 이하) */
-  @media (max-width:640px){
-    body{padding:24px 14px 60px;}
-    .grid{grid-template-columns:1fr;}
-    .cal-panel{padding:14px 10px;}
-    .cal-cell{min-height:64px;padding:4px 3px;gap:2px;}
-    .cal-daynum{font-size:10.5px;}
-    .cal-event{font-size:9px;padding:1px 3px;}
-  }
-</style>
+        .calendar-cell {
+            position: relative;
+            min-height: 80px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: background 0.2s;
+            overflow: hidden;
+        }
+        .calendar-cell:active {
+            background: #f8f9fa;
+        }
+        .day-number {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .other-month {
+            opacity: 0.3;
+        }
+
+        /* 모바일용 뱃지 */
+        .mobile-badge {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: var(--primary-light);
+            padding: 2px 5px;
+            border-radius: 4px;
+            width: fit-content;
+        }
+        .event-dot {
+            width: 5px; height: 5px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+        }
+        .event-count {
+            font-size: 10px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* PC용 시간 + 체험단명 표시 칩 (기본 숨김) */
+        .pc-events {
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 2px;
+            overflow: hidden;
+        }
+        .pc-event-chip {
+            font-size: 11px;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 2px 5px;
+            border-radius: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 600;
+        }
+
+        /* PC 화면(768px 이상)에서는 텍스트 칩을 보여줌 */
+        @media (min-width: 768px) {
+            .calendar-cell { min-height: 100px; }
+            .mobile-badge { display: none !important; }
+            .pc-events { display: flex; }
+        }
+
+        /* 모달 팝업 스타일 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: none;
+            justify-content: center; align-items: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+        .modal-content {
+            background: #fff;
+            width: 100%; max-width: 340px;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 14px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+        }
+        .modal-header h3 { font-size: 16px; color: #111; margin: 0; }
+        .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #666; }
+        .modal-body-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; }
+        .modal-event-item {
+            background: #f8f9fa;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: #333;
+            border-left: 3px solid var(--primary-color);
+            line-height: 1.4;
+        }
+    </style>
 </head>
 <body>
-<div class="wrap" id="appContent">
 
-  <header>
-    <h1>KWAN 도구 허브</h1>
-    <p>업무·개인용 도구 모음. 필요할 때 하나씩 열어서 씁니다.</p>
-  </header>
+<div class="wrap">
+    <!-- 허브 상단 타이틀 -->
+    <header>
+        <h1>KWAN 도구 허브</h1>
+        <p>업무·개인용 도구 모음. 필요할 때 하나씩 열어서 씁니다.</p>
+    </header>
 
-  <div class="section-title">체험단 / 콘텐츠</div>
-  <div class="grid">
-    <a class="card" href="./review.html">
-      <div class="icon">📋</div>
-      <div class="title">Blog</div>
-      <div class="desc">지역·제공내역·마감일·상태·예약일시·플랫폼까지 한 번에 관리</div>
-    </a>
-
-    <a class="card" href="./task.html">
-      <div class="icon">✅</div>
-      <div class="title">Task</div>
-      <div class="desc">노션 개인 페이지 연동 (할 일 관리)</div>
-    </a>
-
-    <div class="card empty">+ 다음 도구 추가 예정</div>
-  </div>
-
-  <div class="section-title">체험단 캘린더</div>
-  <div class="cal-panel">
-    <div class="cal-header">
-      <button class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
-      <div class="cal-title" id="calTitle"></div>
-      <button class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
+    <!-- 체험단 / 콘텐츠 카드 섹션 -->
+    <div class="section-title">체험단 / 콘텐츠</div>
+    <div class="hub-grid">
+        <a href="./review.html" class="hub-card">
+            <h3>Blog</h3>
+            <p>지역·제공내역·마감일·상태·예약일시·플랫폼까지 한 번에 관리</p>
+        </a>
+        <a href="./task.html" class="hub-card">
+            <h3>Task</h3>
+            <p>노션 개인 페이지 연동 (할 일 관리)</p>
+        </a>
     </div>
-    <div class="cal-legend">
-      <span><i class="dot confirm"></i>예약완료(예약일 기준)</span>
-    </div>
-    <div class="cal-grid" id="calGrid"></div>
-  </div>
 
+    <!-- 체험단 캘린더 섹션 -->
+    <div class="section-title">체험단 캘린더</div>
+    <div class="card">
+        <div class="calendar-header">
+            <button class="nav-btn">&lt;</button>
+            <h2>2026년 7월</h2>
+            <button class="nav-btn">&gt;</button>
+        </div>
+
+        <div class="weekdays">
+            <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+        </div>
+
+        <div class="calendar-grid">
+            <div class="calendar-cell other-month"><span class="day-number">28</span></div>
+            <div class="calendar-cell other-month"><span class="day-number">29</span></div>
+            <div class="calendar-cell other-month"><span class="day-number">30</span></div>
+            <div class="calendar-cell"><span class="day-number">1</span></div>
+            <div class="calendar-cell"><span class="day-number">2</span></div>
+            <div class="calendar-cell"><span class="day-number">3</span></div>
+            <div class="calendar-cell"><span class="day-number">4</span></div>
+
+            <div class="calendar-cell"><span class="day-number">5</span></div>
+            <div class="calendar-cell"><span class="day-number">6</span></div>
+            <div class="calendar-cell"><span class="day-number">7</span></div>
+            <div class="calendar-cell"><span class="day-number">8</span></div>
+            <div class="calendar-cell"><span class="day-number">9</span></div>
+            <div class="calendar-cell"><span class="day-number">10</span></div>
+            <div class="calendar-cell"><span class="day-number">11</span></div>
+
+            <div class="calendar-cell"><span class="day-number">12</span></div>
+            <div class="calendar-cell"><span class="day-number">13</span></div>
+            <div class="calendar-cell"><span class="day-number">14</span></div>
+            <div class="calendar-cell"><span class="day-number">15</span></div>
+            <div class="calendar-cell"><span class="day-number">16</span></div>
+            <div class="calendar-cell"><span class="day-number">17</span></div>
+            <div class="calendar-cell"><span class="day-number">18</span></div>
+
+            <div class="calendar-cell"><span class="day-number">19</span></div>
+            <div class="calendar-cell"><span class="day-number">20</span></div>
+            
+            <!-- 21일 -->
+            <div class="calendar-cell" onclick="openDateModal('2026년 7월 21일', ['19:00 - [보라]피트니스벨 화정 (예약완료)'])">
+                <span class="day-number">21</span>
+                <div class="mobile-badge"><span class="event-dot"></span><span class="event-count">1</span></div>
+                <div class="pc-events"><div class="pc-event-chip">19:00 피트니스벨</div></div>
+            </div>
+
+            <div class="calendar-cell"><span class="day-number">22</span></div>
+
+            <!-- 23일 -->
+            <div class="calendar-cell" onclick="openDateModal('2026년 7월 23일', ['19:00 - 중앙회식당 무의도'])">
+                <span class="day-number">23</span>
+                <div class="mobile-badge"><span class="event-dot"></span><span class="event-count">1</span></div>
+                <div class="pc-events"><div class="pc-event-chip">19:00 중앙회식당 무의도</div></div>
+            </div>
+
+            <div class="calendar-cell"><span class="day-number">24</span></div>
+
+            <!-- 25일 -->
+            <div class="calendar-cell" onclick="openDateModal('2026년 7월 25일', ['14:00 - 중앙회식당 무의도'])">
+                <span class="day-number">25</span>
+                <div class="mobile-badge"><span class="event-dot"></span><span class="event-count">1</span></div>
+                <div class="pc-events"><div class="pc-event-chip">14:00 중앙회식당 무의도</div></div>
+            </div>
+
+            <!-- 26일 -->
+            <div class="calendar-cell" onclick="openDateModal('2026년 7월 26일', ['14:00 - 일우담'])">
+                <span class="day-number">26</span>
+                <div class="mobile-badge"><span class="event-dot"></span><span class="event-count">1</span></div>
+                <div class="pc-events"><div class="pc-event-chip">14:00 일우담</div></div>
+            </div>
+
+            <div class="calendar-cell"><span class="day-number">27</span></div>
+            <div class="calendar-cell"><span class="day-number">28</span></div>
+            <div class="calendar-cell"><span class="day-number">29</span></div>
+            <div class="calendar-cell"><span class="day-number">30</span></div>
+            <div class="calendar-cell"><span class="day-number">31</span></div>
+            <div class="calendar-cell other-month"><span class="day-number">1</span></div>
+        </div>
+    </div>
 </div>
+
+<!-- 상세 일정 모달 팝업 -->
+<div id="eventModal" class="modal-overlay" onclick="closeOnOutsideClick(event)">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalDateTitle">날짜 제목</h3>
+            <button onclick="closeDateModal()" class="close-btn">&times;</button>
+        </div>
+        <div id="modalEventList" class="modal-body-list">
+            <!-- 자바스크립트로 동적 주입 -->
+        </div>
+    </div>
+</div>
+
 <script>
-/* ===========================================================
-   review.html 과 동일한 Apps Script 연동 (읽기 전용)
-   =========================================================== */
-const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
-// ⚠️ Apps Script(Code.gs)의 SECRET_KEY / review.html의 SITE_KEY와 반드시 동일해야 합니다.
-const CAL_SITE_KEY = "130702";
+    function openDateModal(dateStr, events) {
+        document.getElementById('modalDateTitle').innerText = dateStr;
+        const listContainer = document.getElementById('modalEventList');
+        listContainer.innerHTML = '';
 
-let calItems = [];
-let calCursor = new Date();
-calCursor.setDate(1);
+        if (events && events.length > 0) {
+            events.forEach(ev => {
+                const item = document.createElement('div');
+                item.className = 'modal-event-item';
+                item.innerText = ev;
+                listContainer.appendChild(item);
+            });
+        } else {
+            listContainer.innerHTML = '<div style="color:#888; font-size:13px; text-align:center; padding:12px;">등록된 일정이 없습니다.</div>';
+        }
 
-const calStatusLabel = { wait:"예약대기", confirm:"예약완료", done:"체험완료", end:"종료" };
-
-function calNormalizeDate(v){
-  if(!v) return "";
-  const d = new Date(v);
-  if(isNaN(d.getTime())) return "";
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const day = String(d.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-}
-
-// 예약완료(confirm) 상태인 항목만 예약일자(resvDate) 기준으로 캘린더에 표시
-function calEventDate(it){
-  if(it.status !== "confirm" || !it.resvDate) return "";
-  return calNormalizeDate(it.resvDate);
-}
-
-function calEscapeHtml(str){
-  return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-function calChangeMonth(delta){
-  calCursor.setMonth(calCursor.getMonth() + delta);
-  calRender();
-}
-
-function calRender(){
-  const y = calCursor.getFullYear();
-  const m = calCursor.getMonth(); // 0-11
-  document.getElementById('calTitle').textContent = `${y}년 ${m+1}월`;
-
-  // 이 달의 항목들을 날짜별로 묶기
-  const byDate = {};
-  calItems.forEach(it => {
-    const dateStr = calEventDate(it);
-    if(!dateStr) return;
-    const [ey, em] = dateStr.split('-').map(Number);
-    if(ey === y && em === m+1){
-      (byDate[dateStr] = byDate[dateStr] || []).push(it);
+        document.getElementById('eventModal').style.display = 'flex';
     }
-  });
 
-  const first = new Date(y, m, 1);
-  const startOffset = first.getDay(); // 0=일요일
-  const daysInMonth = new Date(y, m+1, 0).getDate();
-  const daysInPrevMonth = new Date(y, m, 0).getDate();
+    function closeDateModal() {
+        document.getElementById('eventModal').style.display = 'none';
+    }
 
-  const todayStr = calNormalizeDate(new Date());
-
-  const cells = [];
-  const dowLabels = ['일','월','화','수','목','금','토'];
-  dowLabels.forEach(l => cells.push(`<div class="cal-dow">${l}</div>`));
-
-  // 이전 달 채우기
-  for(let i = startOffset - 1; i >= 0; i--){
-    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
-  }
-
-  // 이번 달
-  for(let d = 1; d <= daysInMonth; d++){
-    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const isToday = dateStr === todayStr;
-    const dayItems = (byDate[dateStr] || []).slice().sort((a,b) => (a.resvTime||"").localeCompare(b.resvTime||""));
-    const eventsHtml = dayItems.map(it => {
-      const timeLabel = it.resvTime ? `${calEscapeHtml(it.resvTime)} ` : '';
-      return `<div class="cal-event ${it.status}" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
-    }).join('');
-    cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${eventsHtml}</div>`);
-  }
-
-  // 다음 달 채우기 (7의 배수로 맞춤)
-  const totalSoFar = startOffset + daysInMonth;
-  const trailing = (7 - (totalSoFar % 7)) % 7;
-  for(let d = 1; d <= trailing; d++){
-    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${d}</div></div>`);
-  }
-
-  document.getElementById('calGrid').innerHTML = cells.join('');
-}
-
-async function calLoad(){
-  try{
-    const res = await fetch(`${CAL_API_URL}?key=${encodeURIComponent(CAL_SITE_KEY)}`, { cache: "no-store" });
-    const data = await res.json();
-    if(data.ok && Array.isArray(data.items)) calItems = data.items;
-  }catch(e){
-    console.error("캘린더 데이터 로드 실패:", e);
-  }
-  calRender();
-}
-calLoad();
-setInterval(calLoad, 30000);
+    function closeOnOutsideClick(event) {
+        if (event.target.id === 'eventModal') {
+            closeDateModal();
+        }
+    }
 </script>
 <script src="./auth-gate.js"></script>
 </body>
