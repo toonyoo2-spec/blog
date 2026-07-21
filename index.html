@@ -12,6 +12,11 @@
     --line:#e1dfd6;
     --card:#ffffff;
     --accent:#3a5a52;
+
+    --wait-bg:#fdf3d9;   --wait-ink:#8a6d16;
+    --conf-bg:#e2eef5;   --conf-ink:#1f5c82;
+    --done-bg:#e3ede4;   --done-ink:#2f6b3c;
+    --end-bg:#ececea;    --end-ink:#78766e;
   }
   *{box-sizing:border-box;}
   body{
@@ -108,6 +113,100 @@
     border-radius:4px;
   }
   #appContent{display:none;}
+
+  /* ---- 캘린더 ---- */
+  .cal-panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+  }
+  .cal-header{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+    margin-bottom:14px;
+  }
+  .cal-nav-btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--sub);
+    width:30px;height:30px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+    line-height:1;
+  }
+  .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .cal-title{font-size:15.5px;font-weight:700;min-width:110px;text-align:center;}
+
+  .cal-legend{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:16px;
+    font-size:12px;
+    color:var(--sub);
+  }
+  .cal-legend span{display:flex;align-items:center;gap:5px;}
+  .cal-legend .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .dot.wait{background:var(--wait-ink);}
+  .dot.confirm{background:var(--conf-ink);}
+  .dot.done{background:var(--done-ink);}
+  .dot.end{background:var(--end-ink);}
+
+  .cal-grid{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:6px;
+  }
+  .cal-dow{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--sub);
+    padding-bottom:6px;
+    font-weight:600;
+  }
+  .cal-cell{
+    min-height:82px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:6px 6px;
+    background:#fdfcfa;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .cal-cell.other-month{background:transparent;border-color:transparent;}
+  .cal-cell.today{border-color:var(--accent);}
+  .cal-daynum{font-size:11.5px;color:var(--sub);}
+  .cal-cell.today .cal-daynum{color:var(--accent);font-weight:700;}
+  .cal-event{
+    font-size:10.5px;
+    padding:2px 5px;
+    border-radius:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    cursor:default;
+  }
+  .cal-event.wait{background:var(--wait-bg);color:var(--wait-ink);}
+  .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
+  .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
+  .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
+  .cal-empty-msg{
+    text-align:center;
+    padding:30px 0;
+    color:var(--sub);
+    font-size:13px;
+  }
+
+  @media (max-width:640px){
+    .cal-cell{min-height:58px;}
+    .cal-event{font-size:9.5px;}
+  }
 </style>
 </head>
 <body>
@@ -135,7 +234,123 @@
     <div class="card empty">+ 다음 도구 추가 예정</div>
   </div>
 
+  <div class="section-title">체험단 캘린더</div>
+  <div class="cal-panel">
+    <div class="cal-header">
+      <button class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
+      <div class="cal-title" id="calTitle"></div>
+      <button class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
+    </div>
+    <div class="cal-legend">
+      <span><i class="dot confirm"></i>예약완료(예약일 기준)</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
 </div>
+<script>
+/* ===========================================================
+   review.html 과 동일한 Apps Script 연동 (읽기 전용)
+   =========================================================== */
+const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
+
+let calItems = [];
+let calCursor = new Date();
+calCursor.setDate(1);
+
+const calStatusLabel = { wait:"예약대기", confirm:"예약완료", done:"체험완료", end:"종료" };
+
+function calNormalizeDate(v){
+  if(!v) return "";
+  const d = new Date(v);
+  if(isNaN(d.getTime())) return "";
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// 예약완료(confirm) 상태인 항목만 예약일자(resvDate) 기준으로 캘린더에 표시
+function calEventDate(it){
+  if(it.status !== "confirm" || !it.resvDate) return "";
+  return calNormalizeDate(it.resvDate);
+}
+
+function calEscapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function calChangeMonth(delta){
+  calCursor.setMonth(calCursor.getMonth() + delta);
+  calRender();
+}
+
+function calRender(){
+  const y = calCursor.getFullYear();
+  const m = calCursor.getMonth(); // 0-11
+  document.getElementById('calTitle').textContent = `${y}년 ${m+1}월`;
+
+  // 이 달의 항목들을 날짜별로 묶기
+  const byDate = {};
+  calItems.forEach(it => {
+    const dateStr = calEventDate(it);
+    if(!dateStr) return;
+    const [ey, em] = dateStr.split('-').map(Number);
+    if(ey === y && em === m+1){
+      (byDate[dateStr] = byDate[dateStr] || []).push(it);
+    }
+  });
+
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay(); // 0=일요일
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+
+  const todayStr = calNormalizeDate(new Date());
+
+  const cells = [];
+  const dowLabels = ['일','월','화','수','목','금','토'];
+  dowLabels.forEach(l => cells.push(`<div class="cal-dow">${l}</div>`));
+
+  // 이전 달 채우기
+  for(let i = startOffset - 1; i >= 0; i--){
+    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
+  }
+
+  // 이번 달
+  for(let d = 1; d <= daysInMonth; d++){
+    const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === todayStr;
+    const dayItems = (byDate[dateStr] || []);
+    const eventsHtml = dayItems.map(it =>
+      `<div class="cal-event ${it.status}" title="${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})">${calEscapeHtml(it.name)}</div>`
+    ).join('');
+    cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${eventsHtml}</div>`);
+  }
+
+  // 다음 달 채우기 (7의 배수로 맞춤)
+  const totalSoFar = startOffset + daysInMonth;
+  const trailing = (7 - (totalSoFar % 7)) % 7;
+  for(let d = 1; d <= trailing; d++){
+    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${d}</div></div>`);
+  }
+
+  document.getElementById('calGrid').innerHTML = cells.join('');
+}
+
+async function calLoad(){
+  try{
+    const res = await fetch(CAL_API_URL, { cache: "no-store" });
+    const data = await res.json();
+    if(data.ok && Array.isArray(data.items)) calItems = data.items;
+  }catch(e){
+    console.error("캘린더 데이터 로드 실패:", e);
+  }
+  calRender();
+}
+calLoad();
+setInterval(calLoad, 30000);
+</script>
 <script src="./auth-gate.js"></script>
 </body>
 </html>
