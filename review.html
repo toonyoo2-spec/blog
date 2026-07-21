@@ -538,6 +538,9 @@
 // ⬇️ 구글 Apps Script 배포 후 발급된 웹앱 URL로 반드시 교체하세요
 const API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
 
+// ⚠️ Apps Script(Code.gs)의 SECRET_KEY와 반드시 동일해야 합니다.
+const SITE_KEY = "130702";
+
 let items = [];
 let filter = "all";
 
@@ -596,6 +599,7 @@ async function analyzeAiImage(){
       headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({
         action: "analyzeImage",
+        key: SITE_KEY,
         imageBase64: aiImageBase64,
         mediaType: aiImageMediaType
       })
@@ -675,7 +679,7 @@ async function callApi(action, payload) {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(Object.assign({ action }, payload))
+    body: JSON.stringify(Object.assign({ action, key: SITE_KEY }, payload))
   });
   const data = await res.json();
   if (!data.ok) throw new Error(data.error || "요청 실패");
@@ -931,7 +935,7 @@ function importData(e){
 
 async function loadInitialData(){
   try{
-    const res = await fetch(API_URL, { cache: "no-store" });
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
     const data = await res.json();
     if (data.ok && Array.isArray(data.items)) items = data.items;
   }catch(e){
@@ -942,7 +946,7 @@ async function loadInitialData(){
   // 다른 사람이 시트나 다른 창에서 수정한 내용을 주기적으로 반영 (10초마다)
   setInterval(async () => {
     try {
-      const res = await fetch(API_URL, { cache: "no-store" });
+      const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
       const data = await res.json();
       if (data.ok && Array.isArray(data.items)) {
         items = data.items;

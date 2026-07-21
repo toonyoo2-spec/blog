@@ -254,6 +254,8 @@
    review.html 과 동일한 Apps Script 연동 (읽기 전용)
    =========================================================== */
 const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
+// ⚠️ Apps Script(Code.gs)의 SECRET_KEY / review.html의 SITE_KEY와 반드시 동일해야 합니다.
+const CAL_SITE_KEY = "130702";
 
 let calItems = [];
 let calCursor = new Date();
@@ -342,7 +344,7 @@ function calRender(){
 
 async function calLoad(){
   try{
-    const res = await fetch(CAL_API_URL, { cache: "no-store" });
+    const res = await fetch(`${CAL_API_URL}?key=${encodeURIComponent(CAL_SITE_KEY)}`, { cache: "no-store" });
     const data = await res.json();
     if(data.ok && Array.isArray(data.items)) calItems = data.items;
   }catch(e){
