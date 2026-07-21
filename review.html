@@ -89,7 +89,7 @@
 
   .form-grid{
     display:grid;
-    grid-template-columns:90px 1.1fr 1.3fr 120px 110px 120px;
+    grid-template-columns:90px 1fr 1.1fr 1.2fr 120px 110px 120px;
     gap:10px;
     align-items:end;
   }
@@ -217,6 +217,12 @@
     cursor:pointer;
   }
 
+  .address-input{
+    font-size:12.5px;
+    padding:6px 8px;
+    min-width:140px;
+  }
+
   .resv-input{
     font-size:12px;
     padding:5px 6px;
@@ -294,6 +300,10 @@
         <input id="in-provide" placeholder="예: 식사 2인 + 원고료 5만원">
       </div>
       <div class="field">
+        <label>주소</label>
+        <input id="in-address" placeholder="예: 서울시 강남구 ...">
+      </div>
+      <div class="field">
         <label>마감일자</label>
         <input id="in-deadline" type="date">
       </div>
@@ -340,6 +350,7 @@
           <th>마감일자</th>
           <th>상태 / 예약일시</th>
           <th>플랫폼</th>
+          <th>주소</th>
           <th></th>
         </tr>
       </thead>
@@ -351,6 +362,12 @@
 </div>
 
 <script>
+/* ===========================================================
+   Apps Script 연동 설정
+   =========================================================== */
+// ⬇️ 구글 Apps Script 배포 후 발급된 웹앱 URL로 반드시 교체하세요
+const API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
+
 let items = [];
 let filter = "all";
 
@@ -369,31 +386,47 @@ function platformOptions(selected){
   ).join('');
 }
 
-function updatePlatform(id, value){
-  const it = items.find(i => i.id === id);
-  it.platform = value;
-}
-
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-function addItem(){
+// 서버(Apps Script)로 POST 요청 보내는 공통 함수
+async function callApi(action, payload) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action }, payload))
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "요청 실패");
+  return data.items;
+}
+
+async function addItem(){
   const region = document.getElementById('in-region').value;
   const name = document.getElementById('in-name').value.trim();
   const provide = document.getElementById('in-provide').value.trim();
+  const address = document.getElementById('in-address').value.trim();
   const deadline = document.getElementById('in-deadline').value;
   const status = document.getElementById('in-status').value;
   const platform = document.getElementById('in-platform').value;
 
   if(!name){ alert('체험단 이름을 입력해주세요.'); return; }
 
-  items.push({
+  const newItem = {
     id: uid(),
-    region, name, provide, deadline, status, platform,
+    region, name, provide, address, deadline, status, platform,
     resvDate: "", resvTime: ""
-  });
+  };
+
+  try {
+    items = await callApi("add", { item: newItem });
+  } catch (err) {
+    alert("저장 실패: " + err.message);
+    return;
+  }
 
   document.getElementById('in-name').value = "";
   document.getElementById('in-provide').value = "";
+  document.getElementById('in-address').value = "";
   document.getElementById('in-deadline').value = "";
   document.getElementById('in-status').value = "wait";
   document.getElementById('in-platform').value = "디너의여왕";
@@ -401,21 +434,66 @@ function addItem(){
   render();
 }
 
-function deleteItem(id){
+async function deleteItem(id){
   if(!confirm('이 체험단을 삭제할까요?')) return;
-  items = items.filter(it => it.id !== id);
+  try {
+    items = await callApi("delete", { id });
+  } catch (err) {
+    alert("삭제 실패: " + err.message);
+    return;
+  }
   render();
 }
 
-function updateStatus(id, value){
+async function updateStatus(id, value){
   const it = items.find(i => i.id === id);
-  it.status = value;
+  if (!it) return;
+  const updated = Object.assign({}, it, { status: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
   render();
 }
 
-function updateResv(id, field, value){
+async function updateResv(id, field, value){
   const it = items.find(i => i.id === id);
-  it[field] = value;
+  if (!it) return;
+  const updated = Object.assign({}, it, { [field]: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
+async function updatePlatform(id, value){
+  const it = items.find(i => i.id === id);
+  if (!it) return;
+  const updated = Object.assign({}, it, { platform: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
+async function updateAddress(id, value){
+  const it = items.find(i => i.id === id);
+  if (!it) return;
+  const updated = Object.assign({}, it, { address: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
   render();
 }
 
@@ -511,6 +589,11 @@ function render(){
             ${platformOptions(it.platform)}
           </select>
         </td>
+        <td data-label="주소">
+          <input class="address-input" value="${escapeHtml(it.address || '')}"
+            placeholder="주소 입력"
+            onchange="updateAddress('${it.id}', this.value)">
+        </td>
         <td data-label=""><button class="del-btn" onclick="deleteItem('${it.id}')">✕</button></td>
       </tr>
     `;
@@ -553,7 +636,7 @@ function importData(e){
       if(Array.isArray(data)){
         items = data;
         render();
-        alert('불러오기 완료: ' + data.length + '건');
+        alert('불러오기 완료: ' + data.length + '건 (참고: 서버에는 자동 반영되지 않습니다)');
       }
     }catch(err){
       alert('파일을 읽을 수 없습니다. JSON 형식을 확인해주세요.');
@@ -565,15 +648,25 @@ function importData(e){
 
 async function loadInitialData(){
   try{
-    const res = await fetch('./data.json', { cache: 'no-store' });
-    if(res.ok){
-      const data = await res.json();
-      if(Array.isArray(data)) items = data;
-    }
+    const res = await fetch(API_URL, { cache: "no-store" });
+    const data = await res.json();
+    if (data.ok && Array.isArray(data.items)) items = data.items;
   }catch(e){
-    // data.json이 없으면 빈 목록으로 시작
+    console.error("데이터 로드 실패:", e);
   }
   render();
+
+  // 다른 사람이 시트나 다른 창에서 수정한 내용을 주기적으로 반영 (10초마다)
+  setInterval(async () => {
+    try {
+      const res = await fetch(API_URL, { cache: "no-store" });
+      const data = await res.json();
+      if (data.ok && Array.isArray(data.items)) {
+        items = data.items;
+        render();
+      }
+    } catch (e) { /* 조용히 무시 */ }
+  }, 10000);
 }
 loadInitialData();
 </script>
