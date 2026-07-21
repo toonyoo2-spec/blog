@@ -95,9 +95,10 @@
     display:inline-block;
   }
 
+  /* ✨ 수정됨: 8칸 그리드로 확장 */
   .form-grid{
     display:grid;
-    grid-template-columns:90px 1fr 1.8fr 1.1fr 105px 105px 115px;
+    grid-template-columns:80px 1.2fr 1.5fr 1fr 1fr 110px 105px 115px;
     gap:10px;
     align-items:end;
   }
@@ -225,10 +226,10 @@
     cursor:pointer;
   }
 
-  .address-input{
+  .address-input, .contact-input {
     font-size:12.5px;
     padding:6px 8px;
-    min-width:140px;
+    min-width:110px;
   }
 
   .resv-input{
@@ -349,9 +350,10 @@
     margin-bottom:14px;
   }
 
+  /* ✨ 수정됨: 7칸 그리드로 확장 */
   .ai-result-grid{
     display:grid;
-    grid-template-columns:90px 1fr 1.8fr 1.1fr 140px 140px;
+    grid-template-columns:80px 1.2fr 1.5fr 1fr 1fr 110px 115px;
     gap:10px;
     align-items:end;
   }
@@ -411,6 +413,11 @@
       <div class="field">
         <label>주소</label>
         <input id="in-address" placeholder="예: 서울시 강남구 ...">
+      </div>
+      <!-- ✨ 예약문의 필드 추가됨 -->
+      <div class="field">
+        <label>예약문의</label>
+        <input id="in-contact" placeholder="예: 010-1234-5678">
       </div>
       <div class="field">
         <label>마감일자</label>
@@ -479,6 +486,11 @@
         <label>주소 (시/군/구 제외)</label>
         <input id="ai-address">
       </div>
+      <!-- ✨ 예약문의 폼 추가됨 -->
+      <div class="field">
+        <label>예약문의</label>
+        <input id="ai-contact">
+      </div>
       <div class="field">
         <label>마감일자</label>
         <input id="ai-deadline" type="date">
@@ -520,6 +532,7 @@
           <th>상태 / 예약일시</th>
           <th>플랫폼</th>
           <th>주소</th>
+          <th>예약문의</th> <!-- ✨ 추가됨 -->
           <th>마감일자</th>
           <th></th>
         </tr>
@@ -612,6 +625,7 @@ async function analyzeAiImage(){
     document.getElementById('ai-name').value = r.name || "";
     document.getElementById('ai-provide').value = r.provide || "";
     document.getElementById('ai-address').value = r.address || "";
+    document.getElementById('ai-contact').value = r.contact || ""; // ✨ 매핑 추가
     document.getElementById('ai-deadline').value = normalizeDate(r.deadline) || "";
     document.getElementById('ai-platform').value = platformList.includes(r.platform) ? r.platform : "기타";
 
@@ -635,6 +649,7 @@ async function confirmAiAdd(){
     name,
     provide: document.getElementById('ai-provide').value.trim(),
     address: document.getElementById('ai-address').value.trim(),
+    contact: document.getElementById('ai-contact').value.trim(), // ✨ 전송 추가
     deadline: document.getElementById('ai-deadline').value,
     status: "wait",
     platform: document.getElementById('ai-platform').value,
@@ -691,6 +706,7 @@ async function addItem(){
   const name = document.getElementById('in-name').value.trim();
   const provide = document.getElementById('in-provide').value.trim();
   const address = document.getElementById('in-address').value.trim();
+  const contact = document.getElementById('in-contact').value.trim(); // ✨ 추가
   const deadline = document.getElementById('in-deadline').value;
   const status = document.getElementById('in-status').value;
   const platform = document.getElementById('in-platform').value;
@@ -699,7 +715,7 @@ async function addItem(){
 
   const newItem = {
     id: uid(),
-    region, name, provide, address, deadline, status, platform,
+    region, name, provide, address, contact, deadline, status, platform, // ✨ contact 추가
     resvDate: "", resvTime: ""
   };
 
@@ -713,6 +729,7 @@ async function addItem(){
   document.getElementById('in-name').value = "";
   document.getElementById('in-provide').value = "";
   document.getElementById('in-address').value = "";
+  document.getElementById('in-contact').value = ""; // ✨ 초기화 추가
   document.getElementById('in-deadline').value = "";
   document.getElementById('in-status').value = "wait";
   document.getElementById('in-platform').value = "디너의여왕";
@@ -774,6 +791,20 @@ async function updateAddress(id, value){
   const it = items.find(i => i.id === id);
   if (!it) return;
   const updated = Object.assign({}, it, { address: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
+// ✨ 연락처 업데이트 함수 추가
+async function updateContact(id, value){
+  const it = items.find(i => i.id === id);
+  if (!it) return;
+  const updated = Object.assign({}, it, { contact: value });
   try {
     items = await callApi("update", { item: updated });
   } catch (err) {
@@ -879,6 +910,12 @@ function render(){
           <input class="address-input" value="${escapeHtml(it.address || '')}"
             placeholder="주소 입력"
             onchange="updateAddress('${it.id}', this.value)">
+        </td>
+        <!-- ✨ 예약문의 테이블 열 추가됨 -->
+        <td data-label="예약문의">
+          <input class="contact-input" value="${escapeHtml(it.contact || '')}"
+            placeholder="연락처 등"
+            onchange="updateContact('${it.id}', this.value)">
         </td>
         <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${normalizeDate(it.deadline) || '-'}</td>
         <td data-label=""><button class="del-btn" onclick="deleteItem('${it.id}')">✕</button></td>
