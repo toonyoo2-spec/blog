@@ -258,8 +258,15 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   #appContent{display:none;}
+  
+  /* 📱 모바일 화면 최적화 (640px 이하) */
   @media (max-width:640px){
-    .panel{padding:22px 18px 26px;}
+    body{padding:20px 14px 40px;}
+    .panel{padding:20px 16px 24px;}
+    .overlay{padding:20px 10px;}
+    .grid{grid-template-columns:1fr;}
+    .card .edit-controls{opacity:1;} /* 모바일에서는 편집 버튼 항상 노출 */
+    .notion-embed iframe{height:320px;}
   }
 </style>
 </head>
@@ -700,7 +707,6 @@
   render();
 })();
 </script>
-
 <script src="./auth-gate.js"></script>
 </body>
 </html>

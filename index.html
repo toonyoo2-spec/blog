@@ -178,6 +178,7 @@
     display:flex;
     flex-direction:column;
     gap:3px;
+    overflow:hidden;
   }
   .cal-cell.other-month{background:transparent;border-color:transparent;}
   .cal-cell.today{border-color:var(--accent);}
@@ -204,9 +205,14 @@
     font-size:13px;
   }
 
+  /* 📱 모바일 화면 최적화 (640px 이하) */
   @media (max-width:640px){
-    .cal-cell{min-height:58px;}
-    .cal-event{font-size:9.5px;}
+    body{padding:24px 14px 60px;}
+    .grid{grid-template-columns:1fr;}
+    .cal-panel{padding:14px 10px;}
+    .cal-cell{min-height:64px;padding:4px 3px;gap:2px;}
+    .cal-daynum{font-size:10.5px;}
+    .cal-event{font-size:9px;padding:1px 3px;}
   }
 </style>
 </head>
