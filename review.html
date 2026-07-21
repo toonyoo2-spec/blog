@@ -376,6 +376,30 @@
     .resv-row { width: 65%; }
   }
 
+  /* 📱 좁은 화면(480px 이하) 추가 보완 */
+  @media (max-width:480px){
+    .form-grid{grid-template-columns:1fr;}
+    .ai-result-grid{grid-template-columns:1fr;}
+    .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .sum-card{padding:12px;}
+    .sum-card .num{font-size:19px;}
+
+    .ai-upload-row{flex-wrap:wrap;}
+    .ai-preview-wrap{flex-direction:column;align-items:stretch;}
+    .ai-preview-img{max-width:100%;max-height:180px;width:100%;}
+    .ai-analyze-btn{width:100%;}
+
+    .io-btns{gap:6px;}
+    .io-btns button{flex:1;}
+
+    tbody td input, tbody td select {
+      max-width: 58%;
+      font-size:12.5px;
+    }
+    .editable-wrap { width: 58%; }
+    .resv-row { width: 58%; flex-wrap:wrap; justify-content:flex-end; }
+  }
+
   /* ---- AI 이미지 자동등록 ---- */
   .ai-panel{border-color:var(--accent);}
   .ai-panel h2{justify-content:space-between;}

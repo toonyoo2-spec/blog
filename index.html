@@ -191,8 +191,9 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    cursor:default;
+    cursor:pointer;
   }
+  .cal-event:hover{filter:brightness(0.95);}
   .cal-event.wait{background:var(--wait-bg);color:var(--wait-ink);}
   .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
   .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
@@ -204,6 +205,62 @@
     color:var(--sub);
     font-size:13px;
   }
+
+  /* ---- 이벤트 상세 팝업 ---- */
+  .cal-modal-overlay{
+    position:fixed;inset:0;
+    background:rgba(34,34,31,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:9998;
+    padding:20px;
+  }
+  .cal-modal-overlay.open{display:flex;}
+  .cal-modal{
+    background:var(--card);
+    border-radius:14px;
+    max-width:360px;
+    width:100%;
+    padding:24px;
+    position:relative;
+    box-shadow:0 12px 32px rgba(0,0,0,0.15);
+  }
+  .cal-modal-close{
+    position:absolute;
+    top:14px;right:16px;
+    background:none;
+    border:none;
+    font-size:18px;
+    color:var(--sub);
+    cursor:pointer;
+    line-height:1;
+  }
+  .cal-modal-close:hover{color:var(--ink);}
+  .cal-modal-title{
+    font-size:17px;
+    font-weight:700;
+    margin:0 0 4px;
+    padding-right:20px;
+  }
+  .cal-modal-badge{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:20px;
+    margin-bottom:14px;
+  }
+  .cal-modal-row{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:8px 0;
+    border-top:1px solid var(--line);
+    font-size:13px;
+  }
+  .cal-modal-row .k{color:var(--sub);flex-shrink:0;}
+  .cal-modal-row .v{text-align:right;word-break:break-all;}
 
   /* 📱 모바일 화면 최적화 (640px 이하) */
   @media (max-width:640px){
@@ -252,6 +309,13 @@
       <span><i class="dot confirm"></i>예약완료(예약일 기준)</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <div class="cal-modal-overlay" id="calModalOverlay" onclick="if(event.target===this) calCloseDetail()">
+    <div class="cal-modal">
+      <button class="cal-modal-close" onclick="calCloseDetail()">✕</button>
+      <div id="calModalBody"></div>
+    </div>
   </div>
 
 </div>
@@ -333,7 +397,7 @@ function calRender(){
     const dayItems = (byDate[dateStr] || []).slice().sort((a,b) => (a.resvTime||"").localeCompare(b.resvTime||""));
     const eventsHtml = dayItems.map(it => {
       const timeLabel = it.resvTime ? `${calEscapeHtml(it.resvTime)} ` : '';
-      return `<div class="cal-event ${it.status}" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
+      return `<div class="cal-event ${it.status}" onclick="calShowDetail('${it.id}')" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
     }).join('');
     cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${eventsHtml}</div>`);
   }
@@ -360,6 +424,45 @@ async function calLoad(){
 }
 calLoad();
 setInterval(calLoad, 30000);
+
+// ---- 이벤트 상세 팝업 ----
+const calFieldLabels = {
+  region: "지역",
+  provide: "제공내역",
+  address: "주소",
+  contact: "예약문의",
+  deadline: "마감일자",
+  platform: "플랫폼",
+  resvDate: "예약일",
+  resvTime: "예약시간"
+};
+
+function calShowDetail(id){
+  const it = calItems.find(i => i.id === id);
+  if(!it) return;
+
+  const rows = Object.keys(calFieldLabels)
+    .filter(key => it[key])
+    .map(key => `
+      <div class="cal-modal-row">
+        <span class="k">${calFieldLabels[key]}</span>
+        <span class="v">${calEscapeHtml(it[key])}</span>
+      </div>
+    `).join('');
+
+  document.getElementById('calModalBody').innerHTML = `
+    <div class="cal-modal-title">${calEscapeHtml(it.name)}</div>
+    <div class="cal-modal-badge status-badge-${it.status}" style="background:var(--${it.status}-bg);color:var(--${it.status}-ink);">
+      ${calStatusLabel[it.status] || it.status}
+    </div>
+    ${rows}
+  `;
+  document.getElementById('calModalOverlay').classList.add('open');
+}
+
+function calCloseDetail(){
+  document.getElementById('calModalOverlay').classList.remove('open');
+}
 </script>
 <script src="./auth-gate.js"></script>
 </body>
