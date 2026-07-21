@@ -196,6 +196,7 @@
   .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
   .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
   .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
+  .cal-event-time{font-weight:700;margin-right:3px;}
   .cal-empty-msg{
     text-align:center;
     padding:30px 0;
@@ -321,10 +322,11 @@ function calRender(){
   for(let d = 1; d <= daysInMonth; d++){
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayStr;
-    const dayItems = (byDate[dateStr] || []);
-    const eventsHtml = dayItems.map(it =>
-      `<div class="cal-event ${it.status}" title="${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})">${calEscapeHtml(it.name)}</div>`
-    ).join('');
+    const dayItems = (byDate[dateStr] || []).slice().sort((a,b) => (a.resvTime||"").localeCompare(b.resvTime||""));
+    const eventsHtml = dayItems.map(it => {
+      const timeLabel = it.resvTime ? `${calEscapeHtml(it.resvTime)} ` : '';
+      return `<div class="cal-event ${it.status}" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
+    }).join('');
     cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${eventsHtml}</div>`);
   }
 
