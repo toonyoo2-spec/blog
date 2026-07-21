@@ -186,14 +186,13 @@
     border-bottom:1px solid var(--line);
     white-space:nowrap;
   }
-  
-  /* ✨ 수정됨: 테이블 셀 패딩을 줄여 전체 높이 압축 */
   tbody td{
     padding:8px 8px;
     border-bottom:1px solid var(--line);
     vertical-align:middle;
   }
   tbody tr:hover{background:#fafaf7;}
+  
   .region-badge{
     font-size:11.5px;
     padding:2px 8px;
@@ -202,10 +201,45 @@
     color:var(--sub);
     white-space:nowrap;
   }
-  .name-cell{font-weight:600;}
+
+  /* ✨ 수정됨: 텍스트 직접 수정 UI 스타일 추가 */
+  .editable-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    min-height: 24px;
+  }
+  .val-span {
+    flex-grow: 1;
+    word-break: keep-all;
+  }
+  .name-cell .val-span {
+    font-weight: 600;
+  }
+  .edit-btn {
+    opacity: 0;
+    background: none;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 10px;
+    padding: 2px 5px;
+    color: var(--sub);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  /* 마우스 오버 시에만 ✏️ 버튼 표시 */
+  .editable-wrap:hover .edit-btn {
+    opacity: 1;
+  }
+  .edit-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
   .deadline-cell.urgent{color:#b3452f;font-weight:600;}
-  
-  /* ✨ 수정됨: 상태 셀 크기 축소 */
   .status-select{
     font-size:12px;
     padding:4px 6px;
@@ -236,7 +270,6 @@
     min-width:110px;
   }
 
-  /* ✨ 수정됨: 예약일시를 한 줄로(나란히) 배치하는 레이아웃 */
   .resv-row {
     display:flex;
     gap:4px;
@@ -252,7 +285,6 @@
     width:70px;
     flex-shrink:0;
   }
-  /* ✨ 브라우저 단에서 달력 년도(YYYY) 숨기기 */
   .date-short::-webkit-datetime-edit-year-field { 
     display: none; 
   }
@@ -298,6 +330,7 @@
       color:var(--sub);
       margin-bottom:2px;
     }
+    .editable-wrap .edit-btn { opacity: 1; } /* 모바일에서는 터치가 어려우므로 항상 표시 */
   }
 
   /* ---- AI 이미지 자동등록 ---- */
@@ -830,6 +863,48 @@ async function updateContact(id, value){
   render();
 }
 
+/* ✨ 텍스트 직접 수정 시작 함수 */
+function startInlineEdit(btn, id, field) {
+  const wrap = btn.closest('.editable-wrap');
+  const span = wrap.querySelector('.val-span');
+  const currentValue = span.textContent;
+  
+  // 큰 따옴표가 있는 경우 HTML 속성 충돌을 막기 위해 치환
+  const safeValue = currentValue.replace(/"/g, '&quot;');
+
+  // 기존 텍스트와 버튼을 숨기고 입력칸(input)으로 교체
+  wrap.innerHTML = `
+    <input type="text" class="resv-input" style="width:100%; border:1px solid var(--accent); outline:none;" 
+           value="${safeValue}" 
+           onblur="saveInlineEdit('${id}', '${field}', this.value)" 
+           onkeydown="if(event.key === 'Enter') this.blur()">
+  `;
+  
+  // 인풋박스에 포커스 주기
+  const input = wrap.querySelector('input');
+  input.focus();
+}
+
+/* ✨ 텍스트 직접 수정 저장 함수 */
+async function saveInlineEdit(id, field, value) {
+  const it = items.find(i => i.id === id);
+  if (!it) return;
+  
+  // 수정된 내용이 없으면 그냥 화면을 다시 그림 (취소 효과)
+  if (it[field] === value) {
+    render();
+    return;
+  }
+  
+  const updated = Object.assign({}, it, { [field]: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+  }
+  render();
+}
+
 function setFilter(f){
   filter = f;
   render();
@@ -893,7 +968,6 @@ function render(){
   tbody.innerHTML = list.map(it => {
     const urgent = it.status === "wait" && isUrgent(it.deadline);
     
-    // ✨ 수정됨: 예약완료 시 입력칸을 한 줄로 압축한 resv-row 적용
     const resvBlock = it.status === "confirm" ? `
       <div class="resv-row">
         <input type="date" class="resv-input date-short" value="${normalizeDate(it.resvDate)}"
@@ -908,8 +982,23 @@ function render(){
     return `
       <tr>
         <td data-label="지역"><span class="region-badge">${it.region}</span></td>
-        <td data-label="체험단 이름" class="name-cell">${escapeHtml(it.name)}</td>
-        <td data-label="제공내역">${escapeHtml(it.provide) || '-'}</td>
+        
+        <!-- ✨ 수정됨: 체험단 이름 직접 수정 UI -->
+        <td data-label="체험단 이름" class="name-cell">
+          <div class="editable-wrap">
+            <span class="val-span">${escapeHtml(it.name)}</span>
+            <button class="edit-btn" onclick="startInlineEdit(this, '${it.id}', 'name')" title="수정하기">✏️</button>
+          </div>
+        </td>
+        
+        <!-- ✨ 수정됨: 제공내역 직접 수정 UI -->
+        <td data-label="제공내역">
+          <div class="editable-wrap">
+            <span class="val-span">${escapeHtml(it.provide) || ''}</span>
+            <button class="edit-btn" onclick="startInlineEdit(this, '${it.id}', 'provide')" title="수정하기">✏️</button>
+          </div>
+        </td>
+        
         <td data-label="상태" style="min-width: 155px;">
           <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
             ${Object.keys(statusMeta).map(k =>
