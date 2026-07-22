@@ -40,20 +40,62 @@
   h1{font-size:26px;letter-spacing:-0.02em;margin:0 0 4px;}
   header p{margin:0;color:var(--sub);font-size:13.5px;}
 
-  .month-bar{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:18px;
+  /* 직관적인 월 선택 UI 스타일 */
+  .month-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 20px;
   }
-  .month-bar select{
-    padding:8px 12px;
-    border:1px solid var(--line);
-    border-radius:8px;
-    font-size:14px;
-    background:#fff;
-    font-weight:600;
+  .month-controls {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 14px;
   }
+  .month-controls button {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+    color: var(--sub);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .month-controls button:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .current-month {
+    font-size: 26px;
+    font-weight: 700;
+    min-width: 90px;
+    text-align: center;
+    color: var(--ink);
+  }
+  .month-mini-summary {
+    font-size: 14px;
+    color: var(--sub);
+    background: var(--bg);
+    padding: 8px 20px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .month-mini-summary .income-text { color: var(--income-ink); font-weight: 700; }
+  .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
+  .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
   .summary{
     display:grid;
@@ -203,8 +245,18 @@
     <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
   </header>
 
-  <div class="month-bar">
-    <select id="monthSelect" onchange="onMonthChange()"></select>
+  <!-- 변경된 월 선택 UI -->
+  <div class="month-header">
+    <div class="month-controls">
+      <button onclick="changeMonth(-1)">❮</button>
+      <div class="current-month" id="monthDisplay">7월</div>
+      <button onclick="changeMonth(1)">❯</button>
+    </div>
+    <div class="month-mini-summary">
+      <span class="income-text">수입 <span id="miniIncome">0</span>원</span>
+      <span class="divider">|</span>
+      <span class="expense-text">지출 <span id="miniExpense">0</span>원</span>
+    </div>
   </div>
 
   <div class="summary" id="summary"></div>
@@ -277,6 +329,7 @@
 /* ===========================================================
    Apps Script 연동 설정
    =========================================================== */
+// 이전 파일에서 가져온 완벽하게 작동하는 URL 적용 완료!
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
 const SITE_KEY = "130702"; 
 
@@ -294,17 +347,19 @@ function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
 }
 
-// ---- 월 선택 ----
-function initMonthSelect(){
-  const sel = document.getElementById('monthSelect');
-  sel.innerHTML = Array.from({length:12}, (_,i) => {
-    const m = i+1;
-    return `<option value="${m}" ${m===currentMonth?'selected':''}>${m}월</option>`;
-  }).join('');
+// ---- 직관적인 월 선택 (좌우 이동) ----
+function updateMonthDisplay(){
+  document.getElementById('monthDisplay').textContent = currentMonth + "월";
 }
-function onMonthChange(){
-  currentMonth = parseInt(document.getElementById('monthSelect').value, 10);
-  loadEntries();
+
+function changeMonth(offset){
+  let newMonth = currentMonth + offset;
+  if(newMonth < 1) newMonth = 12;
+  if(newMonth > 12) newMonth = 1;
+  currentMonth = newMonth;
+  
+  updateMonthDisplay();
+  loadEntries(); // 월이 변경되면 데이터 다시 불러오기
 }
 
 // ---- 카테고리 로드 & 캐스케이딩 선택 ----
@@ -377,12 +432,17 @@ function renderSummary(){
   const totals = { "수입":0, "지출":0, "저축":0, "투자":0 };
   entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += it.amount; });
 
+  // 1. 하단 전체 상세 요약 카드 렌더링
   document.getElementById('summary').innerHTML = `
     <div class="sum-card income"><div class="num">${formatMoney(totals["수입"])}원</div><div class="lbl">수입</div></div>
     <div class="sum-card expense"><div class="num">${formatMoney(totals["지출"])}원</div><div class="lbl">지출</div></div>
     <div class="sum-card saving"><div class="num">${formatMoney(totals["저축"])}원</div><div class="lbl">저축</div></div>
     <div class="sum-card invest"><div class="num">${formatMoney(totals["투자"])}원</div><div class="lbl">투자</div></div>
   `;
+
+  // 2. 상단 미니 대시보드 (총 수입/지출) 업데이트
+  document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
+  document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
 
 function renderTable(){
@@ -519,7 +579,7 @@ async function deleteEntry(rowIndex){
 }
 
 // ---- 초기화 ----
-initMonthSelect();
+updateMonthDisplay();
 loadCategories().then(loadEntries);
 </script>
 <script src="./auth-gate.js"></script>
