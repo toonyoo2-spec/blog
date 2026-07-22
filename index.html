@@ -14,9 +14,14 @@
     --accent:#3a5a52;
 
     --wait-bg:#fdf3d9;   --wait-ink:#8a6d16;
-    --conf-bg:#e2eef5;   --conf-ink:#1f5c82;
+    --conf-bg:#fbe6e3;   --conf-ink:#b3452f;
     --done-bg:#e3ede4;   --done-ink:#2f6b3c;
     --end-bg:#ececea;    --end-ink:#78766e;
+
+    /* 부부 일정 전용 색상 (사람별로 구분) */
+    --owner-gwan-bg:#e2eef5;  --owner-gwan-ink:#1f5c82;
+    --owner-bora-bg:#fff4c2;  --owner-bora-ink:#b8860b;
+    --owner-common-bg:#e3ede4;  --owner-common-ink:#2f6b3c;
   }
   *{box-sizing:border-box;}
   body{
@@ -127,6 +132,7 @@
     justify-content:center;
     gap:18px;
     margin-bottom:14px;
+    position:relative;
   }
   .cal-nav-btn{
     border:1px solid var(--line);
@@ -140,6 +146,23 @@
   }
   .cal-nav-btn:hover{border-color:var(--accent);color:var(--accent);}
   .cal-title{font-size:15.5px;font-weight:700;min-width:110px;text-align:center;}
+
+  .cal-add-couple-btn{
+    position:absolute;
+    right:0;
+    top:50%;
+    transform:translateY(-50%);
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .cal-add-couple-btn:hover{background:var(--accent);color:#fff;}
 
   .cal-legend{
     display:flex;
@@ -156,12 +179,47 @@
   .dot.confirm{background:var(--conf-ink);}
   .dot.done{background:var(--done-ink);}
   .dot.end{background:var(--end-ink);}
+  .dot.owner-gwan{background:var(--owner-gwan-ink);}
+  .dot.owner-bora{background:var(--owner-bora-ink);}
+  .dot.owner-common{background:var(--owner-common-ink);}
 
+  .cal-grid-wrap{
+    position:relative;
+  }
   .cal-grid{
     display:grid;
     grid-template-columns:repeat(7,1fr);
     gap:6px;
   }
+  .cal-bars-layer{
+    position:absolute;
+    top:0;left:0;right:0;bottom:0;
+    pointer-events:none;
+  }
+  .cal-bar-slot{
+    height:17px;
+    flex-shrink:0;
+  }
+  .cal-bar{
+    position:absolute;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    font-size:10.5px;
+    font-weight:600;
+    padding:2px 6px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    cursor:pointer;
+    pointer-events:auto;
+  }
+  .cal-bar:hover{filter:brightness(0.95);}
+  .cal-bar.round-left{border-top-left-radius:5px;border-bottom-left-radius:5px;}
+  .cal-bar.round-right{border-top-right-radius:5px;border-bottom-right-radius:5px;}
+  .cal-bar.owner-gwan{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);}
+  .cal-bar.owner-bora{background:var(--owner-bora-bg);color:var(--owner-bora-ink);}
+  .cal-bar.owner-common{background:var(--owner-common-bg);color:var(--owner-common-ink);}
   .cal-dow{
     text-align:center;
     font-size:11.5px;
@@ -198,6 +256,9 @@
   .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
   .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
   .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
+  .cal-event.owner-gwan{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);font-weight:600;}
+  .cal-event.owner-bora{background:var(--owner-bora-bg);color:var(--owner-bora-ink);font-weight:600;}
+  .cal-event.owner-common{background:var(--owner-common-bg);color:var(--owner-common-ink);font-weight:600;}
   .cal-event-time{font-weight:700;margin-right:3px;}
   .cal-empty-msg{
     text-align:center;
@@ -206,7 +267,7 @@
     font-size:13px;
   }
 
-  /* ---- 이벤트 상세 팝업 ---- */
+  /* ---- 이벤트 상세 팝업 (공통) ---- */
   .cal-modal-overlay{
     position:fixed;inset:0;
     background:rgba(34,34,31,0.45);
@@ -261,6 +322,83 @@
   }
   .cal-modal-row .k{color:var(--sub);flex-shrink:0;}
   .cal-modal-row .v{text-align:right;word-break:break-all;}
+  .cal-modal-del-btn{
+    margin-top:16px;
+    width:100%;
+    background:none;
+    border:1px solid var(--line);
+    color:var(--sub);
+    padding:9px 0;
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .cal-modal-del-btn:hover{border-color:#b3452f;color:#b3452f;}
+
+  /* ---- 부부 일정 추가 폼 ---- */
+  .couple-field{margin-bottom:12px;}
+  .couple-field label{
+    display:block;
+    font-size:12px;
+    color:var(--sub);
+    margin-bottom:5px;
+  }
+  .couple-field input, .couple-field textarea{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:13.5px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  .couple-field textarea{resize:vertical;min-height:60px;}
+  .couple-field input:focus, .couple-field textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+  }
+  .owner-toggle{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .owner-toggle button{
+    flex:1;
+    border:none;
+    background:#fff;
+    padding:9px 0;
+    font-size:13px;
+    font-weight:600;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .owner-toggle button + button{border-left:1px solid var(--line);}
+  .owner-toggle button.active[data-owner="관"]{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);}
+  .owner-toggle button.active[data-owner="보라"]{background:var(--owner-bora-bg);color:var(--owner-bora-ink);}
+  .owner-toggle button.active[data-owner="공통"]{background:var(--owner-common-bg);color:var(--owner-common-ink);}
+  .couple-save-btn{
+    margin-top:4px;
+    width:100%;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:10px 0;
+    border-radius:8px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .couple-save-btn:hover{opacity:0.9;}
+  .couple-save-btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .couple-status-msg{
+    font-size:11.5px;
+    color:var(--sub);
+    margin-top:8px;
+    text-align:center;
+  }
 
   /* 📱 모바일 화면 최적화 (640px 이하) */
   @media (max-width:640px){
@@ -270,6 +408,15 @@
     .cal-cell{min-height:64px;padding:4px 3px;gap:2px;}
     .cal-daynum{font-size:10.5px;}
     .cal-event{font-size:9px;padding:1px 3px;}
+    .cal-bar-slot{height:13px;}
+    .cal-bar{font-size:9px;padding:1px 4px;}
+    .cal-add-couple-btn{
+      position:static;
+      transform:none;
+      display:block;
+      margin:10px auto 0;
+    }
+    .cal-header{flex-wrap:wrap;}
   }
 </style>
 </head>
@@ -313,13 +460,21 @@
       <button class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
       <div class="cal-title" id="calTitle"></div>
       <button class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
+      <button class="cal-add-couple-btn" onclick="coupleOpenAdd()">+ 일정 추가</button>
     </div>
     <div class="cal-legend">
-      <span><i class="dot confirm"></i>예약완료(예약일 기준)</span>
+      <span><i class="dot confirm"></i>예약완료(체험단)</span>
+      <span><i class="dot owner-gwan"></i>관</span>
+      <span><i class="dot owner-bora"></i>보라</span>
+      <span><i class="dot owner-common"></i>공통</span>
     </div>
-    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-grid-wrap">
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-bars-layer" id="calBarsLayer"></div>
+    </div>
   </div>
 
+  <!-- 이벤트 상세 팝업 (체험단 / 부부 일정 공용) -->
   <div class="cal-modal-overlay" id="calModalOverlay" onclick="if(event.target===this) calCloseDetail()">
     <div class="cal-modal">
       <button class="cal-modal-close" onclick="calCloseDetail()">✕</button>
@@ -327,16 +482,62 @@
     </div>
   </div>
 
+  <!-- 부부 일정 추가 팝업 -->
+  <div class="cal-modal-overlay" id="coupleAddOverlay" onclick="if(event.target===this) coupleCloseAdd()">
+    <div class="cal-modal">
+      <button class="cal-modal-close" onclick="coupleCloseAdd()">✕</button>
+      <div class="cal-modal-title" id="coupleModalTitle" style="margin-bottom:16px;">일정 추가</div>
+      <div class="owner-toggle" id="ownerToggle">
+        <button type="button" data-owner="관" onclick="coupleSelectOwner('관')">관</button>
+        <button type="button" data-owner="보라" onclick="coupleSelectOwner('보라')">보라</button>
+        <button type="button" data-owner="공통" onclick="coupleSelectOwner('공통')">공통</button>
+      </div>
+      <div class="couple-field">
+        <label>제목</label>
+        <input type="text" id="couple-in-title" placeholder="예: 결혼기념일 저녁 예약">
+      </div>
+      <div class="couple-field">
+        <label>날짜</label>
+        <input type="date" id="couple-in-date">
+      </div>
+      <div class="couple-field">
+        <label>종료일 (선택 — 여러 날에 걸친 일정일 때만)</label>
+        <input type="date" id="couple-in-endDate">
+      </div>
+      <div class="couple-field">
+        <label>시작 시간 (선택)</label>
+        <input type="time" id="couple-in-time">
+      </div>
+      <div class="couple-field">
+        <label>종료 시간 (선택)</label>
+        <input type="time" id="couple-in-endTime">
+      </div>
+      <div class="couple-field">
+        <label>메모 (선택)</label>
+        <textarea id="couple-in-memo" placeholder="장소, 준비물 등"></textarea>
+      </div>
+      <button class="couple-save-btn" id="coupleSaveBtn" onclick="coupleAddEvent()">저장</button>
+      <button class="cal-modal-del-btn" id="coupleModalDelBtn" style="display:none;" onclick="coupleDeleteEvent(coupleEditId)">삭제</button>
+      <div class="couple-status-msg" id="coupleStatusMsg"></div>
+    </div>
+  </div>
+
 </div>
 <script>
 /* ===========================================================
-   review.html 과 동일한 Apps Script 연동 (읽기 전용)
+   review.html 과 동일한 Apps Script 연동
+   - 체험단 캘린더: 기존 그대로 읽기 전용 (GET, key만 전달)
+   - 부부 일정: 같은 Apps Script에 resource="events" 로 추가/삭제/조회
    =========================================================== */
 const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
 // ⚠️ Apps Script(Code.gs)의 SECRET_KEY / review.html의 SITE_KEY와 반드시 동일해야 합니다.
 const CAL_SITE_KEY = "130702";
+const COUPLE_RESOURCE = "events";
 
-let calItems = [];
+let calItems = [];       // 체험단 항목 (기존 그대로)
+let coupleItems = [];    // 부부 일정 항목 (신규)
+let coupleEditId = null; // 수정 중인 부부 일정 id (null이면 신규 추가 모드)
+let coupleSelectedOwner = "관";
 let calCursor = new Date();
 calCursor.setDate(1);
 
@@ -352,14 +553,50 @@ function calNormalizeDate(v){
   return `${y}-${m}-${day}`;
 }
 
-// 예약완료(confirm) 상태인 항목만 예약일자(resvDate) 기준으로 캘린더에 표시
-function calEventDate(it){
-  if(it.status !== "confirm" || !it.resvDate) return "";
-  return calNormalizeDate(it.resvDate);
+// 시작일~종료일을 하루 단위 날짜 문자열 배열로 펼침 (여러 날에 걸친 부부 일정용)
+function calDateRange(start, end){
+  const startStr = calNormalizeDate(start);
+  if(!startStr) return [];
+  const endStr = calNormalizeDate(end) || startStr;
+
+  const startD = new Date(startStr + "T00:00:00");
+  const endD = new Date(endStr + "T00:00:00");
+  if(isNaN(endD.getTime()) || endD < startD) return [startStr];
+
+  const dates = [];
+  let cur = new Date(startD);
+  // 안전장치: 과도하게 긴 범위 방지 (최대 60일)
+  let guard = 0;
+  while(cur <= endD && guard < 60){
+    dates.push(calNormalizeDate(cur));
+    cur.setDate(cur.getDate() + 1);
+    guard++;
+  }
+  return dates;
 }
 
 function calEscapeHtml(str){
   return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ---- 공통 API 호출 (부부 일정 추가/삭제용 POST) ---- */
+async function callApi(action, payload){
+  const res = await fetch(CAL_API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ action, key: CAL_SITE_KEY, resource: COUPLE_RESOURCE }, payload))
+  });
+  const data = await res.json();
+  if (!data.ok) throw new Error(data.error || "요청 실패");
+  return data;
+}
+
+/* ---- 체험단(기존): 예약완료(confirm) 상태만 예약일자 기준으로 표시 ---- */
+function calEventDate(it){
+  if(it.status !== "confirm" || !it.resvDate) return "";
+  return calNormalizeDate(it.resvDate);
 }
 
 function calChangeMonth(delta){
@@ -367,20 +604,94 @@ function calChangeMonth(delta){
   calRender();
 }
 
+function coupleOwnerClass(it){
+  return it.owner === '보라' ? 'owner-bora' : (it.owner === '공통' ? 'owner-common' : 'owner-gwan');
+}
+
+function coupleTimeLabel(it, isGlobalStart, isGlobalEnd){
+  // 시작일 세그먼트에는 시작(~종료)시간을, 종료일에만 존재하는 종료시간은 함께 표기
+  const parts = [];
+  if(isGlobalStart && it.time) parts.push(calEscapeHtml(it.time));
+  if(isGlobalEnd && it.endTime) parts.push(calEscapeHtml(it.endTime));
+  return parts.join('~');
+}
+
+let calCurrentSegments = []; // 현재 렌더링된 다일 일정 바 세그먼트 (리사이즈 시 재측정용)
+
 function calRender(){
   const y = calCursor.getFullYear();
   const m = calCursor.getMonth(); // 0-11
   document.getElementById('calTitle').textContent = `${y}년 ${m+1}월`;
 
-  // 이 달의 항목들을 날짜별로 묶기
+  // 이 달의 "단일 날짜" 항목들을 날짜별로 묶기 (체험단 + 부부 단일일정 병합)
   const byDate = {};
+  // 행(row)별 다일 일정 세그먼트 목록
+  const rowSegments = {}; // rowIndex -> [{it, startCol, endCol, isGlobalStart, isGlobalEnd, lane}]
+
   calItems.forEach(it => {
     const dateStr = calEventDate(it);
     if(!dateStr) return;
     const [ey, em] = dateStr.split('-').map(Number);
     if(ey === y && em === m+1){
-      (byDate[dateStr] = byDate[dateStr] || []).push(it);
+      (byDate[dateStr] = byDate[dateStr] || []).push({ kind:'campaign', data: it });
     }
+  });
+
+  const globalStartStr = {}; // it.id -> 전체 일정의 시작일 문자열
+  const globalEndStr = {};   // it.id -> 전체 일정의 종료일 문자열
+
+  coupleItems.forEach(it => {
+    const dates = calDateRange(it.date, it.endDate);
+    if(dates.length === 0) return;
+    globalStartStr[it.id] = dates[0];
+    globalEndStr[it.id] = dates[dates.length-1];
+
+    if(dates.length === 1){
+      const dateStr = dates[0];
+      const [ey, em] = dateStr.split('-').map(Number);
+      if(ey === y && em === m+1){
+        (byDate[dateStr] = byDate[dateStr] || []).push({ kind:'couple', data: it, isRange:false });
+      }
+      return;
+    }
+
+    // 다일 일정: 이 달에 걸치는 날짜만 남기고, 같은 주(row)끼리 묶어 세그먼트 생성
+    const inMonthDates = dates.filter(dateStr => {
+      const [ey, em] = dateStr.split('-').map(Number);
+      return ey === y && em === m+1;
+    });
+    if(inMonthDates.length === 0) return;
+
+    let seg = null;
+    inMonthDates.forEach(dateStr => {
+      const rc = calDateRowCol(dateStr, y, m);
+      if(!rc) return;
+      if(seg && seg.row === rc.row && seg.endCol === rc.col - 1){
+        seg.endCol = rc.col;
+        seg.dates.push(dateStr);
+      } else {
+        if(seg) (rowSegments[seg.row] = rowSegments[seg.row] || []).push(seg);
+        seg = { it, row: rc.row, startCol: rc.col, endCol: rc.col, dates:[dateStr] };
+      }
+    });
+    if(seg) (rowSegments[seg.row] = rowSegments[seg.row] || []).push(seg);
+  });
+
+  // 세그먼트에 전역 시작/종료 여부 및 lane(겹칠 때 쌓을 위치) 부여
+  Object.keys(rowSegments).forEach(rowKey => {
+    const segs = rowSegments[rowKey];
+    segs.forEach(seg => {
+      seg.isGlobalStart = seg.dates[0] === globalStartStr[seg.it.id];
+      seg.isGlobalEnd = seg.dates[seg.dates.length-1] === globalEndStr[seg.it.id];
+    });
+    segs.sort((a,b) => a.startCol - b.startCol || a.endCol - b.endCol);
+    const laneEndCol = [];
+    segs.forEach(seg => {
+      let lane = laneEndCol.findIndex(endCol => endCol < seg.startCol);
+      if(lane === -1){ lane = laneEndCol.length; laneEndCol.push(seg.endCol); }
+      else { laneEndCol[lane] = seg.endCol; }
+      seg.lane = lane;
+    });
   });
 
   const first = new Date(y, m, 1);
@@ -399,16 +710,52 @@ function calRender(){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
+  // 열(col)별로, 해당 행에서 사용된 세그먼트를 lane 순서대로 정리 (빈 lane은 공백 슬롯으로 채워 정렬 유지)
+  function slotsHtmlForCol(row, col){
+    const segs = (rowSegments[row] || []).filter(s => col >= s.startCol && col <= s.endCol);
+    if(segs.length === 0) return '';
+    const maxLane = Math.max(...segs.map(s => s.lane));
+    let html = '';
+    for(let lane = 0; lane <= maxLane; lane++){
+      const seg = segs.find(s => s.lane === lane);
+      if(seg){
+        const segId = `${seg.it.id}_r${row}`;
+        html += `<div class="cal-bar-slot" data-seg="${segId}"></div>`;
+      } else {
+        html += `<div class="cal-bar-slot" data-seg="blank"></div>`;
+      }
+    }
+    return html;
+  }
+
   // 이번 달
   for(let d = 1; d <= daysInMonth; d++){
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayStr;
-    const dayItems = (byDate[dateStr] || []).slice().sort((a,b) => (a.resvTime||"").localeCompare(b.resvTime||""));
-    const eventsHtml = dayItems.map(it => {
-      const timeLabel = it.resvTime ? `${calEscapeHtml(it.resvTime)} ` : '';
-      return `<div class="cal-event ${it.status}" onclick="calShowDetail('${it.id}')" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
+    const rc = calDateRowCol(dateStr, y, m);
+    const dayEntries = (byDate[dateStr] || []).slice().sort((a,b) => {
+      const ta = a.kind === 'campaign' ? (a.data.resvTime||"") : (a.data.time||"");
+      const tb = b.kind === 'campaign' ? (b.data.resvTime||"") : (b.data.time||"");
+      return ta.localeCompare(tb);
+    });
+
+    const eventsHtml = dayEntries.map(entry => {
+      if(entry.kind === 'campaign'){
+        const it = entry.data;
+        const timeLabel = it.resvTime ? `${calEscapeHtml(it.resvTime)} ` : '';
+        return `<div class="cal-event ${it.status}" onclick="calShowDetail('${it.id}','campaign')" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
+      } else {
+        const it = entry.data;
+        let timeLabel = it.time ? calEscapeHtml(it.time) : '';
+        if(it.endTime) timeLabel = timeLabel ? `${timeLabel}~${calEscapeHtml(it.endTime)}` : calEscapeHtml(it.endTime);
+        if(timeLabel) timeLabel += ' ';
+        const ownerClass = coupleOwnerClass(it);
+        return `<div class="cal-event ${ownerClass}" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
+      }
     }).join('');
-    cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${eventsHtml}</div>`);
+
+    const slotsHtml = rc ? slotsHtmlForCol(rc.row, rc.col) : '';
+    cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${slotsHtml}${eventsHtml}</div>`);
   }
 
   // 다음 달 채우기 (7의 배수로 맞춤)
@@ -419,22 +766,93 @@ function calRender(){
   }
 
   document.getElementById('calGrid').innerHTML = cells.join('');
+
+  // 렌더링용 세그먼트 평탄화 후 바(연속 블록) 배치
+  calCurrentSegments = [];
+  Object.keys(rowSegments).forEach(rowKey => {
+    rowSegments[rowKey].forEach(seg => calCurrentSegments.push(seg));
+  });
+  calPositionBars();
 }
 
+// 날짜 문자열이 현재 달력 그리드에서 몇 번째 행/열에 위치하는지 계산 (0=일요일 시작)
+function calDateRowCol(dateStr, y, m){
+  const [ey, em, ed] = dateStr.split('-').map(Number);
+  if(ey !== y || em !== m+1) return null;
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay();
+  const idx = startOffset + (ed - 1); // 헤더(dow) 행 제외, 0부터 시작하는 셀 인덱스
+  return { row: Math.floor(idx / 7), col: idx % 7 };
+}
+
+// 측정된 슬롯 위치를 바탕으로 연속된 다일 일정 바를 그린다
+function calPositionBars(){
+  const layer = document.getElementById('calBarsLayer');
+  const wrap = layer.parentElement;
+  if(!layer || !wrap) return;
+  const wrapRect = wrap.getBoundingClientRect();
+
+  const html = calCurrentSegments.map(seg => {
+    const segId = `${seg.it.id}_r${seg.row}`;
+    const els = Array.from(document.querySelectorAll(`[data-seg="${segId}"]`));
+    if(els.length === 0) return '';
+    let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity;
+    els.forEach(el => {
+      const r = el.getBoundingClientRect();
+      left = Math.min(left, r.left);
+      right = Math.max(right, r.right);
+      top = Math.min(top, r.top);
+      bottom = Math.max(bottom, r.bottom);
+    });
+    const it = seg.it;
+    const ownerClass = coupleOwnerClass(it);
+    const roundClass = (seg.isGlobalStart ? 'round-left ' : '') + (seg.isGlobalEnd ? 'round-right' : '');
+    const label = coupleTimeLabel(it, seg.isGlobalStart, seg.isGlobalEnd);
+    const text = (label ? label + ' ' : '') + calEscapeHtml(it.title);
+    const style = `left:${left - wrapRect.left}px; top:${top - wrapRect.top}px; width:${right-left}px; height:${bottom-top}px;`;
+    const titleAttr = `${it.time?calEscapeHtml(it.time):''}${it.endTime?('~'+calEscapeHtml(it.endTime)):''} ${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})`;
+    return `<div class="cal-bar ${ownerClass} ${roundClass}" style="${style}" onclick="calShowDetail('${it.id}','couple')" title="${titleAttr}">${text}</div>`;
+  }).join('');
+
+  layer.innerHTML = html;
+}
+
+let calResizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(calResizeTimer);
+  calResizeTimer = setTimeout(calPositionBars, 150);
+});
+
+/* ---- 체험단 데이터 로드 (기존 그대로, key만 전달하는 GET) ---- */
 async function calLoad(){
   try{
     const res = await fetch(`${CAL_API_URL}?key=${encodeURIComponent(CAL_SITE_KEY)}`, { cache: "no-store" });
     const data = await res.json();
     if(data.ok && Array.isArray(data.items)) calItems = data.items;
   }catch(e){
-    console.error("캘린더 데이터 로드 실패:", e);
+    console.error("체험단 캘린더 데이터 로드 실패:", e);
   }
   calRender();
 }
-calLoad();
-setInterval(calLoad, 30000);
 
-// ---- 이벤트 상세 팝업 ----
+/* ---- 부부 일정 데이터 로드 (신규, resource=events) ---- */
+async function coupleLoad(){
+  try{
+    const res = await fetch(`${CAL_API_URL}?key=${encodeURIComponent(CAL_SITE_KEY)}&resource=${COUPLE_RESOURCE}`, { cache: "no-store" });
+    const data = await res.json();
+    if(data.ok && Array.isArray(data.items)) coupleItems = data.items;
+  }catch(e){
+    console.error("부부 일정 데이터 로드 실패:", e);
+  }
+  calRender();
+}
+
+calLoad();
+coupleLoad();
+setInterval(calLoad, 30000);
+setInterval(coupleLoad, 30000);
+
+// ---- 이벤트 상세 팝업 (체험단 + 부부 일정 공용) ----
 const calFieldLabels = {
   region: "지역",
   provide: "제공내역",
@@ -446,7 +864,13 @@ const calFieldLabels = {
   resvTime: "예약시간"
 };
 
-function calShowDetail(id){
+function calShowDetail(id, kind){
+  if(kind === 'couple'){
+    coupleOpenEdit(id);
+    return;
+  }
+
+  // 체험단(기존 로직 그대로)
   const it = calItems.find(i => i.id === id);
   if(!it) return;
 
@@ -471,6 +895,109 @@ function calShowDetail(id){
 
 function calCloseDetail(){
   document.getElementById('calModalOverlay').classList.remove('open');
+}
+
+// ---- 부부 일정 추가/삭제 ----
+// ---- 관/보라 토글 ----
+function coupleSelectOwner(owner){
+  coupleSelectedOwner = owner;
+  document.querySelectorAll('#ownerToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.owner === owner);
+  });
+}
+
+// ---- 부부 일정 신규 추가 ----
+function coupleOpenAdd(){
+  coupleEditId = null;
+  document.getElementById('coupleModalTitle').textContent = "일정 추가";
+  document.getElementById('couple-in-title').value = "";
+  document.getElementById('couple-in-date').value = "";
+  document.getElementById('couple-in-endDate').value = "";
+  document.getElementById('couple-in-time').value = "";
+  document.getElementById('couple-in-endTime').value = "";
+  document.getElementById('couple-in-memo').value = "";
+  document.getElementById('coupleStatusMsg').textContent = "";
+  document.getElementById('coupleModalDelBtn').style.display = "none";
+  coupleSelectOwner("관");
+  document.getElementById('coupleAddOverlay').classList.add('open');
+}
+
+// ---- 기존 부부 일정 수정 화면 열기 ----
+function coupleOpenEdit(id){
+  const it = coupleItems.find(i => i.id === id);
+  if(!it) return;
+  coupleEditId = id;
+  document.getElementById('coupleModalTitle').textContent = "일정 수정";
+  document.getElementById('couple-in-title').value = it.title || "";
+  document.getElementById('couple-in-date').value = it.date || "";
+  document.getElementById('couple-in-endDate').value = it.endDate || "";
+  document.getElementById('couple-in-time').value = it.time || "";
+  document.getElementById('couple-in-endTime').value = it.endTime || "";
+  document.getElementById('couple-in-memo').value = it.memo || "";
+  document.getElementById('coupleStatusMsg').textContent = "";
+  document.getElementById('coupleModalDelBtn').style.display = "block";
+  coupleSelectOwner(it.owner === '보라' ? '보라' : (it.owner === '공통' ? '공통' : '관'));
+  document.getElementById('coupleAddOverlay').classList.add('open');
+}
+
+function coupleCloseAdd(){
+  document.getElementById('coupleAddOverlay').classList.remove('open');
+}
+
+async function coupleAddEvent(){
+  const title = document.getElementById('couple-in-title').value.trim();
+  const date = document.getElementById('couple-in-date').value;
+  const endDate = document.getElementById('couple-in-endDate').value;
+  const time = document.getElementById('couple-in-time').value;
+  const endTime = document.getElementById('couple-in-endTime').value;
+  const memo = document.getElementById('couple-in-memo').value.trim();
+  const statusMsg = document.getElementById('coupleStatusMsg');
+  const saveBtn = document.getElementById('coupleSaveBtn');
+
+  if(!title){ alert('제목을 입력해주세요.'); return; }
+  if(!date){ alert('날짜를 선택해주세요.'); return; }
+  if(endDate && endDate < date){ alert('종료일은 날짜(시작일)보다 빠를 수 없어요.'); return; }
+  if(time && endTime && (!endDate || endDate === date) && endTime < time){
+    alert('종료 시간은 시작 시간보다 빠를 수 없어요. (날짜가 바뀌는 일정이면 종료일도 선택해주세요)');
+    return;
+  }
+
+  const isEdit = !!coupleEditId;
+  const item = {
+    id: isEdit ? coupleEditId : uid(),
+    title, date, endDate, time, endTime, memo,
+    owner: coupleSelectedOwner,
+    createdAt: isEdit
+      ? (coupleItems.find(i => i.id === coupleEditId)?.createdAt || new Date().toISOString())
+      : new Date().toISOString()
+  };
+
+  saveBtn.disabled = true;
+  statusMsg.textContent = "저장 중...";
+  try{
+    const data = await callApi(isEdit ? "update" : "add", { item });
+    coupleItems = data.items;
+    statusMsg.textContent = "저장 완료 ✓";
+    calRender();
+    setTimeout(coupleCloseAdd, 500);
+  }catch(err){
+    statusMsg.textContent = "저장 실패: " + err.message;
+  }
+  saveBtn.disabled = false;
+}
+
+async function coupleDeleteEvent(id){
+  if(!id) return;
+  if(!confirm('이 일정을 삭제할까요?')) return;
+  try{
+    const data = await callApi("delete", { id });
+    coupleItems = data.items;
+  }catch(err){
+    alert("삭제 실패: " + err.message);
+    return;
+  }
+  coupleCloseAdd();
+  calRender();
 }
 </script>
 <script src="./auth-gate.js"></script>
