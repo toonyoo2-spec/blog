@@ -117,7 +117,7 @@
     padding:1px 5px;
     border-radius:4px;
   }
-  #appContent{display:none;}
+  #appContent{display:block;}
 
   /* ---- 캘린더 ---- */
   .cal-panel{
@@ -484,7 +484,7 @@
   </div>
 
   <!-- 부부 일정 로그인 팝업 (아이디+비밀번호) -->
-  <div class="cal-modal-overlay" id="coupleLoginOverlay">
+  <div class="cal-modal-overlay open" id="coupleLoginOverlay">
     <div class="cal-modal">
       <div class="cal-modal-title" style="margin-bottom:6px;">일정 로그인</div>
       <p style="font-size:12.5px;color:var(--sub);margin:0 0 16px;">부부 일정을 보고 수정하려면 로그인이 필요합니다.</p>
@@ -556,8 +556,8 @@ const CAL_SITE_KEY = "130702";
 
 /* ⚠️ 아래 두 값을 본인 Supabase 프로젝트 값으로 교체하세요.
    Supabase 대시보드 → Project Settings → API 에서 확인 가능합니다. */
-const SUPABASE_URL = "https://supabase.com/dashboard/project/kblwddlquwlvumhwkirl/settings/api-keys";
-const SUPABASE_ANON_KEY = "sb_publishable_X6OqS-mM1igLrGcc7g4CzQ_fbVXpblY";
+const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let calItems = [];       // 체험단 항목 (기존 그대로, GAS)
@@ -1111,6 +1111,5 @@ async function coupleDeleteEvent(id){
   coupleCloseAdd();
 }
 </script>
-<script src="./auth-gate.js"></script>
 </body>
 </html>
