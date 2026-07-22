@@ -222,50 +222,143 @@
 
   .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
 
-  #appContent{display:block;}
+  /* 화면 표시 숨김 해제 */
+  #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 ---- */
-  .yearly-panel{padding-bottom:16px;}
-  .yearly-scroll{overflow-x:auto;border-radius:8px;}
-  .yearly-scroll + .yearly-scroll{margin-top:16px;}
-  table.yearly-table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
-  .yearly-table th{
-    padding:8px 10px;
-    text-align:right;
-    font-weight:600;
-    color:var(--sub);
+  /* ── 비밀번호 게이트 ── */
+  #gateOverlay{
+    position:fixed;inset:0;z-index:9999;
     background:var(--bg);
-    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
   }
-  .yearly-table th.label{text-align:left;color:var(--ink);}
-  .yearly-table td{
-    padding:7px 10px;
-    text-align:right;
-    border-bottom:1px solid #eee;
+  #gateOverlay.hidden{display:none;}
+  .gate-box{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:40px 36px;width:320px;max-width:88vw;
+    text-align:center;
   }
-  .yearly-table td.label{text-align:left;color:var(--sub);}
-  .yearly-table tr.balance-row td, .yearly-table tr.balance-row th{background:var(--saving-bg);}
-  .yearly-table tr.balance-row td.label{color:var(--saving-ink);font-weight:600;}
-  .yearly-table tr.total-row td{background:var(--expense-bg);font-weight:700;color:var(--expense-ink);}
-  .yearly-table tr.total-row td.label{color:var(--expense-ink);}
-  .yearly-table tr.sub-total-row td{background:#fbeceb;font-weight:600;}
-  .yearly-table tr.sub-total-row td.label{color:#9a4a44;}
-  .yearly-table tr.detail-row td{background:#fff;color:var(--ink);}
-  .yearly-table tr.detail-row:hover td{background:#fafaf7;}
-  .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
+  .gate-box h2{font-size:20px;margin:0 0 6px;letter-spacing:-0.02em;}
+  .gate-box p{font-size:13px;color:var(--sub);margin:0 0 24px;}
+  .gate-box input{
+    width:100%;padding:11px 14px;border:1px solid var(--line);
+    border-radius:8px;font-size:15px;text-align:center;
+    font-family:inherit;margin-bottom:16px;box-sizing:border-box;
+  }
+  .gate-box input:focus{outline:none;border-color:var(--accent);}
+  .gate-box button{
+    width:100%;padding:11px;background:var(--accent);color:#fff;
+    border:none;border-radius:8px;font-size:14px;font-weight:600;
+    cursor:pointer;font-family:inherit;
+  }
+  .gate-box button:hover{opacity:0.9;}
+  #gateError{color:#b3452f;font-size:12.5px;margin-top:10px;display:none;} 
 
+  /* 📱 태블릿/모바일 (900px 이하) */
   @media (max-width:900px){
     .form-grid{grid-template-columns:1fr 1fr;}
     .summary{grid-template-columns:repeat(2,1fr);}
+  }
+
+  /* 📱 모바일 최적화 (768px 이하) */
+  @media (max-width:768px){
+    body{padding:20px 14px 70px;}
+    h1{font-size:22px;}
+    header p{font-size:13px;}
+
+    .month-header{padding:20px 16px;}
+    .month-controls{gap:16px;margin-bottom:12px;}
+    .month-controls button{width:44px;height:44px;font-size:18px;}
+    .current-month{font-size:22px;}
+    .month-mini-summary{font-size:13px;padding:7px 16px;}
+
+    .panel{padding:16px;}
+    .panel h2{font-size:14px;}
+
+    .form-grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .field label{font-size:11.5px;}
+    input, select{font-size:16px;padding:11px 12px;} /* 16px 미만이면 iOS에서 자동 확대됨 */
+    .add-btn{width:100%;text-align:center;padding:13px;font-size:14.5px;margin-top:6px;}
+
+    .sum-card{padding:12px 14px;}
+    .sum-card .num{font-size:17px;}
+    .sum-card .lbl{font-size:11.5px;}
+
+    /* 테이블 → 카드 리스트로 전환 */
     table, thead, tbody, th, td, tr{display:block;}
     thead{display:none;}
-    tbody tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:10px 12px;}
-    tbody td{border:none;padding:6px 0;}
-    tbody td::before{content:attr(data-label);display:block;font-size:11px;color:var(--sub);margin-bottom:2px;}
+    tbody tr{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:12px;
+      margin-bottom:12px;
+      padding:14px 16px;
+      box-shadow:0 2px 6px rgba(0,0,0,0.03);
+      position:relative;
+    }
+    tbody tr:hover{background:var(--card);}
+    tbody td{
+      border:none;
+      padding:6px 0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      text-align:right;
+    }
+    tbody td::before{
+      content:attr(data-label);
+      font-size:11.5px;
+      color:var(--sub);
+      font-weight:600;
+      flex-shrink:0;
+      text-align:left;
+    }
+    /* 수정/삭제 버튼은 카드 우상단 고정, 터치 영역 확대 */
+    tbody td:last-child{
+      position:absolute;
+      top:10px;
+      right:12px;
+      padding:0;
+      gap:2px;
+    }
+    tbody td:last-child::before{display:none;}
+    .edit-btn{font-size:13.5px;padding:6px 8px;}
+    .del-btn{font-size:18px;padding:6px 8px;}
+
+    td[data-label="카테고리"], td[data-label="세부내용"], td[data-label="비고"]{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:2px;
+    }
+    td[data-label="카테고리"] span, td[data-label="세부내용"], td[data-label="비고"]{
+      text-align:left;
+    }
+  }
+
+  /* 📱 좁은 화면 (480px 이하) */
+  @media (max-width:480px){
+    .form-grid{grid-template-columns:1fr;}
+    .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .month-header{padding:16px 12px;}
+    .current-month{font-size:20px;min-width:70px;}
+    .month-mini-summary{font-size:12px;padding:6px 12px;flex-wrap:wrap;justify-content:center;}
+    .month-mini-summary .divider{margin:0 8px;}
+    .gate-box{padding:32px 22px;}
   }
 </style>
 </head>
 <body>
+  <!-- ── 비밀번호 게이트 오버레이 ── -->
+  <div id="gateOverlay">
+    <div class="gate-box">
+      <h2>ledger</h2>
+      <p>접속하려면 비밀번호를 입력하세요</p>
+      <input type="password" id="gateInput" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkGate()">
+      <button onclick="checkGate()">입장하기</button>
+      <div id="gateError">비밀번호가 올바르지 않습니다</div>
+    </div>
+  </div>
+
 <div class="wrap" id="appContent">
 
   <header>
@@ -273,14 +366,6 @@
     <h1>가계부</h1>
     <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
   </header>
-
-  <!-- 연간 한눈에 보기 -->
-  <div class="panel yearly-panel">
-    <h2>연간 한눈에 보기</h2>
-    <div id="yearlySummary">
-      <div class="yearly-loading">연간 데이터를 불러오는 중...</div>
-    </div>
-  </div>
 
   <!-- 변경된 월 선택 UI -->
   <div class="month-header">
@@ -450,128 +535,6 @@ function onMidChange(){
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
-// ---- 연간 한눈에 보기 ----
-async function fetchMonthEntries(month){
-  try{
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${month}`, { cache:"no-store" });
-    const data = await res.json();
-    if(data.ok && Array.isArray(data.items)) return data.items;
-  }catch(e){
-    console.error(`${month}월 데이터 로드 실패:`, e);
-  }
-  return [];
-}
-
-async function loadYearlySummary(){
-  const monthsData = await Promise.all(
-    Array.from({length:12}, (_, i) => fetchMonthEntries(i + 1))
-  );
-  renderYearlySummary(monthsData);
-}
-
-function renderYearlySummary(monthsData){
-  const N = 12;
-  const incomeByMonth = new Array(N).fill(0);
-  const tree = {};       // tree[large][mid][small] = [12개월 금액]
-  const largeTotal = {}; // largeTotal[large] = [12개월 금액]
-
-  monthsData.forEach((entries, idx) => {
-    entries.forEach(it => {
-      const amt = Number(it.amount) || 0;
-      if(it.type === "수입"){
-        incomeByMonth[idx] += amt;
-      } else if(it.type === "지출"){
-        const large = it.large || "기타";
-        const mid = it.mid || "기타";
-        const small = it.small || "기타";
-
-        if(!tree[large]) tree[large] = {};
-        if(!tree[large][mid]) tree[large][mid] = {};
-        if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
-        tree[large][mid][small][idx] += amt;
-
-        if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
-        largeTotal[large][idx] += amt;
-      }
-    });
-  });
-
-  const totalExpenseByMonth = new Array(N).fill(0);
-  Object.values(largeTotal).forEach(arr => arr.forEach((v, i) => totalExpenseByMonth[i] += v));
-
-  const balanceByMonth = incomeByMonth.map((inc, i) => inc - totalExpenseByMonth[i]);
-  const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
-  const sum = arr => arr.reduce((a, b) => a + b, 0);
-
-  const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
-
-  // ---- 표 1: 수입 - 지출 / 저축율 ----
-  const table1 = `
-    <table class="yearly-table">
-      <thead>
-        <tr><th class="label" colspan="2">수입 - 지출</th>${monthHeaders}<th>연간 Balance</th></tr>
-      </thead>
-      <tbody>
-        <tr class="balance-row">
-          <td class="label" colspan="2">금액</td>
-          ${balanceByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}
-          <td>${formatMoney(sum(balanceByMonth))}</td>
-        </tr>
-        <tr class="balance-row">
-          <td class="label" colspan="2">저축율</td>
-          ${savingRateByMonth.map(v => `<td>${v===null ? '-' : v.toFixed(2)+'%'}</td>`).join('')}
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  `;
-
-  // ---- 표 2: 지출 상세 (고정지출/변동지출 → 중분류 → 소분류) ----
-  const order = { "고정지출":0, "변동지출":1 };
-  const largeOrder = Object.keys(largeTotal).sort((a, b) => {
-    const ao = order[a] !== undefined ? order[a] : 2;
-    const bo = order[b] !== undefined ? order[b] : 2;
-    return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
-  });
-
-  let rows = `<tr class="total-row"><td class="label" colspan="3">지출 합계</td>${totalExpenseByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(totalExpenseByMonth))}</td></tr>`;
-
-  largeOrder.forEach(large => {
-    rows += `<tr class="sub-total-row"><td class="label" colspan="3">${escapeHtml(large)}</td>${largeTotal[large].map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(largeTotal[large]))}</td></tr>`;
-  });
-
-  largeOrder.forEach(large => {
-    const mids = tree[large] || {};
-    Object.keys(mids).forEach(mid => {
-      const smalls = mids[mid];
-      Object.keys(smalls).forEach(small => {
-        const arr = smalls[small];
-        rows += `<tr class="detail-row">
-          <td class="label">${escapeHtml(large)}</td>
-          <td class="label">${escapeHtml(mid)}</td>
-          <td class="label">${escapeHtml(small)}</td>
-          ${arr.map(v => `<td>${formatMoney(v)}</td>`).join('')}
-          <td>${formatMoney(sum(arr))}</td>
-        </tr>`;
-      });
-    });
-  });
-
-  const table2 = `
-    <table class="yearly-table">
-      <thead>
-        <tr><th class="label">대분류</th><th class="label">중분류</th><th class="label">소분류</th>${monthHeaders}<th>합계</th></tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-
-  document.getElementById('yearlySummary').innerHTML = `
-    <div class="yearly-scroll">${table1}</div>
-    <div class="yearly-scroll">${table2}</div>
-  `;
-}
-
 // ---- 거래 로드 & 렌더 ----
 async function loadEntries(){
   try{
@@ -704,7 +667,6 @@ async function addEntry(){
   resetForm();
   btn.disabled = false;
   render();
-  loadYearlySummary();
 }
 
 function startEdit(rowIndex){
@@ -751,13 +713,25 @@ async function deleteEntry(rowIndex){
     return;
   }
   render();
-  loadYearlySummary();
+}
+
+// ---- 비밀번호 게이트 ----
+const GATE_KEY = "130702";
+function checkGate(){
+  const val = document.getElementById('gateInput').value.trim();
+  if(val === GATE_KEY){
+    document.getElementById('gateOverlay').classList.add('hidden');
+    document.getElementById('appContent').style.display = '';
+    updateMonthDisplay();
+    loadCategories().then(loadEntries);
+  } else {
+    document.getElementById('gateError').style.display = 'block';
+    document.getElementById('gateInput').value = '';
+  }
 }
 
 // ---- 초기화 ----
-updateMonthDisplay();
-loadCategories().then(loadEntries);
-loadYearlySummary();
 </script>
+<script src="./auth-gate.js"></script>
 </body>
 </html>
