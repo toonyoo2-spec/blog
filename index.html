@@ -455,6 +455,10 @@
         <input type="date" id="couple-in-date">
       </div>
       <div class="couple-field">
+        <label>종료일 (선택 — 여러 날에 걸친 일정일 때만)</label>
+        <input type="date" id="couple-in-endDate">
+      </div>
+      <div class="couple-field">
         <label>시간 (선택)</label>
         <input type="time" id="couple-in-time">
       </div>
@@ -497,6 +501,28 @@ function calNormalizeDate(v){
   const m = String(d.getMonth()+1).padStart(2,'0');
   const day = String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
+}
+
+// 시작일~종료일을 하루 단위 날짜 문자열 배열로 펼침 (여러 날에 걸친 부부 일정용)
+function calDateRange(start, end){
+  const startStr = calNormalizeDate(start);
+  if(!startStr) return [];
+  const endStr = calNormalizeDate(end) || startStr;
+
+  const startD = new Date(startStr + "T00:00:00");
+  const endD = new Date(endStr + "T00:00:00");
+  if(isNaN(endD.getTime()) || endD < startD) return [startStr];
+
+  const dates = [];
+  let cur = new Date(startD);
+  // 안전장치: 과도하게 긴 범위 방지 (최대 60일)
+  let guard = 0;
+  while(cur <= endD && guard < 60){
+    dates.push(calNormalizeDate(cur));
+    cur.setDate(cur.getDate() + 1);
+    guard++;
+  }
+  return dates;
 }
 
 function calEscapeHtml(str){
@@ -546,12 +572,13 @@ function calRender(){
   });
 
   coupleItems.forEach(it => {
-    const dateStr = calNormalizeDate(it.date);
-    if(!dateStr) return;
-    const [ey, em] = dateStr.split('-').map(Number);
-    if(ey === y && em === m+1){
-      (byDate[dateStr] = byDate[dateStr] || []).push({ kind:'couple', data: it });
-    }
+    const dates = calDateRange(it.date, it.endDate);
+    dates.forEach(dateStr => {
+      const [ey, em] = dateStr.split('-').map(Number);
+      if(ey === y && em === m+1){
+        (byDate[dateStr] = byDate[dateStr] || []).push({ kind:'couple', data: it, isRange: dates.length > 1 });
+      }
+    });
   });
 
   const first = new Date(y, m, 1);
@@ -589,7 +616,8 @@ function calRender(){
         const it = entry.data;
         const timeLabel = it.time ? `${calEscapeHtml(it.time)} ` : '';
         const ownerClass = it.owner === '보라' ? 'owner-bora' : (it.owner === '공통' ? 'owner-common' : 'owner-gwan');
-        return `<div class="cal-event ${ownerClass}" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
+        const rangeMark = entry.isRange ? '↔ ' : '';
+        return `<div class="cal-event ${ownerClass}" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})"><span class="cal-event-time">${timeLabel}</span>${rangeMark}${calEscapeHtml(it.title)}</div>`;
       }
     }).join('');
 
@@ -695,6 +723,7 @@ function coupleOpenAdd(){
   document.getElementById('coupleModalTitle').textContent = "일정 추가";
   document.getElementById('couple-in-title').value = "";
   document.getElementById('couple-in-date').value = "";
+  document.getElementById('couple-in-endDate').value = "";
   document.getElementById('couple-in-time').value = "";
   document.getElementById('couple-in-memo').value = "";
   document.getElementById('coupleStatusMsg').textContent = "";
@@ -711,6 +740,7 @@ function coupleOpenEdit(id){
   document.getElementById('coupleModalTitle').textContent = "일정 수정";
   document.getElementById('couple-in-title').value = it.title || "";
   document.getElementById('couple-in-date').value = it.date || "";
+  document.getElementById('couple-in-endDate').value = it.endDate || "";
   document.getElementById('couple-in-time').value = it.time || "";
   document.getElementById('couple-in-memo').value = it.memo || "";
   document.getElementById('coupleStatusMsg').textContent = "";
@@ -726,6 +756,7 @@ function coupleCloseAdd(){
 async function coupleAddEvent(){
   const title = document.getElementById('couple-in-title').value.trim();
   const date = document.getElementById('couple-in-date').value;
+  const endDate = document.getElementById('couple-in-endDate').value;
   const time = document.getElementById('couple-in-time').value;
   const memo = document.getElementById('couple-in-memo').value.trim();
   const statusMsg = document.getElementById('coupleStatusMsg');
@@ -733,11 +764,12 @@ async function coupleAddEvent(){
 
   if(!title){ alert('제목을 입력해주세요.'); return; }
   if(!date){ alert('날짜를 선택해주세요.'); return; }
+  if(endDate && endDate < date){ alert('종료일은 날짜(시작일)보다 빠를 수 없어요.'); return; }
 
   const isEdit = !!coupleEditId;
   const item = {
     id: isEdit ? coupleEditId : uid(),
-    title, date, time, memo,
+    title, date, endDate, time, memo,
     owner: coupleSelectedOwner,
     createdAt: isEdit
       ? (coupleItems.find(i => i.id === coupleEditId)?.createdAt || new Date().toISOString())
