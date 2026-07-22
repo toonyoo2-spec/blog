@@ -329,8 +329,8 @@
 /* ===========================================================
    Apps Script 연동 설정
    =========================================================== */
-// 이전 파일에서 가져온 완벽하게 작동하는 URL 적용 완료!
-const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
+// 알려주신 정상 API_URL 적용
+const API_URL = "https://script.google.com/macros/s/AKfycbw-eQiXnPc5SO9xhgL5PMuSYIVdJE0BzNCtDRX5e6MvtLhO3AjcG7GsF0tqEP2nY8f4/exec";
 const SITE_KEY = "130702"; 
 
 let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
@@ -359,7 +359,7 @@ function changeMonth(offset){
   currentMonth = newMonth;
   
   updateMonthDisplay();
-  loadEntries(); // 월이 변경되면 데이터 다시 불러오기
+  loadEntries();
 }
 
 // ---- 카테고리 로드 & 캐스케이딩 선택 ----
@@ -385,7 +385,7 @@ function onTypeChange(){
   const sel = document.getElementById('in-type');
   sel.className = "type-select " + sel.value;
   const list = categories[sel.value] || [];
-  const larges = [...new Set(list.map(c => c.large))];
+  const larges = [...new Set(list.map(c => c.large))].filter(Boolean);
   const largeSel = document.getElementById('in-large');
   largeSel.innerHTML = larges.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
   onLargeChange();
@@ -397,7 +397,8 @@ function onLargeChange(){
   const list = (categories[type] || []).filter(c => c.large === large);
   const mids = [...new Set(list.map(c => c.mid))].filter(Boolean);
   const midSel = document.getElementById('in-mid');
-  midSel.innerHTML = mids.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  // 중분류: 빈칸 선택지 추가
+  midSel.innerHTML = `<option value="">- 선택 안함 -</option>` + mids.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   onMidChange();
 }
 
@@ -408,7 +409,8 @@ function onMidChange(){
   const list = (categories[type] || []).filter(c => c.large === large && c.mid === mid);
   const smalls = [...new Set(list.map(c => c.small))].filter(Boolean);
   const smallSel = document.getElementById('in-small');
-  smallSel.innerHTML = smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  // 소분류: 빈칸 선택지 추가
+  smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
 // ---- 거래 로드 & 렌더 ----
@@ -432,7 +434,6 @@ function renderSummary(){
   const totals = { "수입":0, "지출":0, "저축":0, "투자":0 };
   entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += it.amount; });
 
-  // 1. 하단 전체 상세 요약 카드 렌더링
   document.getElementById('summary').innerHTML = `
     <div class="sum-card income"><div class="num">${formatMoney(totals["수입"])}원</div><div class="lbl">수입</div></div>
     <div class="sum-card expense"><div class="num">${formatMoney(totals["지출"])}원</div><div class="lbl">지출</div></div>
@@ -440,7 +441,6 @@ function renderSummary(){
     <div class="sum-card invest"><div class="num">${formatMoney(totals["투자"])}원</div><div class="lbl">투자</div></div>
   `;
 
-  // 2. 상단 미니 대시보드 (총 수입/지출) 업데이트
   document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
   document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
@@ -462,7 +462,11 @@ function renderTable(){
     <tr>
       <td data-label="날짜">${escapeHtml(it.date)}</td>
       <td data-label="구분"><span class="type-badge ${it.type}">${escapeHtml(it.type)}</span></td>
-      <td data-label="카테고리" class="cat-cell">${escapeHtml(it.large)} · ${escapeHtml(it.mid)} · ${escapeHtml(it.small)}</td>
+      <td data-label="카테고리" class="cat-cell">
+        ${escapeHtml(it.large)}
+        ${it.mid ? ' · ' + escapeHtml(it.mid) : ''}
+        ${it.small ? ' · ' + escapeHtml(it.small) : ''}
+      </td>
       <td data-label="세부내용">${escapeHtml(it.detail)}</td>
       <td data-label="금액" class="amount-cell">${formatMoney(it.amount)}원</td>
       <td data-label="결제수단">${escapeHtml(it.payment) || '-'}</td>
@@ -497,6 +501,11 @@ function resetForm(){
   document.getElementById('in-amount').value = "";
   document.getElementById('in-payment').value = "";
   document.getElementById('in-note').value = "";
+  
+  // 폼 초기화 시 셀렉트 박스도 첫 번째 값으로 초기화
+  document.getElementById('in-type').selectedIndex = 0;
+  onTypeChange();
+  
   editingRowIndex = null;
   document.getElementById('addBtn').textContent = "+ 추가하기";
 }
@@ -543,13 +552,19 @@ function startEdit(rowIndex){
   if(!it) return;
 
   document.getElementById('in-date').value = it.date;
+  
+  // 값 세팅 후 옵션 다시 불러오기
   document.getElementById('in-type').value = it.type;
   onTypeChange();
-  document.getElementById('in-large').value = it.large;
+  
+  if (it.large) document.getElementById('in-large').value = it.large;
   onLargeChange();
-  document.getElementById('in-mid').value = it.mid;
+  
+  if (it.mid) document.getElementById('in-mid').value = it.mid;
   onMidChange();
-  document.getElementById('in-small').value = it.small;
+  
+  if (it.small) document.getElementById('in-small').value = it.small;
+
   document.getElementById('in-detail').value = it.detail;
   document.getElementById('in-amount').value = it.amount;
   document.getElementById('in-payment').value = it.payment;
