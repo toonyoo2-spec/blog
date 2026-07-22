@@ -18,8 +18,9 @@
     --done-bg:#e3ede4;   --done-ink:#2f6b3c;
     --end-bg:#ececea;    --end-ink:#78766e;
 
-    /* 부부 일정 전용 색상 (체험단 색상과 겹치지 않게) */
-    --couple-bg:#fbe6ee;  --couple-ink:#b23a68;
+    /* 부부 일정 전용 색상 (사람별로 구분) */
+    --owner-gwan-bg:#e2eef8;  --owner-gwan-ink:#2b6ca3;
+    --owner-bora-bg:#efe6fb;  --owner-bora-ink:#7a4fb0;
   }
   *{box-sizing:border-box;}
   body{
@@ -150,9 +151,9 @@
     right:0;
     top:50%;
     transform:translateY(-50%);
-    border:1px solid var(--couple-ink);
-    background:var(--couple-bg);
-    color:var(--couple-ink);
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent);
     padding:6px 12px;
     border-radius:20px;
     font-size:12px;
@@ -160,7 +161,7 @@
     cursor:pointer;
     white-space:nowrap;
   }
-  .cal-add-couple-btn:hover{opacity:0.85;}
+  .cal-add-couple-btn:hover{background:var(--accent);color:#fff;}
 
   .cal-legend{
     display:flex;
@@ -177,7 +178,8 @@
   .dot.confirm{background:var(--conf-ink);}
   .dot.done{background:var(--done-ink);}
   .dot.end{background:var(--end-ink);}
-  .dot.couple{background:var(--couple-ink);}
+  .dot.owner-gwan{background:var(--owner-gwan-ink);}
+  .dot.owner-bora{background:var(--owner-bora-ink);}
 
   .cal-grid{
     display:grid;
@@ -220,7 +222,8 @@
   .cal-event.confirm{background:var(--conf-bg);color:var(--conf-ink);}
   .cal-event.done{background:var(--done-bg);color:var(--done-ink);}
   .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
-  .cal-event.couple{background:var(--couple-bg);color:var(--couple-ink);font-weight:600;}
+  .cal-event.owner-gwan{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);font-weight:600;}
+  .cal-event.owner-bora{background:var(--owner-bora-bg);color:var(--owner-bora-ink);font-weight:600;}
   .cal-event-time{font-weight:700;margin-right:3px;}
   .cal-empty-msg{
     text-align:center;
@@ -318,12 +321,32 @@
   .couple-field textarea{resize:vertical;min-height:60px;}
   .couple-field input:focus, .couple-field textarea:focus{
     outline:none;
-    border-color:var(--couple-ink);
+    border-color:var(--accent);
   }
+  .owner-toggle{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .owner-toggle button{
+    flex:1;
+    border:none;
+    background:#fff;
+    padding:9px 0;
+    font-size:13px;
+    font-weight:600;
+    color:var(--sub);
+    cursor:pointer;
+  }
+  .owner-toggle button + button{border-left:1px solid var(--line);}
+  .owner-toggle button.active[data-owner="관"]{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);}
+  .owner-toggle button.active[data-owner="보라"]{background:var(--owner-bora-bg);color:var(--owner-bora-ink);}
   .couple-save-btn{
     margin-top:4px;
     width:100%;
-    background:var(--couple-ink);
+    background:var(--accent);
     color:#fff;
     border:none;
     padding:10px 0;
@@ -390,11 +413,12 @@
       <button class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
       <div class="cal-title" id="calTitle"></div>
       <button class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
-      <button class="cal-add-couple-btn" onclick="coupleOpenAdd()">+ 부부 일정</button>
+      <button class="cal-add-couple-btn" onclick="coupleOpenAdd()">+ 일정 추가</button>
     </div>
     <div class="cal-legend">
       <span><i class="dot confirm"></i>예약완료(체험단)</span>
-      <span><i class="dot couple"></i>부부 일정</span>
+      <span><i class="dot owner-gwan"></i>관</span>
+      <span><i class="dot owner-bora"></i>보라</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
@@ -411,7 +435,11 @@
   <div class="cal-modal-overlay" id="coupleAddOverlay" onclick="if(event.target===this) coupleCloseAdd()">
     <div class="cal-modal">
       <button class="cal-modal-close" onclick="coupleCloseAdd()">✕</button>
-      <div class="cal-modal-title" style="margin-bottom:16px;">부부 일정 추가</div>
+      <div class="cal-modal-title" id="coupleModalTitle" style="margin-bottom:16px;">일정 추가</div>
+      <div class="owner-toggle" id="ownerToggle">
+        <button type="button" data-owner="관" onclick="coupleSelectOwner('관')">관</button>
+        <button type="button" data-owner="보라" onclick="coupleSelectOwner('보라')">보라</button>
+      </div>
       <div class="couple-field">
         <label>제목</label>
         <input type="text" id="couple-in-title" placeholder="예: 결혼기념일 저녁 예약">
@@ -429,6 +457,7 @@
         <textarea id="couple-in-memo" placeholder="장소, 준비물 등"></textarea>
       </div>
       <button class="couple-save-btn" id="coupleSaveBtn" onclick="coupleAddEvent()">저장</button>
+      <button class="cal-modal-del-btn" id="coupleModalDelBtn" style="display:none;" onclick="coupleDeleteEvent(coupleEditId)">삭제</button>
       <div class="couple-status-msg" id="coupleStatusMsg"></div>
     </div>
   </div>
@@ -447,6 +476,8 @@ const COUPLE_RESOURCE = "events";
 
 let calItems = [];       // 체험단 항목 (기존 그대로)
 let coupleItems = [];    // 부부 일정 항목 (신규)
+let coupleEditId = null; // 수정 중인 부부 일정 id (null이면 신규 추가 모드)
+let coupleSelectedOwner = "관";
 let calCursor = new Date();
 calCursor.setDate(1);
 
@@ -551,7 +582,8 @@ function calRender(){
       } else {
         const it = entry.data;
         const timeLabel = it.time ? `${calEscapeHtml(it.time)} ` : '';
-        return `<div class="cal-event couple" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (부부 일정)"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
+        const ownerClass = it.owner === '보라' ? 'owner-bora' : 'owner-gwan';
+        return `<div class="cal-event ${ownerClass}" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
       }
     }).join('');
 
@@ -611,17 +643,7 @@ const calFieldLabels = {
 
 function calShowDetail(id, kind){
   if(kind === 'couple'){
-    const it = coupleItems.find(i => i.id === id);
-    if(!it) return;
-    document.getElementById('calModalBody').innerHTML = `
-      <div class="cal-modal-title">${calEscapeHtml(it.title)}</div>
-      <div class="cal-modal-badge" style="background:var(--couple-bg);color:var(--couple-ink);">부부 일정</div>
-      <div class="cal-modal-row"><span class="k">날짜</span><span class="v">${calEscapeHtml(it.date)}</span></div>
-      ${it.time ? `<div class="cal-modal-row"><span class="k">시간</span><span class="v">${calEscapeHtml(it.time)}</span></div>` : ''}
-      ${it.memo ? `<div class="cal-modal-row"><span class="k">메모</span><span class="v">${calEscapeHtml(it.memo)}</span></div>` : ''}
-      <button class="cal-modal-del-btn" onclick="coupleDeleteEvent('${it.id}')">삭제</button>
-    `;
-    document.getElementById('calModalOverlay').classList.add('open');
+    coupleOpenEdit(id);
     return;
   }
 
@@ -653,12 +675,41 @@ function calCloseDetail(){
 }
 
 // ---- 부부 일정 추가/삭제 ----
+// ---- 관/보라 토글 ----
+function coupleSelectOwner(owner){
+  coupleSelectedOwner = owner;
+  document.querySelectorAll('#ownerToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.owner === owner);
+  });
+}
+
+// ---- 부부 일정 신규 추가 ----
 function coupleOpenAdd(){
+  coupleEditId = null;
+  document.getElementById('coupleModalTitle').textContent = "일정 추가";
   document.getElementById('couple-in-title').value = "";
   document.getElementById('couple-in-date').value = "";
   document.getElementById('couple-in-time').value = "";
   document.getElementById('couple-in-memo').value = "";
   document.getElementById('coupleStatusMsg').textContent = "";
+  document.getElementById('coupleModalDelBtn').style.display = "none";
+  coupleSelectOwner("관");
+  document.getElementById('coupleAddOverlay').classList.add('open');
+}
+
+// ---- 기존 부부 일정 수정 화면 열기 ----
+function coupleOpenEdit(id){
+  const it = coupleItems.find(i => i.id === id);
+  if(!it) return;
+  coupleEditId = id;
+  document.getElementById('coupleModalTitle').textContent = "일정 수정";
+  document.getElementById('couple-in-title').value = it.title || "";
+  document.getElementById('couple-in-date').value = it.date || "";
+  document.getElementById('couple-in-time').value = it.time || "";
+  document.getElementById('couple-in-memo').value = it.memo || "";
+  document.getElementById('coupleStatusMsg').textContent = "";
+  document.getElementById('coupleModalDelBtn').style.display = "block";
+  coupleSelectOwner(it.owner === '보라' ? '보라' : '관');
   document.getElementById('coupleAddOverlay').classList.add('open');
 }
 
@@ -677,16 +728,20 @@ async function coupleAddEvent(){
   if(!title){ alert('제목을 입력해주세요.'); return; }
   if(!date){ alert('날짜를 선택해주세요.'); return; }
 
-  const newItem = {
-    id: uid(),
+  const isEdit = !!coupleEditId;
+  const item = {
+    id: isEdit ? coupleEditId : uid(),
     title, date, time, memo,
-    createdAt: new Date().toISOString()
+    owner: coupleSelectedOwner,
+    createdAt: isEdit
+      ? (coupleItems.find(i => i.id === coupleEditId)?.createdAt || new Date().toISOString())
+      : new Date().toISOString()
   };
 
   saveBtn.disabled = true;
   statusMsg.textContent = "저장 중...";
   try{
-    const data = await callApi("add", { item: newItem });
+    const data = await callApi(isEdit ? "update" : "add", { item });
     coupleItems = data.items;
     statusMsg.textContent = "저장 완료 ✓";
     calRender();
@@ -698,7 +753,8 @@ async function coupleAddEvent(){
 }
 
 async function coupleDeleteEvent(id){
-  if(!confirm('이 부부 일정을 삭제할까요?')) return;
+  if(!id) return;
+  if(!confirm('이 일정을 삭제할까요?')) return;
   try{
     const data = await callApi("delete", { id });
     coupleItems = data.items;
@@ -706,7 +762,7 @@ async function coupleDeleteEvent(id){
     alert("삭제 실패: " + err.message);
     return;
   }
-  calCloseDetail();
+  coupleCloseAdd();
   calRender();
 }
 </script>
