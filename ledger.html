@@ -180,7 +180,8 @@
 
   .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
 
-  #appContent{display:none;}
+  /* 화면 표시 숨김 해제 */
+  #appContent{display:block;} 
 
   @media (max-width:900px){
     .form-grid{grid-template-columns:1fr 1fr;}
@@ -274,10 +275,10 @@
 
 <script>
 /* ===========================================================
-   Apps Script 연동 설정 (가계부 전용 Apps Script — Blog/Task와 다름)
+   Apps Script 연동 설정
    =========================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
-const SITE_KEY = "130702"; // ⚠️ LedgerCode.gs의 SECRET_KEY와 동일해야 함
+const SITE_KEY = "130702"; 
 
 let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
 let entries = [];
