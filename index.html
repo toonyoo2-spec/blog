@@ -421,6 +421,10 @@
         <input type="date" id="couple-in-date">
       </div>
       <div class="couple-field">
+        <label>시간 (선택)</label>
+        <input type="time" id="couple-in-time">
+      </div>
+      <div class="couple-field">
         <label>메모 (선택)</label>
         <textarea id="couple-in-memo" placeholder="장소, 준비물 등"></textarea>
       </div>
@@ -534,8 +538,8 @@ function calRender(){
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayStr;
     const dayEntries = (byDate[dateStr] || []).slice().sort((a,b) => {
-      const ta = a.kind === 'campaign' ? (a.data.resvTime||"") : "";
-      const tb = b.kind === 'campaign' ? (b.data.resvTime||"") : "";
+      const ta = a.kind === 'campaign' ? (a.data.resvTime||"") : (a.data.time||"");
+      const tb = b.kind === 'campaign' ? (b.data.resvTime||"") : (b.data.time||"");
       return ta.localeCompare(tb);
     });
 
@@ -546,7 +550,8 @@ function calRender(){
         return `<div class="cal-event ${it.status}" onclick="calShowDetail('${it.id}','campaign')" title="${timeLabel}${calEscapeHtml(it.name)} (${calStatusLabel[it.status]||''})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.name)}</div>`;
       } else {
         const it = entry.data;
-        return `<div class="cal-event couple" onclick="calShowDetail('${it.id}','couple')" title="${calEscapeHtml(it.title)} (부부 일정)">${calEscapeHtml(it.title)}</div>`;
+        const timeLabel = it.time ? `${calEscapeHtml(it.time)} ` : '';
+        return `<div class="cal-event couple" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (부부 일정)"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
       }
     }).join('');
 
@@ -612,6 +617,7 @@ function calShowDetail(id, kind){
       <div class="cal-modal-title">${calEscapeHtml(it.title)}</div>
       <div class="cal-modal-badge" style="background:var(--couple-bg);color:var(--couple-ink);">부부 일정</div>
       <div class="cal-modal-row"><span class="k">날짜</span><span class="v">${calEscapeHtml(it.date)}</span></div>
+      ${it.time ? `<div class="cal-modal-row"><span class="k">시간</span><span class="v">${calEscapeHtml(it.time)}</span></div>` : ''}
       ${it.memo ? `<div class="cal-modal-row"><span class="k">메모</span><span class="v">${calEscapeHtml(it.memo)}</span></div>` : ''}
       <button class="cal-modal-del-btn" onclick="coupleDeleteEvent('${it.id}')">삭제</button>
     `;
@@ -650,6 +656,7 @@ function calCloseDetail(){
 function coupleOpenAdd(){
   document.getElementById('couple-in-title').value = "";
   document.getElementById('couple-in-date').value = "";
+  document.getElementById('couple-in-time').value = "";
   document.getElementById('couple-in-memo').value = "";
   document.getElementById('coupleStatusMsg').textContent = "";
   document.getElementById('coupleAddOverlay').classList.add('open');
@@ -662,6 +669,7 @@ function coupleCloseAdd(){
 async function coupleAddEvent(){
   const title = document.getElementById('couple-in-title').value.trim();
   const date = document.getElementById('couple-in-date').value;
+  const time = document.getElementById('couple-in-time').value;
   const memo = document.getElementById('couple-in-memo').value.trim();
   const statusMsg = document.getElementById('coupleStatusMsg');
   const saveBtn = document.getElementById('coupleSaveBtn');
@@ -671,7 +679,7 @@ async function coupleAddEvent(){
 
   const newItem = {
     id: uid(),
-    title, date, memo,
+    title, date, time, memo,
     createdAt: new Date().toISOString()
   };
 
