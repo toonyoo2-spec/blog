@@ -490,7 +490,7 @@ function collectFormItem(){
     detail: document.getElementById('in-detail').value.trim(),
     amount: Number(document.getElementById('in-amount').value) || 0,
     payment: document.getElementById('in-payment').value.trim(),
-    review: "",
+    review: "", // 시트의 리뷰 열에 대응하기 위해 빈 값으로 전송
     note: document.getElementById('in-note').value.trim()
   };
 }
