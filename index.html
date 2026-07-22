@@ -21,6 +21,7 @@
     /* 부부 일정 전용 색상 (사람별로 구분) */
     --owner-gwan-bg:#e2eef5;  --owner-gwan-ink:#1f5c82;
     --owner-bora-bg:#fff4c2;  --owner-bora-ink:#b8860b;
+    --owner-common-bg:#e3ede4;  --owner-common-ink:#2f6b3c;
   }
   *{box-sizing:border-box;}
   body{
@@ -180,6 +181,7 @@
   .dot.end{background:var(--end-ink);}
   .dot.owner-gwan{background:var(--owner-gwan-ink);}
   .dot.owner-bora{background:var(--owner-bora-ink);}
+  .dot.owner-common{background:var(--owner-common-ink);}
 
   .cal-grid{
     display:grid;
@@ -224,6 +226,7 @@
   .cal-event.end{background:var(--end-bg);color:var(--end-ink);}
   .cal-event.owner-gwan{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);font-weight:600;}
   .cal-event.owner-bora{background:var(--owner-bora-bg);color:var(--owner-bora-ink);font-weight:600;}
+  .cal-event.owner-common{background:var(--owner-common-bg);color:var(--owner-common-ink);font-weight:600;}
   .cal-event-time{font-weight:700;margin-right:3px;}
   .cal-empty-msg{
     text-align:center;
@@ -343,6 +346,7 @@
   .owner-toggle button + button{border-left:1px solid var(--line);}
   .owner-toggle button.active[data-owner="관"]{background:var(--owner-gwan-bg);color:var(--owner-gwan-ink);}
   .owner-toggle button.active[data-owner="보라"]{background:var(--owner-bora-bg);color:var(--owner-bora-ink);}
+  .owner-toggle button.active[data-owner="공통"]{background:var(--owner-common-bg);color:var(--owner-common-ink);}
   .couple-save-btn{
     margin-top:4px;
     width:100%;
@@ -419,6 +423,7 @@
       <span><i class="dot confirm"></i>예약완료(체험단)</span>
       <span><i class="dot owner-gwan"></i>관</span>
       <span><i class="dot owner-bora"></i>보라</span>
+      <span><i class="dot owner-common"></i>공통</span>
     </div>
     <div class="cal-grid" id="calGrid"></div>
   </div>
@@ -439,6 +444,7 @@
       <div class="owner-toggle" id="ownerToggle">
         <button type="button" data-owner="관" onclick="coupleSelectOwner('관')">관</button>
         <button type="button" data-owner="보라" onclick="coupleSelectOwner('보라')">보라</button>
+        <button type="button" data-owner="공통" onclick="coupleSelectOwner('공통')">공통</button>
       </div>
       <div class="couple-field">
         <label>제목</label>
@@ -582,7 +588,7 @@ function calRender(){
       } else {
         const it = entry.data;
         const timeLabel = it.time ? `${calEscapeHtml(it.time)} ` : '';
-        const ownerClass = it.owner === '보라' ? 'owner-bora' : 'owner-gwan';
+        const ownerClass = it.owner === '보라' ? 'owner-bora' : (it.owner === '공통' ? 'owner-common' : 'owner-gwan');
         return `<div class="cal-event ${ownerClass}" onclick="calShowDetail('${it.id}','couple')" title="${timeLabel}${calEscapeHtml(it.title)} (${calEscapeHtml(it.owner||'관')})"><span class="cal-event-time">${timeLabel}</span>${calEscapeHtml(it.title)}</div>`;
       }
     }).join('');
@@ -709,7 +715,7 @@ function coupleOpenEdit(id){
   document.getElementById('couple-in-memo').value = it.memo || "";
   document.getElementById('coupleStatusMsg').textContent = "";
   document.getElementById('coupleModalDelBtn').style.display = "block";
-  coupleSelectOwner(it.owner === '보라' ? '보라' : '관');
+  coupleSelectOwner(it.owner === '보라' ? '보라' : (it.owner === '공통' ? '공통' : '관'));
   document.getElementById('coupleAddOverlay').classList.add('open');
 }
 
