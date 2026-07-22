@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>가계부</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --ink:#22221f;
+    --sub:#6b6a63;
+    --line:#e1dfd6;
+    --card:#ffffff;
+    --accent:#3a5a52;
+
+    --income-bg:#e2eef5; --income-ink:#1f5c82;
+    --expense-bg:#fdf3d9; --expense-ink:#8a6d16;
+    --saving-bg:#e3ede4;  --saving-ink:#2f6b3c;
+    --invest-bg:#f1e7f9;  --invest-ink:#6b3fa0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    padding:32px 20px 80px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  header{margin-bottom:20px;}
+  .home-btn{
+    display:inline-block;
+    font-size:12.5px;
+    color:var(--sub);
+    text-decoration:none;
+    margin-bottom:8px;
+  }
+  .home-btn:hover{color:var(--accent);}
+  h1{font-size:26px;letter-spacing:-0.02em;margin:0 0 4px;}
+  header p{margin:0;color:var(--sub);font-size:13.5px;}
+
+  .month-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .month-bar select{
+    padding:8px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    font-size:14px;
+    background:#fff;
+    font-weight:600;
+  }
+
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .sum-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .sum-card .num{font-size:19px;font-weight:700;}
+  .sum-card .lbl{font-size:12px;color:var(--sub);margin-top:2px;}
+  .sum-card.income .num{color:var(--income-ink);}
+  .sum-card.expense .num{color:var(--expense-ink);}
+  .sum-card.saving .num{color:var(--saving-ink);}
+  .sum-card.invest .num{color:var(--invest-ink);}
+
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:15px;
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+
+  .form-grid{
+    display:grid;
+    grid-template-columns:90px 100px 1fr 1fr 1fr 110px 100px 100px 1fr;
+    gap:8px;
+    align-items:end;
+  }
+  .field label{
+    display:block;
+    font-size:11px;
+    color:var(--sub);
+    margin-bottom:4px;
+  }
+  input, select{
+    width:100%;
+    padding:8px 9px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:13px;
+    background:#fff;
+    color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, select:focus{outline:none;border-color:var(--accent);}
+  .add-btn{
+    grid-column:1/-1;
+    justify-self:start;
+    margin-top:4px;
+    background:var(--accent);
+    color:#fff;
+    border:none;
+    padding:10px 22px;
+    border-radius:7px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .add-btn:hover{opacity:0.9;}
+  .add-btn:disabled{opacity:0.5;cursor:not-allowed;}
+
+  .type-select{font-weight:700;}
+  .type-select.수입{background:var(--income-bg);color:var(--income-ink);}
+  .type-select.지출{background:var(--expense-bg);color:var(--expense-ink);}
+  .type-select.저축{background:var(--saving-bg);color:var(--saving-ink);}
+  .type-select.투자{background:var(--invest-bg);color:var(--invest-ink);}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    color:var(--sub);
+    font-weight:600;
+    padding:0 8px 8px;
+    border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--line);
+    vertical-align:middle;
+  }
+  tbody tr:hover{background:#fafaf7;}
+  .type-badge{
+    font-size:11px;
+    font-weight:700;
+    padding:2px 8px;
+    border-radius:12px;
+    white-space:nowrap;
+  }
+  .type-badge.수입{background:var(--income-bg);color:var(--income-ink);}
+  .type-badge.지출{background:var(--expense-bg);color:var(--expense-ink);}
+  .type-badge.저축{background:var(--saving-bg);color:var(--saving-ink);}
+  .type-badge.투자{background:var(--invest-bg);color:var(--invest-ink);}
+  .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
+  .cat-cell{color:var(--sub);font-size:12px;}
+  .del-btn{
+    background:none;border:none;color:#b7b5ac;cursor:pointer;font-size:15px;line-height:1;
+  }
+  .del-btn:hover{color:#b3452f;}
+  .edit-btn{
+    background:none;border:none;color:#b7b5ac;cursor:pointer;font-size:13px;margin-right:4px;
+  }
+  .edit-btn:hover{color:var(--accent);}
+
+  .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
+
+  #appContent{display:none;}
+
+  @media (max-width:900px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+    .summary{grid-template-columns:repeat(2,1fr);}
+    table, thead, tbody, th, td, tr{display:block;}
+    thead{display:none;}
+    tbody tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:10px 12px;}
+    tbody td{border:none;padding:6px 0;}
+    tbody td::before{content:attr(data-label);display:block;font-size:11px;color:var(--sub);margin-bottom:2px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="appContent">
+
+  <header>
+    <a href="./index.html" class="home-btn">← 홈</a>
+    <h1>가계부</h1>
+    <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
+  </header>
+
+  <div class="month-bar">
+    <select id="monthSelect" onchange="onMonthChange()"></select>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="panel">
+    <h2>새 거래 추가</h2>
+    <div class="form-grid">
+      <div class="field">
+        <label>날짜</label>
+        <input type="date" id="in-date">
+      </div>
+      <div class="field">
+        <label>구분</label>
+        <select id="in-type" class="type-select" onchange="onTypeChange()"></select>
+      </div>
+      <div class="field">
+        <label>대분류</label>
+        <select id="in-large" onchange="onLargeChange()"></select>
+      </div>
+      <div class="field">
+        <label>중분류</label>
+        <select id="in-mid" onchange="onMidChange()"></select>
+      </div>
+      <div class="field">
+        <label>소분류</label>
+        <select id="in-small"></select>
+      </div>
+      <div class="field">
+        <label>세부내용</label>
+        <input type="text" id="in-detail" placeholder="예: 마트 장보기">
+      </div>
+      <div class="field">
+        <label>금액</label>
+        <input type="number" id="in-amount" placeholder="0">
+      </div>
+      <div class="field">
+        <label>결제수단</label>
+        <input type="text" id="in-payment" placeholder="예: 현대카드">
+      </div>
+      <div class="field">
+        <label>비고</label>
+        <input type="text" id="in-note" placeholder="선택">
+      </div>
+      <button class="add-btn" id="addBtn" onclick="addEntry()">+ 추가하기</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>날짜</th>
+          <th>구분</th>
+          <th>카테고리</th>
+          <th>세부내용</th>
+          <th>금액</th>
+          <th>결제수단</th>
+          <th>비고</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="emptyMsg" style="display:none;">이번 달 거래 내역이 없어요.</div>
+  </div>
+
+</div>
+
+<script>
+/* ===========================================================
+   Apps Script 연동 설정 (가계부 전용 Apps Script — Blog/Task와 다름)
+   =========================================================== */
+const API_URL = "여기에_가계부용_Apps_Script_웹앱_URL_입력";
+const SITE_KEY = "130702"; // ⚠️ LedgerCode.gs의 SECRET_KEY와 동일해야 함
+
+let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
+let entries = [];
+let currentMonth = new Date().getMonth() + 1;
+let editingRowIndex = null;
+
+const TYPES = ["수입","지출","저축","투자"];
+
+function escapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function formatMoney(n){
+  return (Number(n)||0).toLocaleString('ko-KR');
+}
+
+// ---- 월 선택 ----
+function initMonthSelect(){
+  const sel = document.getElementById('monthSelect');
+  sel.innerHTML = Array.from({length:12}, (_,i) => {
+    const m = i+1;
+    return `<option value="${m}" ${m===currentMonth?'selected':''}>${m}월</option>`;
+  }).join('');
+}
+function onMonthChange(){
+  currentMonth = parseInt(document.getElementById('monthSelect').value, 10);
+  loadEntries();
+}
+
+// ---- 카테고리 로드 & 캐스케이딩 선택 ----
+async function loadCategories(){
+  try{
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=categories`, { cache:"no-store" });
+    const data = await res.json();
+    if(data.ok && data.categories) categories = data.categories;
+  }catch(e){
+    console.error("카테고리 로드 실패:", e);
+  }
+  initTypeSelect();
+}
+
+function initTypeSelect(){
+  const sel = document.getElementById('in-type');
+  sel.innerHTML = TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
+  sel.className = "type-select " + sel.value;
+  onTypeChange();
+}
+
+function onTypeChange(){
+  const sel = document.getElementById('in-type');
+  sel.className = "type-select " + sel.value;
+  const list = categories[sel.value] || [];
+  const larges = [...new Set(list.map(c => c.large))];
+  const largeSel = document.getElementById('in-large');
+  largeSel.innerHTML = larges.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+  onLargeChange();
+}
+
+function onLargeChange(){
+  const type = document.getElementById('in-type').value;
+  const large = document.getElementById('in-large').value;
+  const list = (categories[type] || []).filter(c => c.large === large);
+  const mids = [...new Set(list.map(c => c.mid))].filter(Boolean);
+  const midSel = document.getElementById('in-mid');
+  midSel.innerHTML = mids.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
+  onMidChange();
+}
+
+function onMidChange(){
+  const type = document.getElementById('in-type').value;
+  const large = document.getElementById('in-large').value;
+  const mid = document.getElementById('in-mid').value;
+  const list = (categories[type] || []).filter(c => c.large === large && c.mid === mid);
+  const smalls = [...new Set(list.map(c => c.small))].filter(Boolean);
+  const smallSel = document.getElementById('in-small');
+  smallSel.innerHTML = smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+}
+
+// ---- 거래 로드 & 렌더 ----
+async function loadEntries(){
+  try{
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${currentMonth}`, { cache:"no-store" });
+    const data = await res.json();
+    if(data.ok && Array.isArray(data.items)) entries = data.items;
+  }catch(e){
+    console.error("거래 로드 실패:", e);
+  }
+  render();
+}
+
+function render(){
+  renderSummary();
+  renderTable();
+}
+
+function renderSummary(){
+  const totals = { "수입":0, "지출":0, "저축":0, "투자":0 };
+  entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += it.amount; });
+
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card income"><div class="num">${formatMoney(totals["수입"])}원</div><div class="lbl">수입</div></div>
+    <div class="sum-card expense"><div class="num">${formatMoney(totals["지출"])}원</div><div class="lbl">지출</div></div>
+    <div class="sum-card saving"><div class="num">${formatMoney(totals["저축"])}원</div><div class="lbl">저축</div></div>
+    <div class="sum-card invest"><div class="num">${formatMoney(totals["투자"])}원</div><div class="lbl">투자</div></div>
+  `;
+}
+
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  const emptyMsg = document.getElementById('emptyMsg');
+
+  if(entries.length === 0){
+    tbody.innerHTML = "";
+    emptyMsg.style.display = "block";
+    return;
+  }
+  emptyMsg.style.display = "none";
+
+  const sorted = entries.slice().sort((a,b) => (a.date||"").localeCompare(b.date||""));
+
+  tbody.innerHTML = sorted.map(it => `
+    <tr>
+      <td data-label="날짜">${escapeHtml(it.date)}</td>
+      <td data-label="구분"><span class="type-badge ${it.type}">${escapeHtml(it.type)}</span></td>
+      <td data-label="카테고리" class="cat-cell">${escapeHtml(it.large)} · ${escapeHtml(it.mid)} · ${escapeHtml(it.small)}</td>
+      <td data-label="세부내용">${escapeHtml(it.detail)}</td>
+      <td data-label="금액" class="amount-cell">${formatMoney(it.amount)}원</td>
+      <td data-label="결제수단">${escapeHtml(it.payment) || '-'}</td>
+      <td data-label="비고">${escapeHtml(it.note) || '-'}</td>
+      <td data-label="">
+        <button class="edit-btn" onclick="startEdit(${it.rowIndex})">수정</button>
+        <button class="del-btn" onclick="deleteEntry(${it.rowIndex})">✕</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ---- 추가/수정/삭제 ----
+function collectFormItem(){
+  return {
+    date: document.getElementById('in-date').value,
+    type: document.getElementById('in-type').value,
+    large: document.getElementById('in-large').value,
+    mid: document.getElementById('in-mid').value,
+    small: document.getElementById('in-small').value,
+    detail: document.getElementById('in-detail').value.trim(),
+    amount: Number(document.getElementById('in-amount').value) || 0,
+    payment: document.getElementById('in-payment').value.trim(),
+    review: "",
+    note: document.getElementById('in-note').value.trim()
+  };
+}
+
+function resetForm(){
+  document.getElementById('in-date').value = "";
+  document.getElementById('in-detail').value = "";
+  document.getElementById('in-amount').value = "";
+  document.getElementById('in-payment').value = "";
+  document.getElementById('in-note').value = "";
+  editingRowIndex = null;
+  document.getElementById('addBtn').textContent = "+ 추가하기";
+}
+
+async function addEntry(){
+  const item = collectFormItem();
+  if(!item.date){ alert('날짜를 입력해주세요.'); return; }
+  if(!item.amount){ alert('금액을 입력해주세요.'); return; }
+
+  const btn = document.getElementById('addBtn');
+  btn.disabled = true;
+
+  try{
+    let res, data;
+    if(editingRowIndex){
+      res = await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body: JSON.stringify({ action:"update", key:SITE_KEY, month:currentMonth, rowIndex:editingRowIndex, item })
+      });
+    } else {
+      res = await fetch(API_URL, {
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body: JSON.stringify({ action:"add", key:SITE_KEY, month:currentMonth, item })
+      });
+    }
+    data = await res.json();
+    if(!data.ok) throw new Error(data.error);
+    entries = data.items;
+  }catch(err){
+    alert("저장 실패: " + err.message);
+    btn.disabled = false;
+    return;
+  }
+
+  resetForm();
+  btn.disabled = false;
+  render();
+}
+
+function startEdit(rowIndex){
+  const it = entries.find(e => e.rowIndex === rowIndex);
+  if(!it) return;
+
+  document.getElementById('in-date').value = it.date;
+  document.getElementById('in-type').value = it.type;
+  onTypeChange();
+  document.getElementById('in-large').value = it.large;
+  onLargeChange();
+  document.getElementById('in-mid').value = it.mid;
+  onMidChange();
+  document.getElementById('in-small').value = it.small;
+  document.getElementById('in-detail').value = it.detail;
+  document.getElementById('in-amount').value = it.amount;
+  document.getElementById('in-payment').value = it.payment;
+  document.getElementById('in-note').value = it.note;
+
+  editingRowIndex = rowIndex;
+  document.getElementById('addBtn').textContent = "수정 완료";
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+async function deleteEntry(rowIndex){
+  if(!confirm('이 거래를 삭제할까요?')) return;
+  try{
+    const res = await fetch(API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body: JSON.stringify({ action:"delete", key:SITE_KEY, month:currentMonth, rowIndex })
+    });
+    const data = await res.json();
+    if(!data.ok) throw new Error(data.error);
+    entries = data.items;
+  }catch(err){
+    alert("삭제 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
+// ---- 초기화 ----
+initMonthSelect();
+loadCategories().then(loadEntries);
+</script>
+<script src="./auth-gate.js"></script>
+</body>
+</html>
