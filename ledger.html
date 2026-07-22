@@ -222,8 +222,7 @@
 
   .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
 
-  /* 화면 표시 숨김 해제 */
-  #appContent{display:block;} 
+  #appContent{display:none;}
 
   @media (max-width:900px){
     .form-grid{grid-template-columns:1fr 1fr;}
@@ -597,6 +596,6 @@ async function deleteEntry(rowIndex){
 updateMonthDisplay();
 loadCategories().then(loadEntries);
 </script>
-<script src="./auth-gate.js"></script>
+<script src="./auth-gate-ledger.js"></script>
 </body>
 </html>
