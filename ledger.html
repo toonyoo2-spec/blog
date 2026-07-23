@@ -154,7 +154,7 @@
   }
   .cal-item .detail { overflow: hidden; text-overflow: ellipsis; }
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
-  .cal-item .unit { display: inline; } /* 기본적으로 PC에서는 '원' 표시 */
+  .cal-item .unit { display: inline; } /* PC 기본값 '원' 표시 */
 
   /* 월 선택 컨트롤 */
   .month-header {
@@ -213,29 +213,44 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
-  /* 수입 / 지출 요약 카드 */
-  .summary{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px;
-    margin-bottom:22px;
+  /* 📊 항목별 토탈 금액 카드 영역 */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
   }
-  .sum-card{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:20px;
+  .sum-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
   }
-  .sum-card .lbl{font-size:13px;color:var(--sub);margin-bottom:6px;}
-  .sum-card .num{
-    font-size:24px;
-    font-weight:700;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+  .sum-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 5px;
   }
-  .sum-card.income .num{color:#007BFF;}
-  .sum-card.expense .num{color:var(--expense-ink);}
+  /* 항목별 컬러 테두리 포인트 */
+  .sum-card.type-joint::before { background: #343A40; }
+  .sum-card.type-car::before { background: #ADB5BD; }
+  .sum-card.type-bora::before { background: #E83E8C; }
+  .sum-card.type-gwan::before { background: #28A745; }
+  .sum-card.type-income::before { background: #007BFF; }
+
+  .sum-card .lbl { font-size: 12.5px; color: var(--sub); margin-bottom: 6px; font-weight: 600; }
+  .sum-card .num {
+    font-size: 20px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--ink);
+  }
+  .sum-card.type-income .num { color: #007BFF; }
 
   /* 연간 한눈에 보기 */
   .yearly-panel h2 { font-size:16px; }
@@ -326,25 +341,33 @@
     .ledger-cal-grid { gap: 3px; }
     .cal-cell { min-height: 60px; padding: 2px; border-radius: 6px; }
     
-    /* 🌟 모바일에서는 '원' 글자 보이지 않도록 전면 제거 */
-    .cal-item .unit { display: none !important; }
+    /* 🌟 모바일에서는 '원' 글자 전면 제거 */
+    .cal-item .unit, .sum-card .unit { display: none !important; }
 
     .cal-item { 
       font-size: 9.5px; 
       padding: 2px 3px; 
       border-radius: 3px;
-      justify-content: center; /* 모바일에서 숫자를 중앙 및 우측 정렬로 가독성 강화 */
+      justify-content: center;
     }
-    .cal-item .detail { display: none; } /* 칩 내부 텍스트는 숨기고 터치 팝업 활용 */
+    .cal-item .detail { display: none; }
     .cal-item .amt { font-weight: 700; text-align: center; }
 
     .cal-legend { font-size: 11.5px; gap: 8px; }
     .color-dot { width: 8px; height: 8px; }
 
-    .summary { gap: 10px; }
-    .sum-card { padding: 14px 12px; }
+    /* 모바일에서 5개 항목을 2/3배치 모드로 전환 */
+    .summary {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .summary .sum-card:last-child {
+      grid-column: span 2; /* 수입 카드는 가로 전면 배치 */
+    }
+    .sum-card { padding: 12px 10px; }
+    .sum-card .lbl { font-size: 11px; margin-bottom: 2px; }
     .sum-card .num {
-      font-size: 17px !important;
+      font-size: 16px !important;
       white-space: nowrap !important;
       letter-spacing: -0.03em;
     }
@@ -480,7 +503,7 @@
     </div>
   </div>
 
-  <!-- 3. 수입 / 지출 요약 카드 -->
+  <!-- 3. 항목별 토탈 금액 카드 (공동/자동차/보라/관/수입) -->
   <div class="summary" id="summary"></div>
 
   <!-- 4. 연간 한눈에 보기 -->
@@ -587,37 +610,63 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
-/* 수입 / 지출 요약 카드 계산 */
+/* 📊 5가지 항목별 (공동, 자동차, 보라, 관, 수입) 토탈 계산 및 렌더링 */
 function renderSummary(entries){
-  const totals = { "수입":0, "지출":0 };
+  const totals = {
+    "공동": 0,
+    "자동차": 0,
+    "보라": 0,
+    "관": 0,
+    "수입": 0
+  };
   
+  let totalExpense = 0;
+
   entries.forEach(it => {
     const typeStr = String(it.type || "").trim();
+    const ownerStr = String(it.owner || "").trim();
     const amt = Number(it.amount) || 0;
 
     if (typeStr === "수입") {
       totals["수입"] += amt;
     } else {
-      totals["지출"] += amt;
+      totalExpense += amt;
+      if (totals[ownerStr] !== undefined) {
+        totals[ownerStr] += amt;
+      } else {
+        totals["공동"] += amt; // 기타 항목은 기본 공동으로 포함
+      }
     }
   });
 
   document.getElementById('summary').innerHTML = `
-    <div class="sum-card income">
-      <div class="lbl">수입</div>
-      <div class="num">${formatMoney(totals["수입"])}원</div>
+    <div class="sum-card type-joint">
+      <div class="lbl">공동</div>
+      <div class="num">${formatMoney(totals["공동"])}<span class="unit">원</span></div>
     </div>
-    <div class="sum-card expense">
-      <div class="lbl">지출</div>
-      <div class="num">${formatMoney(totals["지출"])}원</div>
+    <div class="sum-card type-car">
+      <div class="lbl">자동차</div>
+      <div class="num">${formatMoney(totals["자동차"])}<span class="unit">원</span></div>
+    </div>
+    <div class="sum-card type-bora">
+      <div class="lbl">보라</div>
+      <div class="num">${formatMoney(totals["보라"])}<span class="unit">원</span></div>
+    </div>
+    <div class="sum-card type-gwan">
+      <div class="lbl">관</div>
+      <div class="num">${formatMoney(totals["관"])}<span class="unit">원</span></div>
+    </div>
+    <div class="sum-card type-income">
+      <div class="lbl">수입</div>
+      <div class="num">${formatMoney(totals["수입"])}<span class="unit">원</span></div>
     </div>
   `;
 
   document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
-  document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
+  document.getElementById('miniExpense').textContent = formatMoney(totalExpense);
 }
 
-/* 🌟 캘린더 렌더링 ('원' 단위 분기 및 정렬) */
+/* 캘린더 렌더링 */
 function renderCalendar(entries){
   const y = currentYear;
   const m = currentMonth - 1; 
@@ -652,7 +701,7 @@ function renderCalendar(entries){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
-  // 🎯 정렬 순서 가중치 정의: 수입 -> 공동 -> 자동차 -> 보라 -> 관 -> 기타
+  // 정렬 순서 가중치 정의: 수입 -> 공동 -> 자동차 -> 보라 -> 관
   const ownerOrder = {
     "수입": 0,
     "공동": 1,
@@ -665,7 +714,6 @@ function renderCalendar(entries){
     const isToday = isCurrentMonthToday && (d === todayNum);
     const dayEntries = byDate[d] || [];
 
-    // 지정 순서에 따라 정렬
     dayEntries.sort((a, b) => {
       const typeA = String(a.type || "").trim();
       const typeB = String(b.type || "").trim();
@@ -685,28 +733,27 @@ function renderCalendar(entries){
       const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
       const amt = Number(it.amount) || 0;
 
-      // 🎨 지정 5가지 색상
-      let bgColor = "#343A40"; // 기본값 (공동: 다크그레이)
+      let bgColor = "#343A40"; 
       let textColor = "#FFFFFF";
       let borderStyle = "none";
 
       if (typeStr === "수입") {
-        bgColor = "#007BFF"; // 블루
+        bgColor = "#007BFF";
       } else {
         switch (ownerStr) {
           case "공동":
-            bgColor = "#343A40"; // 다크그레이
+            bgColor = "#343A40";
             break;
           case "자동차":
-            bgColor = "#FFFFFF"; // 화이트
+            bgColor = "#FFFFFF";
             textColor = "#212529";
             borderStyle = "1px solid #CED4DA";
             break;
           case "보라":
-            bgColor = "#E83E8C"; // 핑크
+            bgColor = "#E83E8C";
             break;
           case "관":
-            bgColor = "#28A745"; // 그린
+            bgColor = "#28A745";
             break;
           default:
             bgColor = "#343A40";
