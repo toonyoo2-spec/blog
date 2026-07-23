@@ -559,9 +559,12 @@ const CAL_SITE_KEY = "130702";
 
 /* ⚠️ 아래 두 값을 본인 Supabase 프로젝트 값으로 교체하세요.
    Supabase 대시보드 → Project Settings → API 에서 확인 가능합니다. */
-const SUPABASE_URL = "https://kblwddlquwlvumhwkirl.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_X6OqS-mM1igLrGcc7g4CzQ_fbVXpblY";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+// 로그인 세션을 localStorage 대신 sessionStorage에 저장 → 브라우저(탭)를 닫으면 자동 로그아웃됩니다.
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
+});
 
 let calItems = [];       // 체험단 항목 (Apps Script, resource=blog)
 let coupleItems = [];    // 부부 일정 항목 (Apps Script, resource=events)
@@ -931,20 +934,12 @@ async function coupleLogout(){
   coupleShowLogin();
 }
 
-/* index.html에서 로그인하면, review.html / ledger.html의 별도 비밀번호 게이트를
-   다시 물어보지 않도록 사이트 공용 인증 플래그를 저장합니다. (auth-gate.js, auth-gate-ledger.js와 공유) */
-const SITE_AUTH_KEY = 'kwanHubAuth';
-function markSiteAuthed(){
-  localStorage.setItem(SITE_AUTH_KEY, 'ok');
-}
-
 async function coupleInitAuth(){
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     coupleLoggedIn = true;
     coupleHideLogin();
     document.getElementById('coupleLogoutBtn').style.display = 'inline-block';
-    markSiteAuthed();
     await coupleLoad();
   } else {
     coupleLoggedIn = false;
@@ -955,7 +950,6 @@ async function coupleInitAuth(){
       coupleLoggedIn = true;
       coupleHideLogin();
       document.getElementById('coupleLogoutBtn').style.display = 'inline-block';
-      markSiteAuthed();
       await coupleLoad();
     } else {
       coupleLoggedIn = false;

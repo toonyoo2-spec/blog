@@ -676,11 +676,11 @@ async function deleteEntry(rowIndex){
 }
 
 // ---- 초기화 ----
-// (비밀번호 게이트는 auth-gate-ledger.js가 담당: 화면을 가리고 있는 동안
-//  데이터는 미리 백그라운드에서 불러와 둡니다. 게이트가 열리면 appContent만 보이면 됩니다.)
+// (로그인 게이트는 auth-gate.js가 담당: index.html과 동일한 Supabase 계정으로 로그인.
+//  화면을 가리고 있는 동안 데이터는 미리 백그라운드에서 불러와 둡니다.)
 updateMonthDisplay();
 loadCategories().then(loadEntries);
 </script>
-<script src="./auth-gate-ledger.js"></script>
+<script src="./auth-gate.js"></script>
 </body>
 </html>
