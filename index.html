@@ -518,7 +518,6 @@
       <div class="cal-title" id="calTitle"></div>
       <button class="cal-nav-btn" onclick="calChangeMonth(1)">›</button>
       <button class="cal-add-couple-btn" onclick="coupleOpenAdd()">+ 일정 추가</button>
-      <button class="cal-nav-btn" id="coupleLogoutBtn" style="display:none;position:absolute;right:110px;top:50%;transform:translateY(-50%);width:auto;padding:0 10px;font-size:11px;" onclick="coupleLogout()" title="로그아웃">로그아웃</button>
     </div>
     <div class="cal-legend">
       <span><i class="dot confirm"></i>예약완료(체험단)</span>
@@ -611,16 +610,11 @@ const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7
 const CAL_SITE_KEY = "130702";
 
 /* Supabase 프로젝트 값(SUPABASE_URL / SUPABASE_ANON_KEY)은 이제 이 파일이 아니라
-   ./supabase-config.js 한 곳에서만 관리합니다. (auth-gate.js를 쓰는 다른 페이지들과
-   동일한 값을 자동으로 공유하기 위함 — 값이 파일마다 따로 있으면 페이지 이동할 때마다
-   세션을 못 찾아서 로그인창이 다시 뜨는 원인이 됩니다.) */
-// 로그인 세션을 localStorage 대신 sessionStorage에 저장 → 브라우저(탭)를 닫으면 자동 로그아웃됩니다.
+   ./supabase-config.js 한 곳에서만 관리합니다. */
 const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
 });
-// 탭이 백그라운드로 갔다가 다시 보일 때 자동 토큰 갱신을 확실히 재개시킴.
-// (모바일 브라우저는 백그라운드에서 타이머를 멈추기 때문에, 이걸 안 해주면
-//  한동안 안 보다가 돌아왔을 때 토큰이 만료되어 로그인이 풀릴 수 있음)
+
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') {
     sb.auth.startAutoRefresh();
@@ -661,7 +655,6 @@ function calDateRange(start, end){
 
   const dates = [];
   let cur = new Date(startD);
-  // 안전장치: 과도하게 긴 범위 방지 (최대 60일)
   let guard = 0;
   while(cur <= endD && guard < 60){
     dates.push(calNormalizeDate(cur));
@@ -677,7 +670,7 @@ function calEscapeHtml(str){
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-/* ---- Apps Script "events" 시트 row <-> 프론트 item (필드명이 이미 동일, endDate/endTime 없으면 빈 값으로) ---- */
+/* ---- Apps Script "events" 시트 row <-> 프론트 item ---- */
 function coupleRowToItem(row){
   return {
     id: row.id,
@@ -721,7 +714,6 @@ function coupleOwnerClass(it){
 }
 
 function coupleTimeLabel(it, isGlobalStart, isGlobalEnd){
-  // 시작일 세그먼트에는 시작(~종료)시간을, 종료일에만 존재하는 종료시간은 함께 표기
   const parts = [];
   if(isGlobalStart && it.time) parts.push(calEscapeHtml(it.time));
   if(isGlobalEnd && it.endTime) parts.push(calEscapeHtml(it.endTime));
@@ -735,10 +727,8 @@ function calRender(){
   const m = calCursor.getMonth(); // 0-11
   document.getElementById('calTitle').textContent = `${y}년 ${m+1}월`;
 
-  // 이 달의 "단일 날짜" 항목들을 날짜별로 묶기 (체험단 + 부부 단일일정 병합)
   const byDate = {};
-  // 행(row)별 다일 일정 세그먼트 목록
-  const rowSegments = {}; // rowIndex -> [{it, startCol, endCol, isGlobalStart, isGlobalEnd, lane}]
+  const rowSegments = {}; 
 
   calItems.forEach(it => {
     const dateStr = calEventDate(it);
@@ -749,8 +739,8 @@ function calRender(){
     }
   });
 
-  const globalStartStr = {}; // it.id -> 전체 일정의 시작일 문자열
-  const globalEndStr = {};   // it.id -> 전체 일정의 종료일 문자열
+  const globalStartStr = {};
+  const globalEndStr = {};   
 
   coupleItems.forEach(it => {
     const dates = calDateRange(it.date, it.endDate);
@@ -767,7 +757,6 @@ function calRender(){
       return;
     }
 
-    // 다일 일정: 이 달에 걸치는 날짜만 남기고, 같은 주(row)끼리 묶어 세그먼트 생성
     const inMonthDates = dates.filter(dateStr => {
       const [ey, em] = dateStr.split('-').map(Number);
       return ey === y && em === m+1;
@@ -789,7 +778,6 @@ function calRender(){
     if(seg) (rowSegments[seg.row] = rowSegments[seg.row] || []).push(seg);
   });
 
-  // 세그먼트에 전역 시작/종료 여부 및 lane(겹칠 때 쌓을 위치) 부여
   Object.keys(rowSegments).forEach(rowKey => {
     const segs = rowSegments[rowKey];
     segs.forEach(seg => {
@@ -807,7 +795,7 @@ function calRender(){
   });
 
   const first = new Date(y, m, 1);
-  const startOffset = first.getDay(); // 0=일요일
+  const startOffset = first.getDay(); 
   const daysInMonth = new Date(y, m+1, 0).getDate();
   const daysInPrevMonth = new Date(y, m, 0).getDate();
 
@@ -822,7 +810,6 @@ function calRender(){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
-  // 열(col)별로, 해당 행에서 사용된 세그먼트를 lane 순서대로 정리 (빈 lane은 공백 슬롯으로 채워 정렬 유지)
   function slotsHtmlForCol(row, col){
     const segs = (rowSegments[row] || []).filter(s => col >= s.startCol && col <= s.endCol);
     if(segs.length === 0) return '';
@@ -870,7 +857,7 @@ function calRender(){
     cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${slotsHtml}${eventsHtml}</div>`);
   }
 
-  // 다음 달 채우기 (7의 배수로 맞춤)
+  // 다음 달 채우기
   const totalSoFar = startOffset + daysInMonth;
   const trailing = (7 - (totalSoFar % 7)) % 7;
   for(let d = 1; d <= trailing; d++){
@@ -879,7 +866,6 @@ function calRender(){
 
   document.getElementById('calGrid').innerHTML = cells.join('');
 
-  // 렌더링용 세그먼트 평탄화 후 바(연속 블록) 배치
   calCurrentSegments = [];
   Object.keys(rowSegments).forEach(rowKey => {
     rowSegments[rowKey].forEach(seg => calCurrentSegments.push(seg));
@@ -887,17 +873,15 @@ function calRender(){
   calPositionBars();
 }
 
-// 날짜 문자열이 현재 달력 그리드에서 몇 번째 행/열에 위치하는지 계산 (0=일요일 시작)
 function calDateRowCol(dateStr, y, m){
   const [ey, em, ed] = dateStr.split('-').map(Number);
   if(ey !== y || em !== m+1) return null;
   const first = new Date(y, m, 1);
   const startOffset = first.getDay();
-  const idx = startOffset + (ed - 1); // 헤더(dow) 행 제외, 0부터 시작하는 셀 인덱스
+  const idx = startOffset + (ed - 1);
   return { row: Math.floor(idx / 7), col: idx % 7 };
 }
 
-// 측정된 슬롯 위치를 바탕으로 연속된 다일 일정 바를 그린다
 function calPositionBars(){
   const layer = document.getElementById('calBarsLayer');
   const wrap = layer.parentElement;
@@ -935,7 +919,7 @@ window.addEventListener('resize', () => {
   calResizeTimer = setTimeout(calPositionBars, 150);
 });
 
-/* ---- 체험단 데이터 로드 (기존 그대로, key만 전달하는 GET) ---- */
+/* ---- 체험단 데이터 로드 ---- */
 async function calLoad(){
   try{
     const res = await fetch(`${CAL_API_URL}?key=${encodeURIComponent(CAL_SITE_KEY)}`, { cache: "no-store" });
@@ -947,7 +931,7 @@ async function calLoad(){
   calRender();
 }
 
-/* ---- 부부 일정 데이터 로드 (Apps Script, resource=events) ---- */
+/* ---- 부부 일정 데이터 로드 ---- */
 async function coupleLoad(){
   if(!coupleLoggedIn) return;
   try{
@@ -970,7 +954,6 @@ function coupleShowLogin(){
 function coupleHideLogin(){
   document.getElementById('coupleLoginOverlay').classList.remove('open');
 }
-/* 아이디(kwan/bora)를 내부용 가짜 이메일로 변환 (Supabase Auth는 이메일 기반) */
 function coupleIdToEmail(id){
   return `${id.trim().toLowerCase()}@${window.COUPLE_EMAIL_DOMAIN}`;
 }
@@ -987,21 +970,12 @@ async function coupleLoginWithPassword(){
   if(error){ msg.textContent = "로그인 실패: 아이디 또는 비밀번호를 확인해주세요."; return; }
   msg.textContent = "";
 }
-async function coupleLogout(){
-  await sb.auth.signOut();
-  coupleLoggedIn = false;
-  coupleItems = [];
-  document.getElementById('coupleLogoutBtn').style.display = 'none';
-  calRender();
-  coupleShowLogin();
-}
 
 async function coupleInitAuth(){
   const { data: { session } } = await sb.auth.getSession();
   if(session){
     coupleLoggedIn = true;
     coupleHideLogin();
-    document.getElementById('coupleLogoutBtn').style.display = 'inline-block';
     await coupleLoad();
   } else {
     coupleLoggedIn = false;
@@ -1011,11 +985,9 @@ async function coupleInitAuth(){
     if(session){
       coupleLoggedIn = true;
       coupleHideLogin();
-      document.getElementById('coupleLogoutBtn').style.display = 'inline-block';
       await coupleLoad();
     } else {
       coupleLoggedIn = false;
-      document.getElementById('coupleLogoutBtn').style.display = 'none';
       coupleItems = [];
       calRender();
     }
@@ -1045,7 +1017,6 @@ function calShowDetail(id, kind){
     return;
   }
 
-  // 체험단(기존 로직 그대로)
   const it = calItems.find(i => i.id === id);
   if(!it) return;
 
@@ -1072,8 +1043,6 @@ function calCloseDetail(){
   document.getElementById('calModalOverlay').classList.remove('open');
 }
 
-// ---- 부부 일정 추가/삭제 ----
-// ---- 관/보라 토글 ----
 function coupleSelectOwner(owner){
   coupleSelectedOwner = owner;
   document.querySelectorAll('#ownerToggle button').forEach(b => {
@@ -1081,7 +1050,6 @@ function coupleSelectOwner(owner){
   });
 }
 
-// ---- 부부 일정 신규 추가 ----
 function coupleOpenAdd(){
   if(!coupleLoggedIn){ alert('로그인 후 이용해주세요.'); coupleShowLogin(); return; }
   coupleEditId = null;
@@ -1098,7 +1066,6 @@ function coupleOpenAdd(){
   document.getElementById('coupleAddOverlay').classList.add('open');
 }
 
-// ---- 기존 부부 일정 수정 화면 열기 ----
 function coupleOpenEdit(id){
   const it = coupleItems.find(i => i.id === id);
   if(!it) return;
