@@ -156,7 +156,7 @@
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
   .cal-item .unit { display: inline; }
 
-  /* 월 선택 컨트롤 (맨 위로 이동) */
+  /* 월 선택 컨트롤 (맨 위) */
   .month-header {
     display: flex;
     flex-direction: column;
@@ -213,10 +213,10 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
-  /* 📊 항목별 토탈 금액 카드 영역 (4개 항목 4열 배치) */
+  /* 📊 항목별 토탈 금액 카드 영역 (6개 항목 6열 배치) */
   .summary {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 12px;
     margin-bottom: 22px;
   }
@@ -224,7 +224,7 @@
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 16px 18px;
+    padding: 16px 14px;
     position: relative;
     overflow: hidden;
   }
@@ -235,13 +235,15 @@
     width: 5px;
   }
   .sum-card.type-joint::before { background: #343A40; }
-  .sum-card.type-car::before { background: #ADB5BD; }
-  .sum-card.type-bora::before { background: #E83E8C; }
   .sum-card.type-gwan::before { background: #28A745; }
+  .sum-card.type-bora::before { background: #E83E8C; }
+  .sum-card.type-fuel::before { background: #FD7E14; }
+  .sum-card.type-fixed::before { background: #6C757D; }
+  .sum-card.type-etc::before { background: #6f42c1; }
 
   .sum-card .lbl { font-size: 12.5px; color: var(--sub); margin-bottom: 6px; font-weight: 600; }
   .sum-card .num {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     white-space: nowrap;
     overflow: hidden;
@@ -353,13 +355,13 @@
     .color-dot { width: 8px; height: 8px; }
 
     .summary {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
     }
-    .sum-card { padding: 12px 10px; }
+    .sum-card { padding: 10px 8px; }
     .sum-card .lbl { font-size: 11px; margin-bottom: 2px; }
     .sum-card .num {
-      font-size: 16px !important;
+      font-size: 14px !important;
       white-space: nowrap !important;
       letter-spacing: -0.03em;
     }
@@ -463,7 +465,7 @@
     <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 월 선택 및 미니 요약 컨트롤 (맨 위로 이동) -->
+  <!-- 1. 월 선택 및 미니 요약 컨트롤 -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -482,19 +484,22 @@
     <div class="cal-header-wrap">
       <h2 id="calTitleHeader">7월 캘린더</h2>
       
-      <!-- 🎨 범례 디자인 -->
+      <!-- 🎨 범례 디자인 (요청하신 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
       <div class="cal-legend">
         <span class="legend-item"><span class="color-dot" style="background:#343A40;"></span>공동</span>
-        <span class="legend-item"><span class="color-dot" style="background:#FFFFFF; border:1px solid #CED4DA;"></span>자동차</span>
-        <span class="legend-item"><span class="color-dot" style="background:#E83E8C;"></span>보라</span>
         <span class="legend-item"><span class="color-dot" style="background:#28A745;"></span>관</span>
+        <span class="legend-item"><span class="color-dot" style="background:#E83E8C;"></span>보라</span>
+        <span class="legend-item"><span class="color-dot" style="background:#FD7E14;"></span>유류비</span>
+        <span class="legend-item"><span class="color-dot" style="background:#6C757D;"></span>고정지출</span>
+        <span class="legend-item"><span class="color-dot" style="background:#6f42c1;"></span>기타</span>
+        <span class="legend-item"><span class="color-dot" style="background:#007BFF;"></span>수입</span>
       </div>
     </div>
     
     <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
   </div>
 
-  <!-- 3. 항목별 토탈 금액 카드 (공동/자동차/보라/관 - 4개 4열 배치) -->
+  <!-- 3. 항목별 토탈 금액 카드 (요청 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
   <div class="summary" id="summary"></div>
 
   <!-- 4. 연간 한눈에 보기 -->
@@ -567,6 +572,40 @@ function toggleYearlyPanel() {
   panel.classList.toggle('open');
 }
 
+/* 🌟 분류 변환 규칙 함수 (소분류 & 대분류 종합 매핑) */
+function getCategoryGroup(item) {
+  const typeStr = String(item.type || "").trim();
+  const smallStr = String(item.small || "").trim();
+
+  if (typeStr === "수입") {
+    return "수입";
+  }
+
+  // 1. 고정지출 분류
+  if (typeStr === "고정지출") {
+    if (smallStr === "전기충전" || smallStr === "주유비") {
+      return "유류비";
+    }
+    return "고정지출"; // 자동차(전기충전/주유비) 제외한 나머지 고정지출
+  }
+
+  // 2. 변동지출 분류 (소분류 기준)
+  if (smallStr === "건강" || smallStr === "경조사") {
+    return "기타";
+  }
+
+  if (smallStr.startsWith("관 ")) {
+    return "관"; // 관 기타, 관 생활비, 관 병원비 등
+  }
+
+  if (smallStr.startsWith("보라") || smallStr === "보라네") {
+    return "보라"; // 보라 기타, 보라 생활비, 보라 병원비, 보라네 등
+  }
+
+  // 공동 + 교통비 + 문화 및 규칙에 포함되지 않은 기타 모든 변동지출 ➔ 공동으로 통합
+  return "공동";
+}
+
 /* Supabase DB에서 1년 전체 데이터 로드 */
 async function initFullYearDataFromSupabase(){
   try {
@@ -601,29 +640,30 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
-/* 📊 4가지 항목별 (공동, 자동차, 보라, 관) 토탈 계산 및 렌더링 */
+/* 📊 6가지 항목별 (공동, 관, 보라, 유류비, 고정지출, 기타) 토탈 계산 및 렌더링 */
 function renderSummary(entries){
   const totals = {
     "공동": 0,
-    "자동차": 0,
+    "관": 0,
     "보라": 0,
-    "관": 0
+    "유류비": 0,
+    "고정지출": 0,
+    "기타": 0
   };
   
   let totalIncome = 0;
   let totalExpense = 0;
 
   entries.forEach(it => {
-    const typeStr = String(it.type || "").trim();
-    const ownerStr = String(it.owner || "").trim();
     const amt = Number(it.amount) || 0;
+    const cat = getCategoryGroup(it);
 
-    if (typeStr === "수입") {
+    if (cat === "수입") {
       totalIncome += amt;
     } else {
       totalExpense += amt;
-      if (totals[ownerStr] !== undefined) {
-        totals[ownerStr] += amt;
+      if (totals[cat] !== undefined) {
+        totals[cat] += amt;
       } else {
         totals["공동"] += amt; 
       }
@@ -635,17 +675,25 @@ function renderSummary(entries){
       <div class="lbl">공동</div>
       <div class="num">${formatMoney(totals["공동"])}<span class="unit">원</span></div>
     </div>
-    <div class="sum-card type-car">
-      <div class="lbl">자동차</div>
-      <div class="num">${formatMoney(totals["자동차"])}<span class="unit">원</span></div>
+    <div class="sum-card type-gwan">
+      <div class="lbl">관</div>
+      <div class="num">${formatMoney(totals["관"])}<span class="unit">원</span></div>
     </div>
     <div class="sum-card type-bora">
       <div class="lbl">보라</div>
       <div class="num">${formatMoney(totals["보라"])}<span class="unit">원</span></div>
     </div>
-    <div class="sum-card type-gwan">
-      <div class="lbl">관</div>
-      <div class="num">${formatMoney(totals["관"])}<span class="unit">원</span></div>
+    <div class="sum-card type-fuel">
+      <div class="lbl">유류비</div>
+      <div class="num">${formatMoney(totals["유류비"])}<span class="unit">원</span></div>
+    </div>
+    <div class="sum-card type-fixed">
+      <div class="lbl">고정지출</div>
+      <div class="num">${formatMoney(totals["고정지출"])}<span class="unit">원</span></div>
+    </div>
+    <div class="sum-card type-etc">
+      <div class="lbl">기타</div>
+      <div class="num">${formatMoney(totals["기타"])}<span class="unit">원</span></div>
     </div>
   `;
 
@@ -688,12 +736,15 @@ function renderCalendar(entries){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
-  const ownerOrder = {
+  // 정렬 순서 가중치 정의 (요청 순서)
+  const categoryRank = {
     "수입": 0,
     "공동": 1,
-    "자동차": 2,
+    "관": 2,
     "보라": 3,
-    "관": 4
+    "유류비": 4,
+    "고정지출": 5,
+    "기타": 6
   };
 
   for(let d = 1; d <= daysInMonth; d++){
@@ -701,21 +752,17 @@ function renderCalendar(entries){
     const dayEntries = byDate[d] || [];
 
     dayEntries.sort((a, b) => {
-      const typeA = String(a.type || "").trim();
-      const typeB = String(b.type || "").trim();
-      
-      const ownerA = typeA === "수입" ? "수입" : String(a.owner || "").trim();
-      const ownerB = typeB === "수입" ? "수입" : String(b.owner || "").trim();
+      const catA = getCategoryGroup(a);
+      const catB = getCategoryGroup(b);
 
-      const rankA = ownerOrder[ownerA] !== undefined ? ownerOrder[ownerA] : 99;
-      const rankB = ownerOrder[ownerB] !== undefined ? ownerOrder[ownerB] : 99;
+      const rankA = categoryRank[catA] !== undefined ? categoryRank[catA] : 99;
+      const rankB = categoryRank[catB] !== undefined ? categoryRank[catB] : 99;
 
       return rankA - rankB;
     });
 
     const itemsHtml = dayEntries.map(it => {
-      const typeStr = String(it.type || "").trim();
-      const ownerStr = String(it.owner || "").trim();
+      const cat = getCategoryGroup(it);
       const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
       const amt = Number(it.amount) || 0;
 
@@ -723,32 +770,34 @@ function renderCalendar(entries){
       let textColor = "#FFFFFF";
       let borderStyle = "none";
 
-      if (typeStr === "수입") {
-        bgColor = "#007BFF";
-      } else {
-        switch (ownerStr) {
-          case "공동":
-            bgColor = "#343A40";
-            break;
-          case "자동차":
-            bgColor = "#FFFFFF";
-            textColor = "#212529";
-            borderStyle = "1px solid #CED4DA";
-            break;
-          case "보라":
-            bgColor = "#E83E8C";
-            break;
-          case "관":
-            bgColor = "#28A745";
-            break;
-          default:
-            bgColor = "#343A40";
-            break;
-        }
+      switch (cat) {
+        case "수입":
+          bgColor = "#007BFF";
+          break;
+        case "공동":
+          bgColor = "#343A40";
+          break;
+        case "관":
+          bgColor = "#28A745";
+          break;
+        case "보라":
+          bgColor = "#E83E8C";
+          break;
+        case "유류비":
+          bgColor = "#FD7E14";
+          break;
+        case "고정지출":
+          bgColor = "#6C757D";
+          break;
+        case "기타":
+          bgColor = "#6f42c1";
+          break;
+        default:
+          bgColor = "#343A40";
+          break;
       }
 
-      const displayCategory = ownerStr || typeStr;
-      const toastText = `[${displayCategory}] ${detailStr} : ${formatMoney(amt)}원`;
+      const toastText = `[${cat}] ${detailStr} : ${formatMoney(amt)}원`;
 
       return `
         <div class="cal-item" 
