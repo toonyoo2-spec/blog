@@ -198,7 +198,6 @@
     white-space:nowrap;
   }
 
-  /* 🌟 클릭 즉시 수정되는 깔끔한 인라인 스타일 */
   .editable-wrap {
     display: block;
     width: 100%;
@@ -233,6 +232,14 @@
     box-sizing: border-box;
   }
 
+  /* 상태 셀 및 예약일시 정렬 컨테이너 */
+  .status-cell-content {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 220px; /* 날짜(125) + 시간(85) + 간격(6) 대략의 폭에 맞춤 */
+  }
+
   .status-select{
     font-size:12px;
     padding:6px 8px;
@@ -261,7 +268,6 @@
   .resv-row {
     display:flex;
     gap:6px;
-    margin-top:4px;
     width: 100%;
   }
   .resv-input {
@@ -270,13 +276,14 @@
     border:1px solid var(--line);
     border-radius:6px;
     box-sizing: border-box;
+    background: #fff;
   }
   .date-short {
-    width: 125px;
+    width: 130px;
     flex-shrink: 0;
   }
   .time-short {
-    width: 85px;
+    width: 84px;
     flex-shrink: 0;
   }
 
@@ -474,71 +481,6 @@
     </div>
   </div>
 
-  <div class="panel ai-panel">
-    <h2>이미지로 자동등록 <span class="ai-badge">AI</span></h2>
-    <p class="ai-desc">체험단 초대장/안내 캡처를 올리면 지역·주소·제공내역·플랫폼·주차장 정보를 자동으로 읽어 채워드려요. 내용을 확인한 뒤 등록하세요.</p>
-
-    <div class="ai-upload-row">
-      <label class="ai-upload-btn">
-        📷 이미지 선택
-        <input type="file" id="ai-image-input" accept="image/*" onchange="onAiImageSelected(event)">
-      </label>
-      <span id="ai-file-name" class="ai-file-name"></span>
-    </div>
-
-    <div id="ai-preview-wrap" class="ai-preview-wrap" style="display:none;">
-      <img id="ai-preview-img" class="ai-preview-img">
-      <button class="ai-analyze-btn" id="ai-analyze-btn" onclick="analyzeAiImage()">✨ 분석하기</button>
-    </div>
-
-    <div id="ai-status" class="ai-status" style="display:none;"></div>
-
-    <div id="ai-result" class="ai-result-grid" style="display:none;">
-      <div class="field">
-        <label>지역</label>
-        <select id="ai-region">
-          <option value="서울">서울</option>
-          <option value="경기">경기</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>체험단 이름</label>
-        <input id="ai-name" placeholder="예: OO 맛집 체험단">
-      </div>
-      <div class="field">
-        <label>제공내역</label>
-        <input id="ai-provide">
-      </div>
-      <div class="field">
-        <label>주소 (시/군/구 제외)</label>
-        <input id="ai-address">
-      </div>
-      <div class="field">
-        <label>예약문의</label>
-        <input id="ai-contact">
-      </div>
-      <div class="field">
-        <label>주차장</label>
-        <input id="ai-deadline" type="text" placeholder="예: 건물 내 무료주차 2시간">
-      </div>
-      <div class="field">
-        <label>플랫폼</label>
-        <select id="ai-platform">
-          <option value="디너의여왕">디너의여왕</option>
-          <option value="리뷰노트">리뷰노트</option>
-          <option value="놀러와체험단">놀러와체험단</option>
-          <option value="레뷰">레뷰</option>
-          <option value="데일리뷰">데일리뷰</option>
-          <option value="기타">기타</option>
-        </select>
-      </div>
-      <div class="ai-result-actions">
-        <button class="add-btn" onclick="confirmAiAdd()">+ 이 내용으로 등록하기</button>
-        <button class="ai-cancel-btn" onclick="resetAiPanel()">취소</button>
-      </div>
-    </div>
-  </div>
-
   <div class="panel">
     <div class="toolbar">
       <div class="tabs" id="tabs"></div>
@@ -581,7 +523,7 @@ const statusMeta = {
   wait:    { label:"예약대기",   cls:"status-wait" },
   confirm: { label:"예약완료",   cls:"status-confirm" },
   done:    { label:"체험완료",   cls:"status-done" },
-  end:     { label:"종료",      cls:"status-end" }
+  end:     { label:"종료",       cls:"status-end" }
 };
 
 const platformList = ["디너의여왕","리뷰노트","놀러와체험단","레뷰","데일리뷰","기타"];
@@ -593,109 +535,6 @@ function platformOptions(selected){
 }
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
-/* ===========================================================
-   AI 이미지 자동등록
-   =========================================================== */
-let aiImageBase64 = null;
-let aiImageMediaType = null;
-
-function onAiImageSelected(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  aiImageMediaType = file.type || "image/png";
-  document.getElementById('ai-file-name').textContent = file.name;
-
-  const reader = new FileReader();
-  reader.onload = function(evt){
-    aiImageBase64 = evt.target.result.split(',')[1];
-    document.getElementById('ai-preview-img').src = evt.target.result;
-    document.getElementById('ai-preview-wrap').style.display = "flex";
-    document.getElementById('ai-result').style.display = "none";
-    document.getElementById('ai-status').style.display = "none";
-  };
-  reader.readAsDataURL(file);
-}
-
-async function analyzeAiImage(){
-  if(!aiImageBase64){ alert('이미지를 먼저 선택해주세요.'); return; }
-
-  const statusEl = document.getElementById('ai-status');
-  const btn = document.getElementById('ai-analyze-btn');
-  statusEl.style.display = "block";
-  statusEl.textContent = "이미지를 분석하고 있어요...";
-  btn.disabled = true;
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "analyzeImage",
-        key: SITE_KEY,
-        imageBase64: aiImageBase64,
-        mediaType: aiImageMediaType
-      })
-    });
-    const data = await res.json();
-    if(!data.ok) throw new Error(data.error || "분석 실패");
-
-    const r = data.data || {};
-    document.getElementById('ai-region').value = (r.region === "경기") ? "경기" : "서울";
-    document.getElementById('ai-name').value = r.name || "";
-    document.getElementById('ai-provide').value = r.provide || "";
-    document.getElementById('ai-address').value = r.address || "";
-    document.getElementById('ai-contact').value = r.contact || "";
-    document.getElementById('ai-deadline').value = r.deadline || "";
-    document.getElementById('ai-platform').value = platformList.includes(r.platform) ? r.platform : "기타";
-
-    document.getElementById('ai-result').style.display = "grid";
-    statusEl.style.display = "none";
-  } catch(err) {
-    statusEl.textContent = "분석 실패: " + err.message + " — 아래 항목을 직접 입력해서 등록할 수 있어요.";
-    document.getElementById('ai-result').style.display = "grid";
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-async function confirmAiAdd(){
-  const name = document.getElementById('ai-name').value.trim();
-  if(!name){ alert('체험단 이름을 입력해주세요.'); return; }
-
-  const newItem = {
-    id: uid(),
-    region: document.getElementById('ai-region').value,
-    name,
-    provide: document.getElementById('ai-provide').value.trim(),
-    address: document.getElementById('ai-address').value.trim(),
-    contact: document.getElementById('ai-contact').value.trim(),
-    deadline: document.getElementById('ai-deadline').value,
-    status: "wait",
-    platform: document.getElementById('ai-platform').value,
-    resvDate: "", resvTime: ""
-  };
-
-  try {
-    items = await callApi("add", { item: newItem });
-  } catch (err) {
-    alert("저장 실패: " + err.message);
-    return;
-  }
-
-  resetAiPanel();
-  render();
-}
-
-function resetAiPanel(){
-  aiImageBase64 = null;
-  aiImageMediaType = null;
-  document.getElementById('ai-image-input').value = "";
-  document.getElementById('ai-file-name').textContent = "";
-  document.getElementById('ai-preview-wrap').style.display = "none";
-  document.getElementById('ai-result').style.display = "none";
-  document.getElementById('ai-status').style.display = "none";
-}
 
 function normalizeDate(v){
   if(!v) return "";
@@ -804,7 +643,6 @@ async function updatePlatform(id, value){
   render();
 }
 
-// 🌟 버튼 없이 텍스트 클릭 즉시 수정 모드 전환
 function startInlineEditSpan(span, id, field) {
   const wrap = span.closest('.editable-wrap');
   const currentValue = span.textContent.trim();
@@ -977,7 +815,7 @@ async function loadInitialData(){
   setInterval(async () => {
     try {
       const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}`, { cache: "no-store" });
-      const data = await res.json();
+    const data = await res.json();
       if (data.ok && Array.isArray(data.items)) {
         items = data.items;
         render();
