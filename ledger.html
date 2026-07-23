@@ -52,12 +52,12 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 24px; /* 요일 행과의 여백 대폭 확장 */
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
   }
   .cal-header-wrap h2 {
-    font-size: 16px;
+    font-size: 17px;
     margin: 0 !important;
     display: flex;
     align-items: center;
@@ -73,7 +73,7 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    font-size: 12.5px;
+    font-size: 13px;
     color: var(--sub);
     flex-wrap: wrap;
   }
@@ -99,13 +99,13 @@
   }
   .cal-dow {
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--sub);
     font-weight: 600;
-    padding-bottom: 6px;
+    padding-bottom: 12px; /* 요일과 날짜 상자 간격 확대 */
   }
   .cal-cell {
-    min-height: 95px;
+    min-height: 100px;
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 6px;
@@ -121,6 +121,7 @@
   }
   .cal-cell.today {
     border-color: var(--accent);
+    background: #f4f8f6;
   }
   .cal-daynum {
     font-size: 11.5px;
@@ -144,10 +145,12 @@
     justify-content: space-between;
     align-items: center;
     gap: 4px;
+    cursor: pointer;
     transition: transform 0.1s ease;
   }
   .cal-item:hover {
     transform: translateY(-1px);
+    filter: brightness(0.95);
   }
   .cal-item .detail { overflow: hidden; text-overflow: ellipsis; }
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
@@ -205,7 +208,7 @@
     display: inline-flex;
     align-items: center;
   }
-  .month-mini-summary .income-text { color: #4A86E8; font-weight: 700; }
+  .month-mini-summary .income-text { color: #007BFF; font-weight: 700; }
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
@@ -230,10 +233,10 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .sum-card.income .num{color:#4A86E8;}
+  .sum-card.income .num{color:#007BFF;}
   .sum-card.expense .num{color:var(--expense-ink);}
 
-  /* 연간 한눈에 보기 펼침/접힘 토글 */
+  /* 연간 한눈에 보기 */
   .yearly-panel h2 { font-size:16px; }
   .yearly-toggle-header {
     cursor: pointer;
@@ -259,7 +262,6 @@
     display: block;
   }
 
-  /* 연간 한눈에 보기 테이블 */
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
 
@@ -290,6 +292,30 @@
   .yearly-table tr.detail-row td{background:#fff;color:var(--ink);}
   .yearly-table tr.detail-row:hover td{background:#fafaf7;}
   .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
+
+  /* 📱 모바일 상세 토스트 팝업 */
+  .mobile-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #212529;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 24px;
+    font-size: 13px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 9999;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    pointer-events: none;
+    max-width: 90%;
+    text-align: center;
+  }
+  .mobile-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
 
   /* 📱 모바일 반응형 */
   @media (max-width: 900px) {
@@ -332,7 +358,7 @@
       letter-spacing: -0.03em;
     }
     .m-y-card.balance .val { color: #2f6b3c; }
-    .m-y-card.rate .val { color: #4A86E8; }
+    .m-y-card.rate .val { color: #007BFF; }
 
     .m-month-chips {
       display: flex;
@@ -412,13 +438,13 @@
     <div class="cal-header-wrap">
       <h2 id="calTitleHeader">7월 캘린더</h2>
       
-      <!-- 🎨 눈이 편안한 동그라미 범례 -->
+      <!-- 🎨 선명하고 가독성 높은 동그라미 범례 -->
       <div class="cal-legend">
-        <span class="legend-item"><span class="color-dot" style="background:#6B6687;"></span>공동</span>
-        <span class="legend-item"><span class="color-dot" style="background:#4A5568;"></span>자동차</span>
-        <span class="legend-item"><span class="color-dot" style="background:#E2B4BD;"></span>보라</span>
-        <span class="legend-item"><span class="color-dot" style="background:#4A7C59;"></span>관</span>
-        <span class="legend-item"><span class="color-dot" style="background:#4A86E8;"></span>수입</span>
+        <span class="legend-item"><span class="color-dot" style="background:#343A40;"></span>공동</span>
+        <span class="legend-item"><span class="color-dot" style="background:#FFFFFF; border:1px solid #CED4DA;"></span>자동차</span>
+        <span class="legend-item"><span class="color-dot" style="background:#E83E8C;"></span>보라</span>
+        <span class="legend-item"><span class="color-dot" style="background:#28A745;"></span>관</span>
+        <span class="legend-item"><span class="color-dot" style="background:#007BFF;"></span>수입</span>
       </div>
     </div>
     
@@ -457,6 +483,9 @@
 
 </div>
 
+<!-- 모바일 클릭 시 뜰 상세 안내 Toast -->
+<div id="mobileToast" class="mobile-toast"></div>
+
 <!-- Supabase 클라이언트 SDK 연동 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="./supabase-config.js"></script>
@@ -468,12 +497,25 @@ let allYearData = new Array(12).fill(null).map(() => []);
 let currentMonth = new Date().getMonth() + 1;
 let currentYear = new Date().getFullYear();
 let selectedMobileMonth = 0;
+let toastTimer = null;
 
 function escapeHtml(str){
   return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
+}
+
+/* 📱 모바일 클릭 시 세부내용 팝업 노출 */
+function showToast(text) {
+  const toast = document.getElementById('mobileToast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2200);
 }
 
 function updateMonthDisplay(){
@@ -560,7 +602,7 @@ function renderSummary(entries){
   document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
 
-/* 🌟 캘린더 렌더링 (지정 정렬 및 편안한 파스텔 색상 적용) */
+/* 🌟 캘린더 렌더링 (요청 색상 계열 및 정렬 최적화) */
 function renderCalendar(entries){
   const y = currentYear;
   const m = currentMonth - 1; 
@@ -608,7 +650,7 @@ function renderCalendar(entries){
     const isToday = isCurrentMonthToday && (d === todayNum);
     const dayEntries = byDate[d] || [];
 
-    // 🌟 지정 순서에 따라 정렬 수행
+    // 지정 순서에 따라 정렬
     dayEntries.sort((a, b) => {
       const typeA = String(a.type || "").trim();
       const typeB = String(b.type || "").trim();
@@ -628,35 +670,43 @@ function renderCalendar(entries){
       const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
       const amt = Number(it.amount) || 0;
 
-      // 🎨 눈이 편안한 파스텔 Palette 지정
-      let bgColor = "#6B6687"; // 기본값 (공동: 차분한 인디고)
+      // 🎨 요청하신 5가지 명확한 컬러 톤 지정
+      let bgColor = "#343A40"; // 기본값 (공동: 다크그레이)
       let textColor = "#FFFFFF";
+      let borderStyle = "none";
 
       if (typeStr === "수입") {
-        bgColor = "#4A86E8"; // 소프트 파란색
+        bgColor = "#007BFF"; // 블루
       } else {
         switch (ownerStr) {
           case "공동":
-            bgColor = "#6B6687"; // 차분한 인디고
+            bgColor = "#343A40"; // 다크그레이
             break;
           case "자동차":
-            bgColor = "#4A5568"; // 슬레이트 차콜
+            bgColor = "#FFFFFF"; // 화이트
+            textColor = "#212529"; // 검은색 글씨
+            borderStyle = "1px solid #CED4DA"; // 화이트 구분을 위한 보더
             break;
           case "보라":
-            bgColor = "#E2B4BD"; // 소프트 인디핑크
-            textColor = "#6B2D38"; // 어두운 와인색 글자 (가독성 최우선)
+            bgColor = "#E83E8C"; // 핑크
             break;
           case "관":
-            bgColor = "#4A7C59"; // 차분한 딥 세이지 그린
+            bgColor = "#28A745"; // 그린
             break;
           default:
-            bgColor = "#6B6687";
+            bgColor = "#343A40";
             break;
         }
       }
 
+      const displayCategory = ownerStr || typeStr;
+      const toastText = `[${displayCategory}] ${detailStr} : ${formatMoney(amt)}원`;
+
       return `
-        <div class="cal-item" style="background-color: ${bgColor} !important; color: ${textColor} !important;" title="[${ownerStr || typeStr}] ${detailStr}: ${formatMoney(amt)}원">
+        <div class="cal-item" 
+             style="background-color: ${bgColor} !important; color: ${textColor} !important; border: ${borderStyle};" 
+             title="${toastText}"
+             onclick="showToast('${toastText}')">
           <span class="detail">${detailStr}</span>
           <span class="amt">${formatMoney(amt)}원</span>
         </div>
