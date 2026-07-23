@@ -939,7 +939,7 @@ function render(){
         </td>
         <td data-label="주차장">
           <div class="editable-wrap">
-            <span class="val-span" onclick="startInlineEditSpan(this, '${it.id}', 'deadline')" title="클릭하여 수정">${escapeHtml(it.deadline) || '주차 정보 입력...'}</span>
+            <span class="val-span" onclick="startInlineEditSpan(this, '${it.id}', 'deadline')" title="클릭하여 수정">${escapeHtml(it.deadline) || '주차 정보'}</span>
           </div>
         </td>
         <td data-label=""><button class="del-btn" onclick="deleteItem('${it.id}')">✕</button></td>
