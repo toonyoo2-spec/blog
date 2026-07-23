@@ -307,18 +307,18 @@
   #appContent{display:none;}
 
 /* ============================================================
-   📱 모바일 반응형 최적화 (820px 이하 화면) — 전체 교체본
+   📱 모바일 반응형 최적화 (갤럭시 플립 포함 모든 모바일 완벽 대응)
    ============================================================ */
 @media (max-width:820px){
 
-  body{ padding:20px 12px 60px; }
-  .wrap{ max-width:100%; }
+  body{ padding:16px 10px 40px; overflow-x: hidden; }
+  .wrap{ max-width:100%; width:100%; overflow-x: hidden; }
 
   header{ align-items:flex-start; }
 
-  .summary{ grid-template-columns:repeat(2,1fr); }
+  .summary{ grid-template-columns:repeat(2,1fr); gap:8px; }
 
-  /* 등록 폼: 8칸 그리드 → 1열 */
+  /* 등록 폼: 1열 배치 */
   .form-grid{
     grid-template-columns:1fr;
   }
@@ -328,16 +328,13 @@
     text-align:center;
   }
 
-  .toolbar{ flex-direction:column; align-items:stretch; }
+  .toolbar{ flex-direction:column; align-items:stretch; gap:10px; }
   .tabs{ justify-content:flex-start; }
   .io-btns{ justify-content:flex-end; }
 
-  /* --------------------------------------------------
-     핵심: 표를 카드형으로 변환
-     -------------------------------------------------- */
-  table, thead, tbody, tr, th, td{ display:block; }
-  table{ width:100%; }
-  thead{ display:none; }               /* PC용 헤더는 숨김 */
+  /* 표 -> 카드 구조 최적화 */
+  table, thead, tbody, tr, th, td{ display:block; width:100%; }
+  thead{ display:none; }               /* 헤더 숨김 */
 
   tbody tr{
     background:var(--card);
@@ -345,72 +342,85 @@
     border-radius:10px;
     padding:10px 12px;
     margin-bottom:12px;
+    box-sizing:border-box;
   }
 
   tbody td{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:10px;
-    width:100%;
-    max-width:100%;
+    gap:8px;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
     padding:8px 0;
     border-bottom:1px dashed var(--line);
     box-sizing:border-box;
   }
   tbody td:last-child{ border-bottom:none; }
 
-  /* data-label 속성을 좌측 라벨로 표시 */
+  /* data-label 좌측 표기 */
   tbody td::before{
     content: attr(data-label);
     flex:0 0 auto;
     font-size:12px;
     font-weight:600;
     color:var(--sub);
-    margin-right:8px;
+    margin-right:6px;
   }
-  /* 삭제 버튼처럼 data-label이 없는 칸은 라벨 숨기고 우측 정렬 */
+  
   tbody td:not([data-label]) ::before,
   tbody td[data-label=""]::before{ display:none; }
   tbody td[data-label=""]{ justify-content:flex-end; }
 
-  /* 칸 안의 실제 입력/선택 요소가 폭을 넘지 않도록 */
+  /* 입력 영역 고정 min-width 전면 제거 (플립 밀림 방지 핵심) */
   tbody td select,
   tbody td input{
     flex:1 1 auto;
     width:auto;
-    max-width:60%;
-    min-width:0;         /* ⬅ 고정 min-width 무력화 (밀림 방지 핵심) */
+    max-width:100%;
+    min-width:0 !important;
     box-sizing:border-box;
   }
+  
+  .address-input, .contact-input {
+    min-width: 0 !important;
+  }
+
   tbody td .region-badge{ flex-shrink:0; }
 
   .editable-wrap{ flex:1 1 auto; min-width:0; }
   .editable-wrap .val-span{
     overflow-wrap:anywhere;
   }
+  
+  /* 모바일 편집 버튼 항상 노출 (터치 디바이스 호환) */
+  .edit-btn { opacity: 0.8; }
 
-  /* --------------------------------------------------
-     👇 상태 / 예약일시 모바일 전용 모듈 (기존 코드 유지)
-     -------------------------------------------------- */
+  /* 상태 / 예약일시 플립 맞춤 가변 레이아웃 */
   td[data-label="상태 / 예약일시"] {
     align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  td[data-label="상태 / 예약일시"]::before {
+    margin-bottom: 2px;
   }
 
   .status-cell-content {
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
-    width: 100%;
+    align-items: stretch;
+    gap: 6px;
+    width: 100% !important;
     max-width: 100% !important;
   }
 
   .status-cell-content .status-select {
     width: 100% !important;
-    max-width: 100% !important;
     font-size: 13px !important;
-    padding: 6px 10px !important;
+    padding: 6px 8px !important;
     box-sizing: border-box;
   }
 
@@ -420,24 +430,23 @@
     flex-direction: row !important;
     gap: 6px !important;
     margin-top: 0 !important;
-    justify-content: flex-end;
   }
 
   .status-cell-content .date-short {
-    width: 60% !important;
-    min-width: 130px !important;
-    max-width: none !important;
-    font-size: 13px !important;
-    padding: 6px 8px !important;
+    width: 58% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: 12px !important;
+    padding: 6px !important;
     box-sizing: border-box;
   }
 
   .status-cell-content .time-short {
-    width: 40% !important;
-    min-width: 95px !important;
-    max-width: none !important;
-    font-size: 13px !important;
-    padding: 6px 6px !important;
+    width: 42% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    font-size: 12px !important;
+    padding: 6px !important;
     box-sizing: border-box;
   }
 }
@@ -617,9 +626,9 @@ let items = [];
 let filter = "all";
 
 const statusMeta = {
-  wait:    { label:"예약대기",  cls:"status-wait" },
-  confirm: { label:"예약완료",  cls:"status-confirm" },
-  done:    { label:"체험완료",  cls:"status-done" },
+  wait:    { label:"예약대기",   cls:"status-wait" },
+  confirm: { label:"예약완료",   cls:"status-confirm" },
+  done:    { label:"체험완료",   cls:"status-done" },
   end:     { label:"종료",      cls:"status-end" }
 };
 
@@ -991,7 +1000,7 @@ function render(){
             <button class="edit-btn" onclick="startInlineEdit(this, '${it.id}', 'provide')" title="수정하기">✏️</button>
           </div>
         </td>
-        <td data-label="상태 / 예약일시" style="min-width: 155px;">
+        <td data-label="상태 / 예약일시">
           <div class="status-cell-content">
             <select class="status-select ${statusMeta[it.status].cls}" onchange="updateStatus('${it.id}', this.value)">
               ${Object.keys(statusMeta).map(k =>
