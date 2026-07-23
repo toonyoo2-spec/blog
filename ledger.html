@@ -114,7 +114,7 @@
   .sum-card .num{
     font-size:19px;
     font-weight:700;
-    white-space:nowrap; /* 금액 1줄 유지 */
+    white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
@@ -232,7 +232,7 @@
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 (PC/모바일 분기) ---- */
+  /* ---- 연간 한눈에 보기 ---- */
   .yearly-panel{padding-bottom:16px;}
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
@@ -272,7 +272,6 @@
     body { padding: 16px 10px 40px; overflow-x: hidden; }
     .wrap { max-width: 100%; width: 100%; }
     
-    /* 🌟 상단 4개 요약 카드 모바일 무조건 1줄 정렬 보정 */
     .summary {
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
@@ -281,8 +280,8 @@
       padding: 12px 10px;
     }
     .sum-card .num {
-      font-size: 15.5px !important;
-      white-space: nowrap !important; /* 모바일에서 3,607,190원 절대 안꺾임 */
+      font-size: 15px !important;
+      white-space: nowrap !important;
       letter-spacing: -0.03em;
     }
 
@@ -306,7 +305,7 @@
       font-size: 14px;
       font-weight: 700;
       margin-top: 2px;
-      white-space: nowrap; /* 연간 총액 무조건 1줄 */
+      white-space: nowrap;
       letter-spacing: -0.03em;
     }
     .m-y-card.balance .val { color: var(--saving-ink); }
@@ -416,7 +415,6 @@
       font-weight: 600;
     }
 
-    /* 내역 카드 금액 1줄 정렬 */
     .amount-cell {
       white-space: nowrap !important;
       letter-spacing: -0.02em;
@@ -609,154 +607,166 @@ function onMidChange(){
 async function fetchMonthEntries(month){
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${month}`, { cache:"no-store" });
+    if (!res.ok) return [];
     const data = await res.json();
-    if(data.ok && Array.isArray(data.items)) return data.items;
+    if(data && data.ok && Array.isArray(data.items)) return data.items;
   }catch(e){
     console.error(`${month}월 데이터 로드 실패:`, e);
   }
   return [];
 }
 
+/* 🌟 서버 차단 방지: 12개월 분량 데이터를 안전하게 수집 */
 async function loadYearlySummary(){
-  const monthsData = await Promise.all(
-    Array.from({length:12}, (_, i) => fetchMonthEntries(i + 1))
-  );
-  cachedMonthsData = monthsData;
-  renderYearlySummary(monthsData);
+  try {
+    const monthsData = [];
+    for (let m = 1; m <= 12; m++) {
+      const items = await fetchMonthEntries(m);
+      monthsData.push(items);
+    }
+    cachedMonthsData = monthsData;
+    renderYearlySummary(monthsData);
+  } catch(e) {
+    console.error("연간 요약 로드 에러:", e);
+  }
 }
 
 function renderYearlySummary(monthsData){
-  const N = 12;
-  const incomeByMonth = new Array(N).fill(0);
-  const tree = {};       
-  const largeTotal = {}; 
+  try {
+    const N = 12;
+    const incomeByMonth = new Array(N).fill(0);
+    const tree = {};       
+    const largeTotal = {}; 
 
-  monthsData.forEach((entries, idx) => {
-    entries.forEach(it => {
-      const amt = Number(it.amount) || 0;
-      if(it.type === "수입"){
-        incomeByMonth[idx] += amt;
-      } else if(it.type === "지출"){
-        const large = it.large || "기타";
-        const mid = it.mid || "기타";
-        const small = it.small || "기타";
+    monthsData.forEach((entries, idx) => {
+      entries.forEach(it => {
+        const amt = Number(it.amount) || 0;
+        if(it.type === "수입"){
+          incomeByMonth[idx] += amt;
+        } else if(it.type === "지출"){
+          const large = it.large || "기타";
+          const mid = it.mid || "기타";
+          const small = it.small || "기타";
 
-        if(!tree[large]) tree[large] = {};
-        if(!tree[large][mid]) tree[large][mid] = {};
-        if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
-        tree[large][mid][small][idx] += amt;
+          if(!tree[large]) tree[large] = {};
+          if(!tree[large][mid]) tree[large][mid] = {};
+          if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
+          tree[large][mid][small][idx] += amt;
 
-        if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
-        largeTotal[large][idx] += amt;
-      }
-    });
-  });
-
-  const totalExpenseByMonth = new Array(N).fill(0);
-  Object.values(largeTotal).forEach(arr => arr.forEach((v, i) => totalExpenseByMonth[i] += v));
-
-  const balanceByMonth = incomeByMonth.map((inc, i) => inc - totalExpenseByMonth[i]);
-  const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
-  const sum = arr => arr.reduce((a, b) => a + b, 0);
-
-  // 1. PC용 렌더링
-  const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
-
-  const pcTable1 = `
-    <table class="yearly-table">
-      <thead>
-        <tr><th class="label" colspan="2">수입 - 지출</th>${monthHeaders}<th>연간 Balance</th></tr>
-      </thead>
-      <tbody>
-        <tr class="balance-row">
-          <td class="label" colspan="2">금액</td>
-          ${balanceByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}
-          <td>${formatMoney(sum(balanceByMonth))}</td>
-        </tr>
-        <tr class="balance-row">
-          <td class="label" colspan="2">저축율</td>
-          ${savingRateByMonth.map(v => `<td>${v===null ? '-' : v.toFixed(2)+'%'}</td>`).join('')}
-          <td></td>
-        </tr>
-      </tbody>
-    </table>
-  `;
-
-  const order = { "고정지출":0, "변동지출":1 };
-  const largeOrder = Object.keys(largeTotal).sort((a, b) => {
-    const ao = order[a] !== undefined ? order[a] : 2;
-    const bo = order[b] !== undefined ? order[b] : 2;
-    return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
-  });
-
-  let pcRows = `<tr class="total-row"><td class="label" colspan="3">지출 합계</td>${totalExpenseByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(totalExpenseByMonth))}</td></tr>`;
-
-  largeOrder.forEach(large => {
-    pcRows += `<tr class="sub-total-row"><td class="label" colspan="3">${escapeHtml(large)}</td>${largeTotal[large].map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(largeTotal[large]))}</td></tr>`;
-  });
-
-  largeOrder.forEach(large => {
-    const mids = tree[large] || {};
-    Object.keys(mids).forEach(mid => {
-      const smalls = mids[mid];
-      Object.keys(smalls).forEach(small => {
-        const arr = smalls[small];
-        pcRows += `<tr class="detail-row">
-          <td class="label">${escapeHtml(large)}</td>
-          <td class="label">${escapeHtml(mid)}</td>
-          <td class="label">${escapeHtml(small)}</td>
-          ${arr.map(v => `<td>${formatMoney(v)}</td>`).join('')}
-          <td>${formatMoney(sum(arr))}</td>
-        </tr>`;
+          if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
+          largeTotal[large][idx] += amt;
+        }
       });
     });
-  });
 
-  const pcTable2 = `
-    <table class="yearly-table">
-      <thead>
-        <tr><th class="label">대분류</th><th class="label">중분류</th><th class="label">소분류</th>${monthHeaders}<th>합계</th></tr>
-      </thead>
-      <tbody>${pcRows}</tbody>
-    </table>
-  `;
+    const totalExpenseByMonth = new Array(N).fill(0);
+    Object.values(largeTotal).forEach(arr => arr.forEach((v, i) => totalExpenseByMonth[i] += v));
 
-  // 2. 모바일용 렌더링
-  const totalIncome = sum(incomeByMonth);
-  const totalExpense = sum(totalExpenseByMonth);
-  const totalBalance = sum(balanceByMonth);
-  const validRates = savingRateByMonth.filter(r => r !== null);
-  const avgRate = validRates.length > 0 ? (validRates.reduce((a,b)=>a+b,0) / validRates.length).toFixed(1) : '-';
+    const balanceByMonth = incomeByMonth.map((inc, i) => inc - totalExpenseByMonth[i]);
+    const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
+    const sum = arr => arr.reduce((a, b) => a + b, 0);
 
-  const mobileSummaryCards = `
-    <div class="m-yearly-cards">
-      <div class="m-y-card"><div class="lbl">연간 총수입</div><div class="val">${formatMoney(totalIncome)}원</div></div>
-      <div class="m-y-card"><div class="lbl">연간 총지출</div><div class="val">${formatMoney(totalExpense)}원</div></div>
-      <div class="m-y-card balance"><div class="lbl">연간 순수익(Balance)</div><div class="val">${formatMoney(totalBalance)}원</div></div>
-      <div class="m-y-card rate"><div class="lbl">평균 저축률</div><div class="val">${avgRate}%</div></div>
-    </div>
-  `;
+    // 1. PC용 렌더링
+    const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
 
-  let mobileChips = `<div class="m-month-chips">`;
-  mobileChips += `<button class="m-chip ${selectedMobileMonth===0?'active':''}" onclick="selectMobileMonth(0)">연간 합계</button>`;
-  for(let m=1; m<=12; m++){
-    mobileChips += `<button class="m-chip ${selectedMobileMonth===m?'active':''}" onclick="selectMobileMonth(${m})">${m}월</button>`;
+    const pcTable1 = `
+      <table class="yearly-table">
+        <thead>
+          <tr><th class="label" colspan="2">수입 - 지출</th>${monthHeaders}<th>연간 Balance</th></tr>
+        </thead>
+        <tbody>
+          <tr class="balance-row">
+            <td class="label" colspan="2">금액</td>
+            ${balanceByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}
+            <td>${formatMoney(sum(balanceByMonth))}</td>
+          </tr>
+          <tr class="balance-row">
+            <td class="label" colspan="2">저축율</td>
+            ${savingRateByMonth.map(v => `<td>${v===null ? '-' : v.toFixed(2)+'%'}</td>`).join('')}
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+
+    const order = { "고정지출":0, "변동지출":1 };
+    const largeOrder = Object.keys(largeTotal).sort((a, b) => {
+      const ao = order[a] !== undefined ? order[a] : 2;
+      const bo = order[b] !== undefined ? order[b] : 2;
+      return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
+    });
+
+    let pcRows = `<tr class="total-row"><td class="label" colspan="3">지출 합계</td>${totalExpenseByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(totalExpenseByMonth))}</td></tr>`;
+
+    largeOrder.forEach(large => {
+      pcRows += `<tr class="sub-total-row"><td class="label" colspan="3">${escapeHtml(large)}</td>${largeTotal[large].map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(largeTotal[large]))}</td></tr>`;
+    });
+
+    largeOrder.forEach(large => {
+      const mids = tree[large] || {};
+      Object.keys(mids).forEach(mid => {
+        const smalls = mids[mid];
+        Object.keys(smalls).forEach(small => {
+          const arr = smalls[small];
+          pcRows += `<tr class="detail-row">
+            <td class="label">${escapeHtml(large)}</td>
+            <td class="label">${escapeHtml(mid)}</td>
+            <td class="label">${escapeHtml(small)}</td>
+            ${arr.map(v => `<td>${formatMoney(v)}</td>`).join('')}
+            <td>${formatMoney(sum(arr))}</td>
+          </tr>`;
+        });
+      });
+    });
+
+    const pcTable2 = `
+      <table class="yearly-table">
+        <thead>
+          <tr><th class="label">대분류</th><th class="label">중분류</th><th class="label">소분류</th>${monthHeaders}<th>합계</th></tr>
+        </thead>
+        <tbody>${pcRows}</tbody>
+      </table>
+    `;
+
+    // 2. 모바일용 렌더링
+    const totalIncome = sum(incomeByMonth);
+    const totalExpense = sum(totalExpenseByMonth);
+    const totalBalance = sum(balanceByMonth);
+    const validRates = savingRateByMonth.filter(r => r !== null);
+    const avgRate = validRates.length > 0 ? (validRates.reduce((a,b)=>a+b,0) / validRates.length).toFixed(1) : '-';
+
+    const mobileSummaryCards = `
+      <div class="m-yearly-cards">
+        <div class="m-y-card"><div class="lbl">연간 총수입</div><div class="val">${formatMoney(totalIncome)}원</div></div>
+        <div class="m-y-card"><div class="lbl">연간 총지출</div><div class="val">${formatMoney(totalExpense)}원</div></div>
+        <div class="m-y-card balance"><div class="lbl">연간 순수익(Balance)</div><div class="val">${formatMoney(totalBalance)}원</div></div>
+        <div class="m-y-card rate"><div class="lbl">평균 저축률</div><div class="val">${avgRate}%</div></div>
+      </div>
+    `;
+
+    let mobileChips = `<div class="m-month-chips">`;
+    mobileChips += `<button class="m-chip ${selectedMobileMonth===0?'active':''}" onclick="selectMobileMonth(0)">연간 합계</button>`;
+    for(let m=1; m<=12; m++){
+      mobileChips += `<button class="m-chip ${selectedMobileMonth===m?'active':''}" onclick="selectMobileMonth(${m})">${m}월</button>`;
+    }
+    mobileChips += `</div>`;
+
+    const mobileAccordion = buildMobileAccordion(tree, largeTotal, selectedMobileMonth);
+
+    document.getElementById('yearlySummary').innerHTML = `
+      <div class="yearly-pc">
+        <div class="yearly-scroll">${pcTable1}</div>
+        <div class="yearly-scroll">${pcTable2}</div>
+      </div>
+      <div class="yearly-mobile">
+        ${mobileSummaryCards}
+        ${mobileChips}
+        <div id="mobileAccordionContainer">${mobileAccordion}</div>
+      </div>
+    `;
+  } catch(err) {
+    console.error("연간 렌더링 오류:", err);
   }
-  mobileChips += `</div>`;
-
-  const mobileAccordion = buildMobileAccordion(tree, largeTotal, selectedMobileMonth);
-
-  document.getElementById('yearlySummary').innerHTML = `
-    <div class="yearly-pc">
-      <div class="yearly-scroll">${pcTable1}</div>
-      <div class="yearly-scroll">${pcTable2}</div>
-    </div>
-    <div class="yearly-mobile">
-      ${mobileSummaryCards}
-      ${mobileChips}
-      <div id="mobileAccordionContainer">${mobileAccordion}</div>
-    </div>
-  `;
 }
 
 function selectMobileMonth(m){
