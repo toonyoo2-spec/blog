@@ -372,7 +372,7 @@
     <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 맨 위 캘린더 영역 (월 선택 시 제목도 동적 변환) -->
+  <!-- 1. 맨 위 캘린더 영역 -->
   <div class="panel">
     <h2 id="calTitleHeader">7월 캘린더</h2>
     <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
@@ -433,7 +433,6 @@ function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
 }
 
-/* 🌟 월 변경 시 중앙 텍스트 및 캘린더 제목 동시 변경 */
 function updateMonthDisplay(){
   document.getElementById('monthDisplay').textContent = currentMonth + "월";
   document.getElementById('calTitleHeader').textContent = currentMonth + "월 캘린더";
@@ -468,6 +467,8 @@ async function initFullYearDataFromSupabase(){
       data.forEach(item => {
         const mIdx = item.month - 1;
         if (mIdx >= 0 && mIdx < 12) {
+          // 금액 유효성 보정 (숫자로 강제 변환)
+          item.amount = Number(item.amount) || 0;
           monthMapped[mIdx].push(item);
         }
       });
@@ -487,9 +488,21 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
+/* 🌟 수입 / 지출 정교한 판별 및 총액 계산 */
 function renderSummary(entries){
   const totals = { "수입":0, "지출":0 };
-  entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += Number(it.amount)||0; });
+  
+  entries.forEach(it => {
+    const typeStr = String(it.type || "").trim();
+    const amt = Number(it.amount) || 0;
+
+    if (typeStr === "수입") {
+      totals["수입"] += amt;
+    } else {
+      // "지출", "저축", "투자" 또는 기타 구분 모두 지출로 처리
+      totals["지출"] += amt;
+    }
+  });
 
   document.getElementById('summary').innerHTML = `
     <div class="sum-card income">
@@ -513,7 +526,7 @@ function renderCalendar(entries){
   const byDate = {};
   entries.forEach(it => {
     if(!it.date) return;
-    let dayKey = String(it.date);
+    let dayKey = String(it.date).trim();
     if(dayKey.includes('T')) dayKey = dayKey.split('T')[0];
     
     const parts = dayKey.split('-');
@@ -545,12 +558,15 @@ function renderCalendar(entries){
     const dayEntries = byDate[d] || [];
 
     const itemsHtml = dayEntries.map(it => {
-      const typeCls = (it.type === "수입") ? "수입" : "지출";
+      const typeStr = String(it.type || "").trim();
+      const typeCls = (typeStr === "수입") ? "수입" : "지출";
       const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
+      const amt = Number(it.amount) || 0;
+
       return `
-        <div class="cal-item ${typeCls}" title="${detailStr}: ${formatMoney(it.amount)}원">
+        <div class="cal-item ${typeCls}" title="${detailStr}: ${formatMoney(amt)}원">
           <span class="detail">${detailStr}</span>
-          <span class="amt">${formatMoney(it.amount)}원</span>
+          <span class="amt">${formatMoney(amt)}원</span>
         </div>
       `;
     }).join('');
@@ -582,9 +598,11 @@ function renderYearlySummary(){
     allYearData.forEach((entries, idx) => {
       entries.forEach(it => {
         const amt = Number(it.amount) || 0;
-        if(it.type === "수입"){
+        const typeStr = String(it.type || "").trim();
+
+        if(typeStr === "수입"){
           incomeByMonth[idx] += amt;
-        } else if(it.type === "지출"){
+        } else {
           const large = it.large || "기타";
           const mid = it.mid || "기타";
           const small = it.small || "기타";
@@ -721,7 +739,8 @@ function selectMobileMonth(m){
   const largeTotal = {};
   allYearData.forEach((entries, idx) => {
     entries.forEach(it => {
-      if(it.type === "지출"){
+      const typeStr = String(it.type || "").trim();
+      if(typeStr !== "수입"){
         const amt = Number(it.amount) || 0;
         const large = it.large || "기타";
         const mid = it.mid || "기타";
