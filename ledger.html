@@ -15,8 +15,6 @@
 
     --income-bg:#e2eef5; --income-ink:#1f5c82;
     --expense-bg:#fdf3d9; --expense-ink:#8a6d16;
-    --saving-bg:#e3ede4;  --saving-ink:#2f6b3c;
-    --invest-bg:#f1e7f9;  --invest-ink:#6b3fa0;
   }
   *{box-sizing:border-box;}
   body{
@@ -29,7 +27,7 @@
 
   .wrap{ max-width: 1600px; width: 95%; margin:0 auto; }
 
-  header{margin-bottom:20px;}
+  header{margin-bottom:24px;}
   .home-btn{
     display:inline-block;
     font-size:12.5px;
@@ -41,7 +39,53 @@
   h1{font-size:26px;letter-spacing:-0.02em;margin:0 0 4px;}
   header p{margin:0;color:var(--sub);font-size:13.5px;}
 
-  /* 월 선택 UI */
+  .panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:16px;
+    margin:0 0 16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel h2::before{
+    content:"";
+    width:6px;height:6px;border-radius:50%;
+    background:var(--accent);
+    display:inline-block;
+  }
+
+  /* 연간 한눈에 보기 펼침/접힘 토글 */
+  .yearly-toggle-header {
+    cursor: pointer;
+    user-select: none;
+    margin: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .yearly-toggle-header .arrow {
+    font-size: 13px;
+    color: var(--sub);
+    transition: transform 0.2s;
+  }
+  .yearly-panel.open .yearly-toggle-header .arrow {
+    transform: rotate(180deg);
+  }
+  .yearly-content-wrap {
+    display: none;
+    margin-top: 16px;
+  }
+  .yearly-panel.open .yearly-content-wrap {
+    display: block;
+  }
+
+  /* 월 선택 컨트롤 */
   .month-header {
     display: flex;
     flex-direction: column;
@@ -98,201 +142,33 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
+  /* 🌟 수입 / 지출 2개 전용 요약 카드 */
   .summary{
     display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:12px;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
     margin-bottom:22px;
   }
   .sum-card{
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:10px;
-    padding:14px 16px;
+    border-radius:12px;
+    padding:20px;
   }
+  .sum-card .lbl{font-size:13px;color:var(--sub);margin-bottom:6px;}
   .sum-card .num{
-    font-size:19px;
+    font-size:24px;
     font-weight:700;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .sum-card .lbl{font-size:12px;color:var(--sub);margin-top:2px;}
   .sum-card.income .num{color:var(--income-ink);}
   .sum-card.expense .num{color:var(--expense-ink);}
-  .sum-card.saving .num{color:var(--saving-ink);}
-  .sum-card.invest .num{color:var(--invest-ink);}
-
-  .panel{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
-  }
-  .panel h2{
-    font-size:15px;
-    margin:0 0 14px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .panel h2::before{
-    content:"";
-    width:6px;height:6px;border-radius:50%;
-    background:var(--accent);
-    display:inline-block;
-  }
-
-  /* 연간 한눈에 보기 펼침/접힘 스타일 */
-  .yearly-toggle-header {
-    cursor: pointer;
-    user-select: none;
-    margin: 0 !important;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .yearly-toggle-header .arrow {
-    font-size: 13px;
-    color: var(--sub);
-    transition: transform 0.2s;
-  }
-  .yearly-panel.open .yearly-toggle-header .arrow {
-    transform: rotate(180deg);
-  }
-  .yearly-content-wrap {
-    display: none;
-    margin-top: 16px;
-  }
-  .yearly-panel.open .yearly-content-wrap {
-    display: block;
-  }
-
-  .form-grid{
-    display:grid;
-    grid-template-columns: 130px 90px 120px 120px 120px 1.5fr 120px 120px 1fr;
-    gap:10px;
-    align-items:end;
-  }
-  .field label{
-    display:block;
-    font-size:11px;
-    color:var(--sub);
-    margin-bottom:4px;
-  }
-  input, select{
-    width:100%;
-    padding:8px 9px;
-    border:1px solid var(--line);
-    border-radius:7px;
-    font-size:13px;
-    background:#fff;
-    color:var(--ink);
-    font-family:inherit;
-  }
-  input:focus, select:focus{outline:none;border-color:var(--accent);}
-  .add-btn{
-    grid-column:1/-1;
-    justify-self:start;
-    margin-top:4px;
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    padding:10px 22px;
-    border-radius:7px;
-    font-size:13.5px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .add-btn:hover{opacity:0.9;}
-  .add-btn:disabled{opacity:0.5;cursor:not-allowed;}
-
-  .type-select{font-weight:700;}
-  .type-select.수입{background:var(--income-bg);color:var(--income-ink);}
-  .type-select.지출{background:var(--expense-bg);color:var(--expense-ink);}
-  .type-select.저축{background:var(--saving-bg);color:var(--saving-ink);}
-  .type-select.투자{background:var(--invest-bg);color:var(--invest-ink);}
-
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  thead th{
-    text-align:left;
-    font-size:12px;
-    color:var(--sub);
-    font-weight:600;
-    padding:0 8px 10px;
-    border-bottom:1px solid var(--line);
-    white-space:nowrap;
-  }
-  tbody td{
-    padding:10px 8px;
-    border-bottom:1px solid var(--line);
-    vertical-align:middle;
-  }
-  tbody tr:hover{background:#fafaf7;}
-  .type-badge{
-    font-size:11px;
-    font-weight:700;
-    padding:2px 8px;
-    border-radius:12px;
-    white-space:nowrap;
-  }
-  .type-badge.수입{background:var(--income-bg);color:var(--income-ink);}
-  .type-badge.지출{background:var(--expense-bg);color:var(--expense-ink);}
-  .type-badge.저축{background:var(--saving-bg);color:var(--saving-ink);}
-  .type-badge.투자{background:var(--invest-bg);color:var(--invest-ink);}
-  .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
-  .cat-cell{color:var(--sub);font-size:12.5px;}
-
-  /* 수정 / 삭제 버튼 스타일 */
-  .row-actions {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-    white-space: nowrap;
-  }
-  .edit-btn {
-    background: #fff;
-    border: 1px solid var(--line);
-    color: var(--sub);
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    line-height: 1.2;
-  }
-  .edit-btn:hover {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-
-  .del-btn {
-    background: #fff;
-    border: 1px solid #f2c4c0;
-    color: #b3452f;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 4px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    line-height: 1.2;
-  }
-  .del-btn:hover {
-    background: #b3452f;
-    color: #fff;
-    border-color: #b3452f;
-  }
-
-  .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 ---- */
+  /* ---- 연간 한눈에 보기 테이블 / 모바일 스타일 ---- */
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
 
@@ -314,8 +190,8 @@
     border-bottom:1px solid #eee;
   }
   .yearly-table td.label{text-align:left;color:var(--sub);}
-  .yearly-table tr.balance-row td, .yearly-table tr.balance-row th{background:var(--saving-bg);}
-  .yearly-table tr.balance-row td.label{color:var(--saving-ink);font-weight:600;}
+  .yearly-table tr.balance-row td, .yearly-table tr.balance-row th{background:#e3ede4;}
+  .yearly-table tr.balance-row td.label{color:#2f6b3c;font-weight:600;}
   .yearly-table tr.total-row td{background:var(--expense-bg);font-weight:700;color:var(--expense-ink);}
   .yearly-table tr.total-row td.label{color:var(--expense-ink);}
   .yearly-table tr.sub-total-row td{background:#fbeceb;font-weight:600;}
@@ -329,10 +205,10 @@
     body { padding: 16px 10px 40px; overflow-x: hidden; }
     .wrap { max-width: 100%; width: 100%; }
     
-    .summary { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-    .sum-card { padding: 12px 10px; }
+    .summary { gap: 10px; }
+    .sum-card { padding: 14px 12px; }
     .sum-card .num {
-      font-size: 15px !important;
+      font-size: 17px !important;
       white-space: nowrap !important;
       letter-spacing: -0.03em;
     }
@@ -360,7 +236,7 @@
       white-space: nowrap;
       letter-spacing: -0.03em;
     }
-    .m-y-card.balance .val { color: var(--saving-ink); }
+    .m-y-card.balance .val { color: #2f6b3c; }
     .m-y-card.rate .val { color: var(--income-ink); }
 
     .m-month-chips {
@@ -424,60 +300,6 @@
     .month-header { padding: 16px 12px; }
     .current-month { font-size: 22px; }
     .month-mini-summary { font-size: 12px; padding: 6px 14px; white-space: nowrap; }
-    
-    .form-grid {
-      grid-template-columns: 1fr !important;
-      gap: 10px;
-    }
-    .add-btn {
-      width: 100%;
-      padding: 12px;
-      text-align: center;
-    }
-    
-    table, thead, tbody, th, td, tr { display: block; }
-    thead { display: none; }
-    
-    tbody tr {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      margin-bottom: 12px;
-      padding: 14px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-    }
-    
-    tbody td {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #f2f1ed;
-    }
-    
-    /* 🌟 모바일 '관리' 행 정렬 완벽 보정 */
-    tbody td:last-child { 
-      border-bottom: none; 
-      padding-top: 10px;
-      margin-top: 4px;
-      border-top: 1px dashed var(--line); /* 관리 버튼 상단에 은은한 구분선 추가 */
-    }
-    
-    tbody td::before {
-      content: attr(data-label);
-      font-size: 12px;
-      color: var(--sub);
-      font-weight: 600;
-    }
-
-    .amount-cell {
-      white-space: nowrap !important;
-      letter-spacing: -0.02em;
-    }
-
-    .row-actions {
-      width: auto;
-    }
   }
 </style>
 </head>
@@ -487,10 +309,10 @@
   <header>
     <a href="./index.html" class="home-btn">← 홈</a>
     <h1>가계부</h1>
-    <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
+    <p>연간 요약 통계 및 월별 수입·지출 현황을 확인합니다.</p>
   </header>
 
-  <!-- 연간 한눈에 보기 -->
+  <!-- 1. 연간 한눈에 보기 -->
   <div class="panel yearly-panel" id="yearlyPanel">
     <h2 class="yearly-toggle-header" onclick="toggleYearlyPanel()">
       <span>연간 한눈에 보기</span>
@@ -503,7 +325,7 @@
     </div>
   </div>
 
-  <!-- 월 선택 UI -->
+  <!-- 2. 월 선택 UI -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -517,88 +339,23 @@
     </div>
   </div>
 
+  <!-- 3. 수입 / 지출 요약 카드 -->
   <div class="summary" id="summary"></div>
-
-  <div class="panel">
-    <h2>새 거래 추가</h2>
-    <div class="form-grid">
-      <div class="field">
-        <label>날짜</label>
-        <input type="date" id="in-date">
-      </div>
-      <div class="field">
-        <label>구분</label>
-        <select id="in-type" class="type-select" onchange="onTypeChange()"></select>
-      </div>
-      <div class="field">
-        <label>대분류</label>
-        <select id="in-large" onchange="onLargeChange()"></select>
-      </div>
-      <div class="field">
-        <label>중분류</label>
-        <select id="in-mid" onchange="onMidChange()"></select>
-      </div>
-      <div class="field">
-        <label>소분류</label>
-        <select id="in-small"></select>
-      </div>
-      <div class="field">
-        <label>세부내용</label>
-        <input type="text" id="in-detail" placeholder="예: 마트 장보기">
-      </div>
-      <div class="field">
-        <label>금액</label>
-        <input type="number" id="in-amount" placeholder="0">
-      </div>
-      <div class="field">
-        <label>결제수단</label>
-        <input type="text" id="in-payment" placeholder="예: 현대카드">
-      </div>
-      <div class="field">
-        <label>비고</label>
-        <input type="text" id="in-note" placeholder="선택">
-      </div>
-      <button class="add-btn" id="addBtn" onclick="addEntry()">+ 추가하기</button>
-    </div>
-  </div>
-
-  <div class="panel">
-    <table>
-      <thead>
-        <tr>
-          <th style="width:110px;">날짜</th>
-          <th style="width:70px;">구분</th>
-          <th style="width:220px;">카테고리</th>
-          <th>세부내용</th>
-          <th style="width:130px; text-align:right;">금액</th>
-          <th style="width:130px;">결제수단</th>
-          <th style="width:150px;">비고</th>
-          <th style="width:110px; text-align:right;">관리</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="empty" id="emptyMsg" style="display:none;">이번 달 거래 내역이 없어요.</div>
-  </div>
 
 </div>
 
 <script>
 /* ===========================================================
-   Apps Script 연동 설정 + 프론트엔드 로컬스토리지 캐싱
+   Apps Script 연동 설정 + 프론트엔드 캐싱
    =========================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
 const SITE_KEY = "130702"; 
 
-let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
 let entries = [];
 let currentMonth = new Date().getMonth() + 1;
-let editingRowIndex = null;
 let cachedMonthsData = null;
 let selectedMobileMonth = 0;
 let isYearlyLoaded = false;
-
-const TYPES = ["수입","지출","저축","투자"];
 
 function escapeHtml(str){
   return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -619,63 +376,6 @@ function changeMonth(offset){
   
   updateMonthDisplay();
   loadEntries();
-}
-
-async function loadCategories(){
-  const cachedCat = localStorage.getItem("ledger_categories");
-  if(cachedCat) {
-    try { categories = JSON.parse(cachedCat); } catch(e){}
-  }
-  initTypeSelect();
-
-  try{
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=categories`, { cache:"no-store" });
-    const data = await res.json();
-    if(data.ok && data.categories) {
-      categories = data.categories;
-      localStorage.setItem("ledger_categories", JSON.stringify(categories));
-      initTypeSelect();
-    }
-  }catch(e){
-    console.error("카테고리 백그라운드 로드 실패:", e);
-  }
-}
-
-function initTypeSelect(){
-  const sel = document.getElementById('in-type');
-  sel.innerHTML = TYPES.map(t => `<option value="${t}">${t}</option>`).join('');
-  sel.className = "type-select " + sel.value;
-  onTypeChange();
-}
-
-function onTypeChange(){
-  const sel = document.getElementById('in-type');
-  sel.className = "type-select " + sel.value;
-  const list = categories[sel.value] || [];
-  const larges = [...new Set(list.map(c => c.large))].filter(Boolean);
-  const largeSel = document.getElementById('in-large');
-  largeSel.innerHTML = larges.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
-  onLargeChange();
-}
-
-function onLargeChange(){
-  const type = document.getElementById('in-type').value;
-  const large = document.getElementById('in-large').value;
-  const list = (categories[type] || []).filter(c => c.large === large);
-  const mids = [...new Set(list.map(c => c.mid))].filter(Boolean);
-  const midSel = document.getElementById('in-mid');
-  midSel.innerHTML = `<option value="">- 선택 안함 -</option>` + mids.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
-  onMidChange();
-}
-
-function onMidChange(){
-  const type = document.getElementById('in-type').value;
-  const large = document.getElementById('in-large').value;
-  const mid = document.getElementById('in-mid').value;
-  const list = (categories[type] || []).filter(c => c.large === large && c.mid === mid);
-  const smalls = [...new Set(list.map(c => c.small))].filter(Boolean);
-  const smallSel = document.getElementById('in-small');
-  smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
 function toggleYearlyPanel() {
@@ -943,6 +643,7 @@ function toggleAccordion(id){
   if(el) el.classList.toggle('open');
 }
 
+/* 🌟 월별 수입 및 지출 총액 조회 */
 async function loadEntries(){
   const cacheKey = `ledger_entries_${currentMonth}`;
   const cachedData = localStorage.getItem(cacheKey);
@@ -950,7 +651,7 @@ async function loadEntries(){
   if(cachedData) {
     try {
       entries = JSON.parse(cachedData);
-      render();
+      renderSummary();
     } catch(e){}
   }
 
@@ -960,188 +661,35 @@ async function loadEntries(){
     if(data.ok && Array.isArray(data.items)) {
       entries = data.items;
       localStorage.setItem(cacheKey, JSON.stringify(entries));
-      render();
+      renderSummary();
     }
   }catch(e){
-    console.error("거래 내역 백그라운드 동기화 실패:", e);
+    console.error("수입/지출 내역 동기화 실패:", e);
   }
 }
 
-function render(){
-  renderSummary();
-  renderTable();
-}
-
+/* 🌟 수입, 지출 2개 카드만 렌더링 */
 function renderSummary(){
-  const totals = { "수입":0, "지출":0, "저축":0, "투자":0 };
+  const totals = { "수입":0, "지출":0 };
   entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += it.amount; });
 
   document.getElementById('summary').innerHTML = `
-    <div class="sum-card income"><div class="num">${formatMoney(totals["수입"])}원</div><div class="lbl">수입</div></div>
-    <div class="sum-card expense"><div class="num">${formatMoney(totals["지출"])}원</div><div class="lbl">지출</div></div>
-    <div class="sum-card saving"><div class="num">${formatMoney(totals["저축"])}원</div><div class="lbl">저축</div></div>
-    <div class="sum-card invest"><div class="num">${formatMoney(totals["투자"])}원</div><div class="lbl">투자</div></div>
+    <div class="sum-card income">
+      <div class="lbl">수입</div>
+      <div class="num">${formatMoney(totals["수입"])}원</div>
+    </div>
+    <div class="sum-card expense">
+      <div class="lbl">지출</div>
+      <div class="num">${formatMoney(totals["지출"])}원</div>
+    </div>
   `;
 
   document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
   document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
 
-function renderTable(){
-  const tbody = document.getElementById('tbody');
-  const emptyMsg = document.getElementById('emptyMsg');
-
-  if(entries.length === 0){
-    tbody.innerHTML = "";
-    emptyMsg.style.display = "block";
-    return;
-  }
-  emptyMsg.style.display = "none";
-
-  const sorted = entries.slice().sort((a,b) => (a.date||"").localeCompare(b.date||""));
-
-  tbody.innerHTML = sorted.map(it => `
-    <tr>
-      <td data-label="날짜">${escapeHtml(it.date)}</td>
-      <td data-label="구분"><span class="type-badge ${it.type}">${escapeHtml(it.type)}</span></td>
-      <td data-label="카테고리" class="cat-cell">
-        ${escapeHtml(it.large)}
-        ${it.mid ? ' · ' + escapeHtml(it.mid) : ''}
-        ${it.small ? ' · ' + escapeHtml(it.small) : ''}
-      </td>
-      <td data-label="세부내용">${escapeHtml(it.detail)}</td>
-      <td data-label="금액" class="amount-cell">${formatMoney(it.amount)}원</td>
-      <td data-label="결제수단">${escapeHtml(it.payment) || '-'}</td>
-      <td data-label="비고">${escapeHtml(it.note) || '-'}</td>
-      <td data-label="관리">
-        <div class="row-actions">
-          <button class="edit-btn" onclick="startEdit(${it.rowIndex})">수정</button>
-          <button class="del-btn" onclick="deleteEntry(${it.rowIndex})">삭제</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function collectFormItem(){
-  return {
-    date: document.getElementById('in-date').value,
-    type: document.getElementById('in-type').value,
-    large: document.getElementById('in-large').value,
-    mid: document.getElementById('in-mid').value,
-    small: document.getElementById('in-small').value,
-    detail: document.getElementById('in-detail').value.trim(),
-    amount: Number(document.getElementById('in-amount').value) || 0,
-    payment: document.getElementById('in-payment').value.trim(),
-    review: "",
-    note: document.getElementById('in-note').value.trim()
-  };
-}
-
-function resetForm(){
-  document.getElementById('in-date').value = "";
-  document.getElementById('in-detail').value = "";
-  document.getElementById('in-amount').value = "";
-  document.getElementById('in-payment').value = "";
-  document.getElementById('in-note').value = "";
-  
-  document.getElementById('in-type').selectedIndex = 0;
-  onTypeChange();
-  
-  editingRowIndex = null;
-  document.getElementById('addBtn').textContent = "+ 추가하기";
-}
-
-async function addEntry(){
-  const item = collectFormItem();
-  if(!item.date){ alert('날짜를 입력해주세요.'); return; }
-  if(!item.amount){ alert('금액을 입력해주세요.'); return; }
-
-  const btn = document.getElementById('addBtn');
-  btn.disabled = true;
-
-  try{
-    let res, data;
-    if(editingRowIndex){
-      res = await fetch(API_URL, {
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify({ action:"update", key:SITE_KEY, month:currentMonth, item })
-      });
-    } else {
-      res = await fetch(API_URL, {
-        method:"POST",
-        headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify({ action:"add", key:SITE_KEY, month:currentMonth, item })
-      });
-    }
-    data = await res.json();
-    if(!data.ok) throw new Error(data.error);
-    entries = data.items;
-    localStorage.setItem(`ledger_entries_${currentMonth}`, JSON.stringify(entries));
-    localStorage.removeItem("ledger_yearly_summary");
-  }catch(err){
-    alert("저장 실패: " + err.message);
-    btn.disabled = false;
-    return;
-  }
-
-  resetForm();
-  btn.disabled = false;
-  render();
-  if (isYearlyLoaded) loadYearlySummary();
-}
-
-function startEdit(rowIndex){
-  const it = entries.find(e => e.rowIndex === rowIndex);
-  if(!it) return;
-
-  document.getElementById('in-date').value = it.date;
-  
-  document.getElementById('in-type').value = it.type;
-  onTypeChange();
-  
-  if (it.large) document.getElementById('in-large').value = it.large;
-  onLargeChange();
-  
-  if (it.mid) document.getElementById('in-mid').value = it.mid;
-  onMidChange();
-  
-  if (it.small) document.getElementById('in-small').value = it.small;
-
-  document.getElementById('in-detail').value = it.detail;
-  document.getElementById('in-amount').value = it.amount;
-  document.getElementById('in-payment').value = it.payment;
-  document.getElementById('in-note').value = it.note;
-
-  editingRowIndex = rowIndex;
-  document.getElementById('addBtn').textContent = "수정 완료";
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-async function deleteEntry(rowIndex){
-  if(!confirm('이 거래를 삭제할까요?')) return;
-  try{
-    const res = await fetch(API_URL, {
-      method:"POST",
-      headers:{"Content-Type":"text/plain;charset=utf-8"},
-      body: JSON.stringify({ action:"delete", key:SITE_KEY, month:currentMonth, rowIndex })
-    });
-    const data = await res.json();
-    if(!data.ok) throw new Error(data.error);
-    entries = data.items;
-    localStorage.setItem(`ledger_entries_${currentMonth}`, JSON.stringify(entries));
-    localStorage.removeItem("ledger_yearly_summary");
-  }catch(err){
-    alert("삭제 실패: " + err.message);
-    return;
-  }
-  render();
-  if (isYearlyLoaded) loadYearlySummary();
-}
-
 updateMonthDisplay();
-loadCategories().then(loadEntries);
+loadEntries();
 </script>
 <script src="./auth-gate.js"></script>
 </body>
