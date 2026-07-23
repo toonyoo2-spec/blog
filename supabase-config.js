@@ -15,6 +15,6 @@
      생깁니다. 이제는 값이 한 군데만 있으므로 그런 불일치가 원천적으로
      발생할 수 없습니다.
 */
-window.SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-window.SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
+window.SUPABASE_URL = "https://kblwddlquwlvumhwkirl.supabase.co";
+window.SUPABASE_ANON_KEY = "sb_publishable_X6OqS-mM1igLrGcc7g4CzQ_fbVXpblY";
 window.COUPLE_EMAIL_DOMAIN = "internal.local";
