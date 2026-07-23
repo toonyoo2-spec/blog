@@ -373,12 +373,39 @@
     text-align:center;
   }
 
-  /* 📱 모바일 화면 최적화 */
+  /* 📱 모바일 화면 최적화 (가로 1줄 3열 카드 배치) */
   @media (max-width:640px){
     body{padding:16px 12px 60px;}
-    header { margin-bottom: 20px; }
+    header { margin-bottom: 16px; }
     h1 { font-size: 22px; }
-    .grid{grid-template-columns:1fr;}
+    
+    /* 🌟 상단 도구 카드 3개를 한 줄로 가로 배치 */
+    .grid {
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 8px !important;
+      margin-bottom: 20px !important;
+    }
+    .card {
+      padding: 12px 8px !important;
+      align-items: center;
+      text-align: center;
+      gap: 4px !important;
+      border-radius: 10px !important;
+    }
+    .card .icon {
+      width: 34px !important;
+      height: 34px !important;
+      font-size: 18px !important;
+      border-radius: 8px !important;
+    }
+    .card .title {
+      font-size: 13px !important;
+      margin-top: 2px;
+    }
+    .card .desc {
+      font-size: 10.5px !important;
+      white-space: nowrap;
+    }
     
     .cal-header {
       display: flex;
