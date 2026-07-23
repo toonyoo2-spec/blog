@@ -406,8 +406,8 @@
         <input id="in-contact" placeholder="예: 010-1234-5678">
       </div>
       <div class="field">
-        <label>마감일자</label>
-        <input id="in-deadline" type="date">
+        <label>주차장</label>
+        <input id="in-deadline" type="text" placeholder="예: 건물 내 무료주차 2시간">
       </div>
       <div class="field">
         <label>상태</label>
@@ -435,7 +435,7 @@
 
   <div class="panel ai-panel">
     <h2>이미지로 자동등록 <span class="ai-badge">AI</span></h2>
-    <p class="ai-desc">체험단 초대장/안내 캡처를 올리면 지역·주소·제공내역·플랫폼·마감일자를 자동으로 읽어 채워드려요. 내용을 확인한 뒤 등록하세요.</p>
+    <p class="ai-desc">체험단 초대장/안내 캡처를 올리면 지역·주소·제공내역·플랫폼·주차장 정보를 자동으로 읽어 채워드려요. 내용을 확인한 뒤 등록하세요.</p>
 
     <div class="ai-upload-row">
       <label class="ai-upload-btn">
@@ -477,8 +477,8 @@
         <input id="ai-contact">
       </div>
       <div class="field">
-        <label>마감일자</label>
-        <input id="ai-deadline" type="date">
+        <label>주차장</label>
+        <input id="ai-deadline" type="text" placeholder="예: 건물 내 무료주차 2시간">
       </div>
       <div class="field">
         <label>플랫폼</label>
@@ -518,7 +518,7 @@
           <th>플랫폼</th>
           <th>주소</th>
           <th>예약문의</th>
-          <th>마감일자</th>
+          <th>주차장</th>
           <th></th>
         </tr>
       </thead>
@@ -608,7 +608,7 @@ async function analyzeAiImage(){
     document.getElementById('ai-provide').value = r.provide || "";
     document.getElementById('ai-address').value = r.address || "";
     document.getElementById('ai-contact').value = r.contact || "";
-    document.getElementById('ai-deadline').value = normalizeDate(r.deadline) || "";
+    document.getElementById('ai-deadline').value = r.deadline || "";
     document.getElementById('ai-platform').value = platformList.includes(r.platform) ? r.platform : "기타";
 
     document.getElementById('ai-result').style.display = "grid";
@@ -792,6 +792,19 @@ async function updateContact(id, value){
   render();
 }
 
+async function updateParking(id, value){
+  const it = items.find(i => i.id === id);
+  if (!it) return;
+  const updated = Object.assign({}, it, { deadline: value });
+  try {
+    items = await callApi("update", { item: updated });
+  } catch (err) {
+    alert("업데이트 실패: " + err.message);
+    return;
+  }
+  render();
+}
+
 function startInlineEdit(btn, id, field) {
   const wrap = btn.closest('.editable-wrap');
   const span = wrap.querySelector('.val-span');
@@ -829,16 +842,6 @@ function setFilter(f){
   render();
 }
 
-function isUrgent(deadline){
-  const clean = normalizeDate(deadline);
-  if(!clean) return false;
-  const d = new Date(clean);
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const diff = (d - today) / (1000*60*60*24);
-  return diff >= 0 && diff <= 3;
-}
-
 function render(){
   const counts = { wait:0, confirm:0, done:0, end:0 };
   items.forEach(it => counts[it.status]++);
@@ -871,7 +874,7 @@ function render(){
       const bKey = (normalizeDate(b.resvDate) || "9999-99-99") + " " + (b.resvTime || "99:99");
       return aKey.localeCompare(bKey);
     }
-    return (normalizeDate(a.deadline) || "9999").localeCompare(normalizeDate(b.deadline) || "9999");
+    return 0;
   });
 
   const tbody = document.getElementById('tbody');
@@ -885,8 +888,6 @@ function render(){
   emptyMsg.style.display = "none";
 
   tbody.innerHTML = list.map(it => {
-    const urgent = it.status === "wait" && isUrgent(it.deadline);
-    
     const resvBlock = it.status === "confirm" ? `
       <div class="resv-row">
         <input type="date" class="resv-input date-short" value="${normalizeDate(it.resvDate)}"
@@ -938,7 +939,11 @@ function render(){
             placeholder="연락처 등"
             onchange="updateContact('${it.id}', this.value)">
         </td>
-        <td data-label="마감일자" class="deadline-cell ${urgent ? 'urgent':''}">${normalizeDate(it.deadline) || '-'}</td>
+        <td data-label="주차장">
+          <input class="address-input" value="${escapeHtml(it.deadline || '')}"
+            placeholder="주차 정보 입력"
+            onchange="updateParking('${it.id}', this.value)">
+        </td>
         <td data-label=""><button class="del-btn" onclick="deleteItem('${it.id}')">✕</button></td>
       </tr>
     `;
