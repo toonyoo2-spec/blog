@@ -11,15 +11,13 @@
   (index.html에서 로그인한 상태로 같은 탭에서 이동하면 자동으로 통과되고,
    새 탭/새 창에서 직접 접속하거나 로그아웃 상태면 이 페이지에서도 로그인 창이 뜹니다.)
 
-  ⚠️ 아래 SUPABASE_URL / SUPABASE_ANON_KEY 값은 index.html과 반드시 동일해야 합니다.
+  Supabase 프로젝트 값(SUPABASE_URL / SUPABASE_ANON_KEY)은 이 파일이 아니라
+  ./supabase-config.js 한 곳에서만 관리합니다. (index.html도 같은 파일을 봅니다.)
+  이 값이 바뀔 일이 있으면 supabase-config.js만 수정하면 됩니다.
 */
 (function(){
-  const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
-  const SUPABASE_ANON_KEY = "YOUR-ANON-PUBLIC-KEY";
-  const COUPLE_EMAIL_DOMAIN = "internal.local"; // index.html과 동일해야 함
-
   function idToEmail(id){
-    return `${id.trim().toLowerCase()}@${COUPLE_EMAIL_DOMAIN}`;
+    return `${id.trim().toLowerCase()}@${window.COUPLE_EMAIL_DOMAIN}`;
   }
 
   function unlock(){
@@ -34,15 +32,26 @@
     if(el) el.style.display = 'none';
   }
 
-  function loadSupabaseLib(){
+  function loadScriptOnce(src){
     return new Promise((resolve, reject) => {
-      if(window.supabase){ resolve(); return; }
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if(existing){ resolve(); return; }
       const s = document.createElement('script');
-      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+      s.src = src;
       s.onload = resolve;
       s.onerror = reject;
       document.head.appendChild(s);
     });
+  }
+
+  function loadSupabaseLib(){
+    if(window.supabase) return Promise.resolve();
+    return loadScriptOnce("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+  }
+
+  function loadSharedConfig(){
+    if(window.SUPABASE_URL && window.SUPABASE_ANON_KEY) return Promise.resolve();
+    return loadScriptOnce("./supabase-config.js");
   }
 
   function showGate(sb){
@@ -101,7 +110,7 @@
   }
 
   async function init(){
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
       auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
     });
 
@@ -126,7 +135,7 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     lock(); // 라이브러리/세션 확인 끝날 때까지는 우선 가려둠
-    loadSupabaseLib().then(init).catch(() => {
+    Promise.all([loadSharedConfig(), loadSupabaseLib()]).then(init).catch(() => {
       const el = document.getElementById('appContent');
       if(el) el.innerHTML = '<p style="text-align:center;padding:60px 20px;color:#b3452f;">로그인 시스템을 불러오지 못했습니다. 네트워크를 확인해주세요.</p>';
       if(el) el.style.display = 'block';
