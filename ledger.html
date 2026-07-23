@@ -224,8 +224,6 @@
     display: block;
   }
 
-  #appContent{display:none;}
-
   /* 연간 한눈에 보기 테이블 */
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
@@ -374,9 +372,9 @@
     <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 맨 위 캘린더 영역 -->
+  <!-- 1. 맨 위 캘린더 영역 (월 선택 시 제목도 동적 변환) -->
   <div class="panel">
-    <h2>월별 캘린더</h2>
+    <h2 id="calTitleHeader">7월 캘린더</h2>
     <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
   </div>
 
@@ -412,14 +410,17 @@
 
 </div>
 
+<!-- Supabase 클라이언트 SDK 연동 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+
 <script>
 /* ===========================================================
-   초고속 1년 통합 메모리 로딩 엔진
+   Supabase DB 직통 초고속 로딩 엔진
    =========================================================== */
-const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
-const SITE_KEY = "130702"; 
 
-// 🌟 메모리에 1년 전체 데이터 상주 (12개 배열: index 0~11)
+const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
 let allYearData = new Array(12).fill(null).map(() => []); 
 let currentMonth = new Date().getMonth() + 1;
 let currentYear = new Date().getFullYear();
@@ -432,11 +433,12 @@ function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
 }
 
+/* 🌟 월 변경 시 중앙 텍스트 및 캘린더 제목 동시 변경 */
 function updateMonthDisplay(){
   document.getElementById('monthDisplay').textContent = currentMonth + "월";
+  document.getElementById('calTitleHeader').textContent = currentMonth + "월 캘린더";
 }
 
-/* 🌟 달 전환: 서버 요청 없이 메모리에서 0초 즉시 변경 */
 function changeMonth(offset){
   let newMonth = currentMonth + offset;
   if(newMonth < 1) newMonth = 12;
@@ -452,43 +454,39 @@ function toggleYearlyPanel() {
   panel.classList.toggle('open');
 }
 
-/* 🌟 1년 전체 데이터 한방 로드 */
-async function initFullYearData(){
-  const localCache = localStorage.getItem("ledger_full_year_data");
-  
-  // 1. 브라우저 캐시 존재 시 0초 즉시 출력
-  if(localCache) {
-    try {
-      allYearData = JSON.parse(localCache);
-      renderCurrentMonth();
-      renderYearlySummary();
-    } catch(e){}
-  }
-
-  // 2. 백그라운드에서 백엔드 호출 (1회 한정)
+/* 🌟 Supabase DB에서 1년 전체 데이터 0.05초 만에 직통 로드 */
+async function initFullYearDataFromSupabase(){
   try {
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
-    const data = await res.json();
-    
-    if (data && data.ok && Array.isArray(data.items)) {
-      allYearData = data.items;
-      localStorage.setItem("ledger_full_year_data", JSON.stringify(data.items));
-      renderCurrentMonth();
-      renderYearlySummary();
+    const { data, error } = await sb
+      .from('ledger_entries')
+      .select('*');
+
+    if (error) throw error;
+
+    const monthMapped = new Array(12).fill(null).map(() => []);
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        const mIdx = item.month - 1;
+        if (mIdx >= 0 && mIdx < 12) {
+          monthMapped[mIdx].push(item);
+        }
+      });
     }
+
+    allYearData = monthMapped;
+    renderCurrentMonth();
+    renderYearlySummary();
   } catch(e) {
-    console.error("1년 데이터 로드 실패:", e);
+    console.error("Supabase 데이터 로드 실패:", e);
   }
 }
 
-/* 🌟 선택된 월에 맞게 화면(카드, 캘린더) 0초 즉시 갱신 */
 function renderCurrentMonth(){
   const entries = allYearData[currentMonth - 1] || [];
   renderSummary(entries);
   renderCalendar(entries);
 }
 
-/* 🌟 요약 카드 렌더링 */
 function renderSummary(entries){
   const totals = { "수입":0, "지출":0 };
   entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += Number(it.amount)||0; });
@@ -508,7 +506,6 @@ function renderSummary(entries){
   document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
 
-/* 🌟 캘린더 렌더링 */
 function renderCalendar(entries){
   const y = currentYear;
   const m = currentMonth - 1; 
@@ -575,7 +572,6 @@ function renderCalendar(entries){
   document.getElementById('ledgerCalGrid').innerHTML = cells.join('');
 }
 
-/* 🌟 연간 요약 0초 즉시 계산 및 렌더링 */
 function renderYearlySummary(){
   try {
     const N = 12;
@@ -804,7 +800,7 @@ function toggleAccordion(id){
 }
 
 updateMonthDisplay();
-initFullYearData();
+initFullYearDataFromSupabase();
 </script>
 <script src="./auth-gate.js"></script>
 </body>
