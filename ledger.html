@@ -47,7 +47,7 @@
     margin-bottom:20px;
   }
   
-  /* 캘린더 상단 헤더 & 동그라미 범례 스타일 */
+  /* 캘린더 상단 헤더 & 범례 */
   .cal-header-wrap {
     display: flex;
     justify-content: space-between;
@@ -156,7 +156,7 @@
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
   .cal-item .unit { display: inline; }
 
-  /* 월 선택 컨트롤 (맨 위) */
+  /* 월 선택 컨트롤 (맨 위 위치) */
   .month-header {
     display: flex;
     flex-direction: column;
@@ -213,7 +213,7 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
-  /* 📊 항목별 토탈 금액 카드 영역 (6개 항목 6열 배치) */
+  /* 📊 항목별 요약 카드 (요청 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) */
   .summary {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -465,7 +465,7 @@
     <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 월 선택 및 미니 요약 컨트롤 -->
+  <!-- 1. 월 선택 및 미니 요약 컨트롤 (맨 위) -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -479,12 +479,12 @@
     </div>
   </div>
 
-  <!-- 2. 맨 위 캘린더 영역 -->
+  <!-- 2. 캘린더 영역 -->
   <div class="panel">
     <div class="cal-header-wrap">
       <h2 id="calTitleHeader">7월 캘린더</h2>
       
-      <!-- 🎨 범례 디자인 (요청하신 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
+      <!-- 🎨 범례 디자인 (요청 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
       <div class="cal-legend">
         <span class="legend-item"><span class="color-dot" style="background:#343A40;"></span>공동</span>
         <span class="legend-item"><span class="color-dot" style="background:#28A745;"></span>관</span>
@@ -517,7 +517,6 @@
 
 </div>
 
-<!-- 모바일 클릭 시 뜰 상세 안내 Toast -->
 <div id="mobileToast" class="mobile-toast"></div>
 
 <!-- Supabase 클라이언트 SDK 연동 -->
@@ -540,7 +539,6 @@ function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
 }
 
-/* 📱 모바일 클릭 시 세부내용 팝업 노출 */
 function showToast(text) {
   const toast = document.getElementById('mobileToast');
   toast.textContent = text;
@@ -572,37 +570,44 @@ function toggleYearlyPanel() {
   panel.classList.toggle('open');
 }
 
-/* 🌟 분류 변환 규칙 함수 (소분류 & 대분류 종합 매핑) */
+/* 🌟 정확한 소분류(G열) & 사용자(K열) 기준 분류 로직 */
 function getCategoryGroup(item) {
-  const typeStr = String(item.type || "").trim();
-  const smallStr = String(item.small || "").trim();
+  const typeStr = String(item.type || "").trim();      // D열 (지출/수입/고정지출/변동지출)
+  const smallStr = String(item.small || "").trim();    // G열 (소분류)
+  const detailStr = String(item.detail || "").trim();  // H열 (세부내용)
+  const ownerStr = String(item.note || "").trim();     // K열 (사용자: 공동/보라/자동차/관)
 
   if (typeStr === "수입") {
     return "수입";
   }
 
-  // 1. 고정지출 분류
-  if (typeStr === "고정지출") {
-    if (smallStr === "전기충전" || smallStr === "주유비") {
-      return "유류비";
-    }
-    return "고정지출"; // 자동차(전기충전/주유비) 제외한 나머지 고정지출
+  // 1. 유류비: 소분류가 전기충전/주유비 이거나 K열 사용자가 '자동차'인 경우
+  if (
+    smallStr === "전기충전" || smallStr === "주유비" ||
+    ownerStr === "자동차" || detailStr.includes("차지비") || detailStr.includes("주유")
+  ) {
+    return "유류비";
   }
 
-  // 2. 변동지출 분류 (소분류 기준)
+  // 2. 고정지출: (유류비 제외한 나머지 고정지출)
+  if (typeStr === "고정지출") {
+    return "고정지출";
+  }
+
+  // 3. 변동지출 소분류 및 사용자 기준 판단
   if (smallStr === "건강" || smallStr === "경조사") {
     return "기타";
   }
 
-  if (smallStr.startsWith("관 ")) {
-    return "관"; // 관 기타, 관 생활비, 관 병원비 등
+  if (smallStr.startsWith("관") || ownerStr === "관") {
+    return "관"; // 관 기타, 관 생활비, 관 병원비
   }
 
-  if (smallStr.startsWith("보라") || smallStr === "보라네") {
-    return "보라"; // 보라 기타, 보라 생활비, 보라 병원비, 보라네 등
+  if (smallStr.startsWith("보라") || smallStr === "보라네" || ownerStr === "보라") {
+    return "보라"; // 보라 기타, 보라 생활비, 보라 병원비, 보라네
   }
 
-  // 공동 + 교통비 + 문화 및 규칙에 포함되지 않은 기타 모든 변동지출 ➔ 공동으로 통합
+  // 4. 공동 + 기타 데이터 규칙 미반영 항목 ➔ 무조건 '공동'으로 귀속
   return "공동";
 }
 
@@ -640,7 +645,7 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
-/* 📊 6가지 항목별 (공동, 관, 보라, 유류비, 고정지출, 기타) 토탈 계산 및 렌더링 */
+/* 📊 6가지 항목별 토탈 계산 */
 function renderSummary(entries){
   const totals = {
     "공동": 0,
@@ -736,7 +741,6 @@ function renderCalendar(entries){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
-  // 정렬 순서 가중치 정의 (요청 순서)
   const categoryRank = {
     "수입": 0,
     "공동": 1,
@@ -784,7 +788,7 @@ function renderCalendar(entries){
           bgColor = "#E83E8C";
           break;
         case "유류비":
-          bgColor = "#FD7E14";
+          bgColor = "#FD7E14"; // 🧡 주황색
           break;
         case "고정지출":
           bgColor = "#6C757D";
