@@ -42,7 +42,7 @@
   h1{font-size:26px;letter-spacing:-0.02em;margin:0 0 4px;}
   header p{margin:0;color:var(--sub);font-size:13.5px;}
 
-  /* 직관적인 월 선택 UI 스타일 */
+  /* 월 선택 UI */
   .month-header {
     display: flex;
     flex-direction: column;
@@ -232,7 +232,7 @@
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 (PC 기본 설정) ---- */
+  /* ---- 연간 한눈에 보기 ---- */
   .yearly-panel{padding-bottom:16px;}
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
@@ -265,27 +265,19 @@
   .yearly-table tr.detail-row:hover td{background:#fafaf7;}
   .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
 
-  /* ============================================================
-     📱 모바일 반응형 최적화 (900px 이하) - 연간보기 노출 완벽 보정
-     ============================================================ */
+  /* 📱 모바일 반응형 */
   @media (max-width: 900px) {
     body { padding: 16px 10px 40px; overflow-x: hidden; }
     .wrap { max-width: 100%; width: 100%; }
     
-    .summary {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-    .sum-card {
-      padding: 12px 10px;
-    }
+    .summary { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .sum-card { padding: 12px 10px; }
     .sum-card .num {
       font-size: 15px !important;
       white-space: nowrap !important;
       letter-spacing: -0.03em;
     }
 
-    /* 🌟 모바일 연간보기 노출 강제 지정 */
     .yearly-pc { display: none !important; }
     .yearly-mobile { display: block !important; }
 
@@ -605,30 +597,37 @@ function onMidChange(){
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
-async function fetchMonthEntries(month){
-  try{
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${month}`, { cache:"no-store" });
-    if (!res.ok) return [];
-    const data = await res.json();
-    if(data && data.ok && Array.isArray(data.items)) return data.items;
-  }catch(e){
-    console.error(`${month}월 데이터 로드 실패:`, e);
-  }
-  return [];
-}
-
+/* 🌟 단 1번의 통합 요청으로 1초만에 1년 치 데이터 로드 완료 */
 async function loadYearlySummary(){
   try {
-    const monthsData = [];
-    for (let m = 1; m <= 12; m++) {
-      const items = await fetchMonthEntries(m);
-      monthsData.push(items);
+    // 1번만 구글 서버 호출 (12개 시트 한방에 파싱)
+    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
+    const data = await res.json();
+    
+    if (data && data.ok && Array.isArray(data.items)) {
+      cachedMonthsData = data.items;
+      renderYearlySummary(data.items);
+    } else {
+      // 기존 하위 호환 보장 (구글 스크립트 수정 전)
+      fallbackLoadYearlySummary();
     }
-    cachedMonthsData = monthsData;
-    renderYearlySummary(monthsData);
   } catch(e) {
-    console.error("연간 요약 로드 에러:", e);
+    console.error("통합 로드 실패, 기존 호환 모드로 전환:", e);
+    fallbackLoadYearlySummary();
   }
+}
+
+async function fallbackLoadYearlySummary() {
+  const monthsData = [];
+  for (let m = 1; m <= 12; m++) {
+    try {
+      const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${m}`, { cache:"no-store" });
+      const data = await res.json();
+      monthsData.push((data && data.ok) ? data.items : []);
+    } catch(e) { monthsData.push([]); }
+  }
+  cachedMonthsData = monthsData;
+  renderYearlySummary(monthsData);
 }
 
 function renderYearlySummary(monthsData){
