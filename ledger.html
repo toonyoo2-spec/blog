@@ -144,7 +144,7 @@
     display:inline-block;
   }
 
-  /* 🌟 연간 한눈에 보기 펼침/접힘 스타일 */
+  /* 연간 한눈에 보기 펼침/접힘 스타일 */
   .yearly-toggle-header {
     cursor: pointer;
     user-select: none;
@@ -243,14 +243,51 @@
   .type-badge.투자{background:var(--invest-bg);color:var(--invest-ink);}
   .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
   .cat-cell{color:var(--sub);font-size:12.5px;}
-  .del-btn{
-    background:none;border:none;color:#b7b5ac;cursor:pointer;font-size:15px;line-height:1;
+
+  /* 🌟 수정 / 삭제 버튼 디자인 전면 개편 */
+  .row-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    white-space: nowrap;
   }
-  .del-btn:hover{color:#b3452f;}
-  .edit-btn{
-    background:none;border:none;color:#b7b5ac;cursor:pointer;font-size:13px;margin-right:4px;
+  .edit-btn {
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--sub);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+    margin-right: 0;
   }
-  .edit-btn:hover{color:var(--accent);}
+  .edit-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .del-btn {
+    background: #fff;
+    border: 1px solid #f2c4c0;
+    color: #b3452f;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+  }
+  .del-btn:hover {
+    background: #b3452f;
+    color: #fff;
+    border-color: #b3452f;
+  }
 
   .empty{text-align:center;padding:50px 0;color:var(--sub);font-size:13.5px;}
 
@@ -447,7 +484,7 @@
     <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
   </header>
 
-  <!-- 🌟 연간 한눈에 보기 (지연 로딩 + 펼침/접힘 토글 적용) -->
+  <!-- 연간 한눈에 보기 -->
   <div class="panel yearly-panel" id="yearlyPanel">
     <h2 class="yearly-toggle-header" onclick="toggleYearlyPanel()">
       <span>연간 한눈에 보기</span>
@@ -530,7 +567,7 @@
           <th style="width:130px; text-align:right;">금액</th>
           <th style="width:130px;">결제수단</th>
           <th style="width:150px;">비고</th>
-          <th style="width:60px;"></th>
+          <th style="width:110px; text-align:right;">관리</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -553,7 +590,7 @@ let currentMonth = new Date().getMonth() + 1;
 let editingRowIndex = null;
 let cachedMonthsData = null;
 let selectedMobileMonth = 0;
-let isYearlyLoaded = false; // 연간 데이터 로드 여부 플래그
+let isYearlyLoaded = false;
 
 const TYPES = ["수입","지출","저축","투자"];
 
@@ -626,7 +663,6 @@ function onMidChange(){
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
-// 🌟 [방법 2 적용] 클릭했을 때만 지연 로딩 수행
 function toggleYearlyPanel() {
   const panel = document.getElementById('yearlyPanel');
   const isOpen = panel.classList.toggle('open');
@@ -636,7 +672,6 @@ function toggleYearlyPanel() {
   }
 }
 
-/* 🌟 [방법 1 적용] 단 1번의 요청으로 1년 치 데이터 0.5초 로드 */
 async function loadYearlySummary(){
   try {
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
@@ -941,9 +976,11 @@ function renderTable(){
       <td data-label="금액" class="amount-cell">${formatMoney(it.amount)}원</td>
       <td data-label="결제수단">${escapeHtml(it.payment) || '-'}</td>
       <td data-label="비고">${escapeHtml(it.note) || '-'}</td>
-      <td data-label="">
-        <button class="edit-btn" onclick="startEdit(${it.rowIndex})">수정</button>
-        <button class="del-btn" onclick="deleteEntry(${it.rowIndex})">✕</button>
+      <td data-label="관리">
+        <div class="row-actions">
+          <button class="edit-btn" onclick="startEdit(${it.rowIndex})">수정</button>
+          <button class="del-btn" onclick="deleteEntry(${it.rowIndex})">삭제</button>
+        </div>
       </td>
     </tr>
   `).join('');
@@ -1013,7 +1050,7 @@ async function addEntry(){
   resetForm();
   btn.disabled = false;
   render();
-  if (isYearlyLoaded) loadYearlySummary(); // 연간 보기가 열려있을 때만 백그라운드 갱신
+  if (isYearlyLoaded) loadYearlySummary();
 }
 
 function startEdit(rowIndex){
