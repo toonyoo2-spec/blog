@@ -306,304 +306,64 @@
   }
   #appContent{display:none;}
 
-  /* 📱 모바일 반응형 완벽 최적화 (820px 이하 화면) */
+/* 📱 모바일 반응형 최적화 (820px 이하 화면) */
   @media (max-width:820px){
-    body{padding:16px 12px 60px;}
-    .form-grid{grid-template-columns:1fr 1fr;}
-    .summary{grid-template-columns:repeat(2,1fr);}
-
-    /* 16px 미만 폰트는 iOS에서 입력 시 자동 확대를 유발함 */
-    input, select{font-size:16px;padding:10px 11px;}
-    .add-btn{width:100%;text-align:center;padding:13px;}
-
-    /* 아이콘 버튼 터치 영역 확대 */
-    .edit-btn{font-size:13px;padding:5px 8px;}
-    .del-btn{font-size:19px;padding:6px 8px;}
-    .status-select, .platform-select{padding:7px 8px;}
     
-    /* 등록 폼 내부그리드 조정 */
-    .ai-result-grid{grid-template-columns:1fr 1fr;}
+    /* ... 기존 모바일 스타일들 ... */
 
-    /* 테이블을 버리고 카드 스타일로 변환 */
-    table, thead, tbody, th, td, tr{display:block;}
-    thead{display:none;}
-    
-    tbody tr{
-      background:var(--card);
-      border:1px solid var(--line);
-      border-radius:12px;
-      margin-bottom:14px;
-      padding:16px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-      position:relative;
-    }
-    tbody td{
-      border:none;
-      padding:6px 0;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-    }
-    /* 각 항목 이름 라벨 표시 */
-    tbody td::before{
-      content:attr(data-label);
-      font-size:12px;
-      color:var(--sub);
-      font-weight:600;
-      flex-shrink:0;
-      width:90px;
-    }
-    tbody td input, tbody td select {
-      max-width: 65%;
-    }
-    .editable-wrap {
-      width: 65%;
-      justify-content: flex-end;
-    }
-    .editable-wrap .edit-btn { opacity: 1; } /* 모바일에서는 항상 수정 버튼 노출 */
-    
-    /* 상단 요약 카드 및 툴바 정렬 */
-    .toolbar{flex-direction:column;align-items:stretch;}
-    .io-btns{justify-content:flex-end;}
-    
-    /* 삭제 버튼을 카드 우측 상단으로 이동 */
-    .del-wrap {
-      position: absolute;
-      top: 14px;
-      right: 16px;
-    }
-    tbody td:last-child {
-      position: absolute;
-      top: 12px;
-      right: 14px;
-      padding: 0;
-    }
-    tbody td:last-child::before { display: none; }
-
-    /* 상태/예약일시 셀: 상태 토글은 글자 크기만큼만, 예약일시는 줄바꿈 없이 온전히 보이게 세로 배치 */
+    /* --------------------------------------------------
+       👇 상태 / 예약일시 모바일 전용 모듈 (이 부분을 덮어씌워주세요)
+       -------------------------------------------------- */
     td[data-label="상태 / 예약일시"] {
-      align-items: flex-start;
+      align-items: flex-start !important; /* 상단 정렬 */
     }
+
     .status-cell-content {
       display: flex;
-      flex-direction: column;
+      flex-direction: column; /* 세로 스택으로 배치 */
       align-items: flex-end;
-      gap: 6px;
-      max-width: 100%;
+      gap: 8px;
+      width: 100%;
+      max-width: 100% !important;
     }
+
     .status-cell-content .status-select {
-      width: auto;
-      max-width: 100%;
-      flex: none;
-      padding: 5px 10px;
+      width: 100% !important; /* 모바일에서는 상태 선택창을 가득 채움 */
+      max-width: 100% !important;
+      font-size: 13px !important;
+      padding: 6px 10px !important;
+      box-sizing: border-box;
     }
+
     .status-cell-content .resv-row {
-      width: auto;
-      max-width: 100%;
-      flex-wrap: nowrap;
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: row !important; /* 날짜와 시간은 가로 정렬 */
+      gap: 6px !important;
+      margin-top: 0 !important;
       justify-content: flex-end;
-      margin-top: 0;
     }
+
+    /* 날짜 입력창: 모바일에서 짤리지 않게 여유 있게 확보 */
     .status-cell-content .date-short {
-      width: 112px;
-      max-width: 112px;
-      flex-shrink: 0;
-      font-size: 11.5px;
+      width: 60% !important;
+      min-width: 130px !important;
+      max-width: none !important;
+      font-size: 13px !important;
+      padding: 6px 8px !important;
+      box-sizing: border-box;
     }
+
+    /* 시간 선택창: 오전/오후 HH시 텍스트가 안 짤리도록 너비 확대 */
     .status-cell-content .time-short {
-      flex-grow: 0;
-      width: 70px;
-      min-width: 70px;
-      max-width: 70px;
-      font-size: 11.5px;
+      width: 40% !important;
+      min-width: 95px !important;
+      max-width: none !important;
+      font-size: 13px !important;
+      padding: 6px 6px !important;
+      box-sizing: border-box;
     }
   }
-
-  /* 📱 좁은 화면(480px 이하) 추가 보완 */
-  @media (max-width:480px){
-    .form-grid{grid-template-columns:1fr;}
-    .ai-result-grid{grid-template-columns:1fr;}
-    .summary{grid-template-columns:repeat(2,1fr);gap:8px;}
-    .sum-card{padding:12px;}
-    .sum-card .num{font-size:19px;}
-
-    .ai-upload-row{flex-wrap:wrap;}
-    .ai-preview-wrap{flex-direction:column;align-items:stretch;}
-    .ai-preview-img{max-width:100%;max-height:180px;width:100%;}
-    .ai-analyze-btn{width:100%;}
-
-    .io-btns{gap:6px;}
-    .io-btns button{flex:1;}
-
-    tbody td input, tbody td select {
-      max-width: 58%;
-      font-size:12.5px;
-    }
-    .editable-wrap { width: 58%; }
-
-    /* 좁은 화면에서도 상태/예약일시는 자체 규칙(status-cell-content)을 따르도록 유지하고
-       예약일 표시폭만 살짝 축소해 화면 밖으로 넘치지 않게 함 */
-    .status-cell-content .date-short {
-      width: 100px;
-      max-width: 100px;
-      font-size: 11px;
-    }
-    .status-cell-content .time-short {
-      width: 64px;
-      min-width: 64px;
-      max-width: 64px;
-      font-size: 11px;
-    }
-    .status-cell-content .status-select {
-      font-size: 11.5px;
-      padding: 5px 8px;
-    }
-  }
-
-  /* ---- AI 이미지 자동등록 ---- */
-  .ai-panel{border-color:var(--accent);}
-  .ai-panel h2{justify-content:space-between;}
-  .ai-badge{
-    background:var(--accent);
-    color:#fff;
-    font-size:10.5px;
-    font-weight:700;
-    padding:2px 8px;
-    border-radius:20px;
-    margin-left:auto;
-  }
-  .ai-desc{
-    font-size:12.5px;
-    color:var(--sub);
-    margin:-6px 0 14px;
-    line-height:1.5;
-  }
-  .ai-upload-row{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    margin-bottom:14px;
-  }
-  .ai-upload-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    background:#eef0ec;
-    color:var(--ink);
-    border:1px solid var(--line);
-    padding:9px 16px;
-    border-radius:8px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .ai-upload-btn:hover{border-color:var(--accent);}
-  .ai-upload-btn input{display:none;}
-  .ai-file-name{font-size:12.5px;color:var(--sub);}
-
-  .ai-preview-wrap{
-    display:flex;
-    align-items:center;
-    gap:14px;
-    margin-bottom:14px;
-  }
-  .ai-preview-img{
-    max-width:120px;
-    max-height:120px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    object-fit:cover;
-  }
-  .ai-analyze-btn{
-    background:var(--accent);
-    color:#fff;
-    border:none;
-    padding:10px 18px;
-    border-radius:7px;
-    font-size:13.5px;
-    font-weight:600;
-    cursor:pointer;
-  }
-  .ai-analyze-btn:hover{opacity:0.9;}
-  .ai-analyze-btn:disabled{opacity:0.5;cursor:default;}
-
-  .ai-status{
-    font-size:12.5px;
-    color:var(--sub);
-    margin-bottom:14px;
-  }
-
-  .ai-result-grid{
-    display:grid;
-    grid-template-columns:80px 1.2fr 1.5fr 1fr 1fr 110px 115px;
-    gap:10px;
-    align-items:end;
-  }
-  .ai-result-actions{
-    grid-column:1/-1;
-    display:flex;
-    gap:10px;
-    margin-top:4px;
-  }
-  .ai-cancel-btn{
-    background:none;
-    border:1px solid var(--line);
-    color:var(--sub);
-    padding:10px 18px;
-    border-radius:7px;
-    font-size:13.5px;
-    cursor:pointer;
-  }
-  .ai-cancel-btn:hover{border-color:var(--accent);color:var(--accent);}
-
-  @media (max-width:820px){
-    .ai-result-grid{grid-template-columns:1fr 1fr;}
-  }@media (max-width: 820px) {
-  /* 1. iOS 자동 확대 방지 (입력창 폰트 16px 고정) 및 터치 영역 확대 */
-  input, select, textarea {
-    font-size: 16px !important; 
-    padding: 10px 12px;
-  }
-  
-  /* 2. 등록 및 분석 폼을 모바일 1열 스택 구조로 완전 개편 */
-  .form-grid, .ai-result-grid {
-    grid-template-columns: 1fr !important;
-    gap: 12px;
-  }
-  
-  /* 3. 카드형 리스트 레이아웃 깔끔하게 정리 */
-  tbody tr {
-    padding: 14px;
-    position: relative;
-  }
-  
-  tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--line);
-  }
-  tbody td:last-child { border-bottom: none; }
-  
-  /* 라벨 명확하게 구분 */
-  tbody td::before {
-    font-size: 12px;
-    width: 80px;
-  }
-  
-  /* 상태/예약일시 컨테이너 레이아웃 정렬 */
-  .status-cell-content {
-    width: 100%;
-    align-items: flex-end;
-  }
-  .status-cell-content .resv-row {
-    width: 100%;
-    justify-content: flex-end;
-  }
-  .status-cell-content .date-short { width: 120px !important; }
-  .status-cell-content .time-short { width: 80px !important; }
-}
 </style>
 </head>
 <body>
