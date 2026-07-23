@@ -27,7 +27,7 @@
 
   .wrap{ max-width: 1600px; width: 95%; margin:0 auto; }
 
-  header{margin-bottom:24px;}
+  header{margin-bottom:20px;}
   .home-btn{
     display:inline-block;
     font-size:12.5px;
@@ -60,30 +60,63 @@
     display:inline-block;
   }
 
-  /* 연간 한눈에 보기 펼침/접힘 토글 */
-  .yearly-toggle-header {
-    cursor: pointer;
-    user-select: none;
-    margin: 0 !important;
+  /* 캘린더 그리드 */
+  .ledger-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .cal-dow {
+    text-align: center;
+    font-size: 12px;
+    color: var(--sub);
+    font-weight: 600;
+    padding-bottom: 6px;
+  }
+  .cal-cell {
+    min-height: 90px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px;
+    background: #fdfcfa;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow: hidden;
+  }
+  .cal-cell.other-month {
+    background: transparent;
+    border-color: transparent;
+  }
+  .cal-cell.today {
+    border-color: var(--accent);
+  }
+  .cal-daynum {
+    font-size: 11.5px;
+    color: var(--sub);
+    margin-bottom: 2px;
+  }
+  .cal-cell.today .cal-daynum {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  
+  .cal-item {
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 4px;
   }
-  .yearly-toggle-header .arrow {
-    font-size: 13px;
-    color: var(--sub);
-    transition: transform 0.2s;
-  }
-  .yearly-panel.open .yearly-toggle-header .arrow {
-    transform: rotate(180deg);
-  }
-  .yearly-content-wrap {
-    display: none;
-    margin-top: 16px;
-  }
-  .yearly-panel.open .yearly-content-wrap {
-    display: block;
-  }
+  .cal-item.수입 { background: var(--income-bg); color: var(--income-ink); }
+  .cal-item.지출 { background: var(--expense-bg); color: var(--expense-ink); }
+  .cal-item .detail { overflow: hidden; text-overflow: ellipsis; }
+  .cal-item .amt { font-weight: 700; flex-shrink: 0; }
 
   /* 월 선택 컨트롤 */
   .month-header {
@@ -94,14 +127,14 @@
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
-    padding: 24px 20px;
+    padding: 20px;
     margin-bottom: 20px;
   }
   .month-controls {
     display: flex;
     align-items: center;
     gap: 24px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
   .month-controls button {
     background: var(--bg);
@@ -142,7 +175,7 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
-  /* 🌟 수입 / 지출 2개 전용 요약 카드 */
+  /* 수입 / 지출 요약 카드 */
   .summary{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -166,9 +199,34 @@
   .sum-card.income .num{color:var(--income-ink);}
   .sum-card.expense .num{color:var(--expense-ink);}
 
+  /* 연간 한눈에 보기 펼침/접힘 토글 */
+  .yearly-toggle-header {
+    cursor: pointer;
+    user-select: none;
+    margin: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .yearly-toggle-header .arrow {
+    font-size: 13px;
+    color: var(--sub);
+    transition: transform 0.2s;
+  }
+  .yearly-panel.open .yearly-toggle-header .arrow {
+    transform: rotate(180deg);
+  }
+  .yearly-content-wrap {
+    display: none;
+    margin-top: 16px;
+  }
+  .yearly-panel.open .yearly-content-wrap {
+    display: block;
+  }
+
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 테이블 / 모바일 스타일 ---- */
+  /* 연간 한눈에 보기 테이블 */
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
 
@@ -205,6 +263,10 @@
     body { padding: 16px 10px 40px; overflow-x: hidden; }
     .wrap { max-width: 100%; width: 100%; }
     
+    .cal-cell { min-height: 55px; padding: 3px; }
+    .cal-item { font-size: 9px; padding: 2px 3px; }
+    .cal-item .detail { display: none; }
+
     .summary { gap: 10px; }
     .sum-card { padding: 14px 12px; }
     .sum-card .num {
@@ -309,23 +371,16 @@
   <header>
     <a href="./index.html" class="home-btn">← 홈</a>
     <h1>가계부</h1>
-    <p>연간 요약 통계 및 월별 수입·지출 현황을 확인합니다.</p>
+    <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 연간 한눈에 보기 -->
-  <div class="panel yearly-panel" id="yearlyPanel">
-    <h2 class="yearly-toggle-header" onclick="toggleYearlyPanel()">
-      <span>연간 한눈에 보기</span>
-      <span class="arrow">▼</span>
-    </h2>
-    <div class="yearly-content-wrap">
-      <div id="yearlySummary">
-        <div class="yearly-loading">연간 데이터를 불러오는 중...</div>
-      </div>
-    </div>
+  <!-- 1. 맨 위 캘린더 영역 -->
+  <div class="panel">
+    <h2>월별 캘린더</h2>
+    <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
   </div>
 
-  <!-- 2. 월 선택 UI -->
+  <!-- 2. 월 선택 컨트롤 -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -342,20 +397,33 @@
   <!-- 3. 수입 / 지출 요약 카드 -->
   <div class="summary" id="summary"></div>
 
+  <!-- 4. 연간 한눈에 보기 -->
+  <div class="panel yearly-panel" id="yearlyPanel">
+    <h2 class="yearly-toggle-header" onclick="toggleYearlyPanel()">
+      <span>연간 한눈에 보기</span>
+      <span class="arrow">▼</span>
+    </h2>
+    <div class="yearly-content-wrap">
+      <div id="yearlySummary">
+        <div class="yearly-loading">연간 데이터를 계산 중입니다...</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 /* ===========================================================
-   Apps Script 연동 설정 + 프론트엔드 캐싱
+   초고속 1년 통합 메모리 로딩 엔진
    =========================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
 const SITE_KEY = "130702"; 
 
-let entries = [];
+// 🌟 메모리에 1년 전체 데이터 상주 (12개 배열: index 0~11)
+let allYearData = new Array(12).fill(null).map(() => []); 
 let currentMonth = new Date().getMonth() + 1;
-let cachedMonthsData = null;
+let currentYear = new Date().getFullYear();
 let selectedMobileMonth = 0;
-let isYearlyLoaded = false;
 
 function escapeHtml(str){
   return (str||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -368,6 +436,7 @@ function updateMonthDisplay(){
   document.getElementById('monthDisplay').textContent = currentMonth + "월";
 }
 
+/* 🌟 달 전환: 서버 요청 없이 메모리에서 0초 즉시 변경 */
 function changeMonth(offset){
   let newMonth = currentMonth + offset;
   if(newMonth < 1) newMonth = 12;
@@ -375,53 +444,146 @@ function changeMonth(offset){
   currentMonth = newMonth;
   
   updateMonthDisplay();
-  loadEntries();
+  renderCurrentMonth();
 }
 
 function toggleYearlyPanel() {
   const panel = document.getElementById('yearlyPanel');
-  const isOpen = panel.classList.toggle('open');
-
-  if (isOpen && !isYearlyLoaded) {
-    loadYearlySummary();
-  }
+  panel.classList.toggle('open');
 }
 
-async function loadYearlySummary(){
-  const cachedYearly = localStorage.getItem("ledger_yearly_summary");
-  if(cachedYearly) {
+/* 🌟 1년 전체 데이터 한방 로드 */
+async function initFullYearData(){
+  const localCache = localStorage.getItem("ledger_full_year_data");
+  
+  // 1. 브라우저 캐시 존재 시 0초 즉시 출력
+  if(localCache) {
     try {
-      cachedMonthsData = JSON.parse(cachedYearly);
-      renderYearlySummary(cachedMonthsData);
+      allYearData = JSON.parse(localCache);
+      renderCurrentMonth();
+      renderYearlySummary();
     } catch(e){}
   }
 
+  // 2. 백그라운드에서 백엔드 호출 (1회 한정)
   try {
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
     const data = await res.json();
     
     if (data && data.ok && Array.isArray(data.items)) {
-      cachedMonthsData = data.items;
-      localStorage.setItem("ledger_yearly_summary", JSON.stringify(data.items));
-      renderYearlySummary(data.items);
-      isYearlyLoaded = true;
+      allYearData = data.items;
+      localStorage.setItem("ledger_full_year_data", JSON.stringify(data.items));
+      renderCurrentMonth();
+      renderYearlySummary();
     }
   } catch(e) {
-    console.error("연간 요약 로드 실패:", e);
-    if(!cachedYearly) {
-      document.getElementById('yearlySummary').innerHTML = `<div class="yearly-loading">데이터를 불러오지 못했습니다. 다시 시도해 주세요.</div>`;
-    }
+    console.error("1년 데이터 로드 실패:", e);
   }
 }
 
-function renderYearlySummary(monthsData){
+/* 🌟 선택된 월에 맞게 화면(카드, 캘린더) 0초 즉시 갱신 */
+function renderCurrentMonth(){
+  const entries = allYearData[currentMonth - 1] || [];
+  renderSummary(entries);
+  renderCalendar(entries);
+}
+
+/* 🌟 요약 카드 렌더링 */
+function renderSummary(entries){
+  const totals = { "수입":0, "지출":0 };
+  entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += Number(it.amount)||0; });
+
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card income">
+      <div class="lbl">수입</div>
+      <div class="num">${formatMoney(totals["수입"])}원</div>
+    </div>
+    <div class="sum-card expense">
+      <div class="lbl">지출</div>
+      <div class="num">${formatMoney(totals["지출"])}원</div>
+    </div>
+  `;
+
+  document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
+  document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
+}
+
+/* 🌟 캘린더 렌더링 */
+function renderCalendar(entries){
+  const y = currentYear;
+  const m = currentMonth - 1; 
+
+  const byDate = {};
+  entries.forEach(it => {
+    if(!it.date) return;
+    let dayKey = String(it.date);
+    if(dayKey.includes('T')) dayKey = dayKey.split('T')[0];
+    
+    const parts = dayKey.split('-');
+    if(parts.length === 3){
+      const dayNum = parseInt(parts[2], 10);
+      (byDate[dayNum] = byDate[dayNum] || []).push(it);
+    }
+  });
+
+  const first = new Date(y, m, 1);
+  const startOffset = first.getDay(); 
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const daysInPrevMonth = new Date(y, m, 0).getDate();
+
+  const today = new Date();
+  const isCurrentMonthToday = (today.getFullYear() === y && today.getMonth() === m);
+  const todayNum = today.getDate();
+
+  const cells = [];
+  const dowLabels = ['일','월','화','수','목','금','토'];
+  dowLabels.forEach(l => cells.push(`<div class="cal-dow">${l}</div>`));
+
+  for(let i = startOffset - 1; i >= 0; i--){
+    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
+  }
+
+  for(let d = 1; d <= daysInMonth; d++){
+    const isToday = isCurrentMonthToday && (d === todayNum);
+    const dayEntries = byDate[d] || [];
+
+    const itemsHtml = dayEntries.map(it => {
+      const typeCls = (it.type === "수입") ? "수입" : "지출";
+      const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
+      return `
+        <div class="cal-item ${typeCls}" title="${detailStr}: ${formatMoney(it.amount)}원">
+          <span class="detail">${detailStr}</span>
+          <span class="amt">${formatMoney(it.amount)}원</span>
+        </div>
+      `;
+    }).join('');
+
+    cells.push(`
+      <div class="cal-cell ${isToday ? 'today' : ''}">
+        <div class="cal-daynum">${d}</div>
+        ${itemsHtml}
+      </div>
+    `);
+  }
+
+  const totalSoFar = startOffset + daysInMonth;
+  const trailing = (7 - (totalSoFar % 7)) % 7;
+  for(let d = 1; d <= trailing; d++){
+    cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${d}</div></div>`);
+  }
+
+  document.getElementById('ledgerCalGrid').innerHTML = cells.join('');
+}
+
+/* 🌟 연간 요약 0초 즉시 계산 및 렌더링 */
+function renderYearlySummary(){
   try {
     const N = 12;
     const incomeByMonth = new Array(N).fill(0);
     const tree = {};       
     const largeTotal = {}; 
 
-    monthsData.forEach((entries, idx) => {
+    allYearData.forEach((entries, idx) => {
       entries.forEach(it => {
         const amt = Number(it.amount) || 0;
         if(it.type === "수입"){
@@ -558,30 +720,28 @@ function selectMobileMonth(m){
     else c.classList.remove('active');
   });
 
-  if(cachedMonthsData){
-    const N = 12;
-    const tree = {};
-    const largeTotal = {};
-    cachedMonthsData.forEach((entries, idx) => {
-      entries.forEach(it => {
-        if(it.type === "지출"){
-          const amt = Number(it.amount) || 0;
-          const large = it.large || "기타";
-          const mid = it.mid || "기타";
-          const small = it.small || "기타";
+  const N = 12;
+  const tree = {};
+  const largeTotal = {};
+  allYearData.forEach((entries, idx) => {
+    entries.forEach(it => {
+      if(it.type === "지출"){
+        const amt = Number(it.amount) || 0;
+        const large = it.large || "기타";
+        const mid = it.mid || "기타";
+        const small = it.small || "기타";
 
-          if(!tree[large]) tree[large] = {};
-          if(!tree[large][mid]) tree[large][mid] = {};
-          if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
-          tree[large][mid][small][idx] += amt;
+        if(!tree[large]) tree[large] = {};
+        if(!tree[large][mid]) tree[large][mid] = {};
+        if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
+        tree[large][mid][small][idx] += amt;
 
-          if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
-          largeTotal[large][idx] += amt;
-        }
-      });
+        if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
+        largeTotal[large][idx] += amt;
+      }
     });
-    document.getElementById('mobileAccordionContainer').innerHTML = buildMobileAccordion(tree, largeTotal, m);
-  }
+  });
+  document.getElementById('mobileAccordionContainer').innerHTML = buildMobileAccordion(tree, largeTotal, m);
 }
 
 function buildMobileAccordion(tree, largeTotal, month){
@@ -643,53 +803,8 @@ function toggleAccordion(id){
   if(el) el.classList.toggle('open');
 }
 
-/* 🌟 월별 수입 및 지출 총액 조회 */
-async function loadEntries(){
-  const cacheKey = `ledger_entries_${currentMonth}`;
-  const cachedData = localStorage.getItem(cacheKey);
-
-  if(cachedData) {
-    try {
-      entries = JSON.parse(cachedData);
-      renderSummary();
-    } catch(e){}
-  }
-
-  try{
-    const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${currentMonth}`, { cache:"no-store" });
-    const data = await res.json();
-    if(data.ok && Array.isArray(data.items)) {
-      entries = data.items;
-      localStorage.setItem(cacheKey, JSON.stringify(entries));
-      renderSummary();
-    }
-  }catch(e){
-    console.error("수입/지출 내역 동기화 실패:", e);
-  }
-}
-
-/* 🌟 수입, 지출 2개 카드만 렌더링 */
-function renderSummary(){
-  const totals = { "수입":0, "지출":0 };
-  entries.forEach(it => { if(totals[it.type] !== undefined) totals[it.type] += it.amount; });
-
-  document.getElementById('summary').innerHTML = `
-    <div class="sum-card income">
-      <div class="lbl">수입</div>
-      <div class="num">${formatMoney(totals["수입"])}원</div>
-    </div>
-    <div class="sum-card expense">
-      <div class="lbl">지출</div>
-      <div class="num">${formatMoney(totals["지출"])}원</div>
-    </div>
-  `;
-
-  document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
-  document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
-}
-
 updateMonthDisplay();
-loadEntries();
+initFullYearData();
 </script>
 <script src="./auth-gate.js"></script>
 </body>
