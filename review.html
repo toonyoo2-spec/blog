@@ -138,7 +138,7 @@
 
   .toolbar{
     display:flex;
-    justify-content:space-between;
+    justify-space-between;
     align-items:center;
     flex-wrap:wrap;
     gap:12px;
@@ -268,24 +268,27 @@
     min-width:110px;
   }
 
+  /* 🔧 PC 및 공통: 상태/예약일시 칸 날짜 잘림 수정 핵심 */
   .resv-row {
     display:flex;
     gap:4px;
     margin-top:4px;
+    width: 100%;
   }
   .resv-input {
-    font-size:11px;
-    padding:4px;
+    font-size:12px;
+    padding:4px 2px;
     border:1px solid var(--line);
     border-radius:4px;
+    box-sizing: border-box;
   }
   .date-short {
-    width:70px;
-    flex-shrink:0;
+    width: 118px; /* 70px -> 118px로 확장하여 날짜 잘림 완벽 방지 */
+    flex-shrink: 0;
   }
   .time-short {
-    flex-grow:1;
-    min-width:65px;
+    flex: 1;
+    min-width: 68px;
   }
 
   .del-btn{
@@ -318,7 +321,6 @@
 
   .summary{ grid-template-columns:repeat(2,1fr); gap:8px; }
 
-  /* 등록 폼: 1열 배치 */
   .form-grid{
     grid-template-columns:1fr;
   }
@@ -332,9 +334,8 @@
   .tabs{ justify-content:flex-start; }
   .io-btns{ justify-content:flex-end; }
 
-  /* 표 -> 카드 구조 최적화 */
   table, thead, tbody, tr, th, td{ display:block; width:100%; }
-  thead{ display:none; }               /* 헤더 숨김 */
+  thead{ display:none; }
 
   tbody tr{
     background:var(--card);
@@ -359,7 +360,6 @@
   }
   tbody td:last-child{ border-bottom:none; }
 
-  /* data-label 좌측 표기 */
   tbody td::before{
     content: attr(data-label);
     flex:0 0 auto;
@@ -373,7 +373,6 @@
   tbody td[data-label=""]::before{ display:none; }
   tbody td[data-label=""]{ justify-content:flex-end; }
 
-  /* 입력 영역 고정 min-width 전면 제거 (플립 밀림 방지 핵심) */
   tbody td select,
   tbody td input{
     flex:1 1 auto;
@@ -394,10 +393,8 @@
     overflow-wrap:anywhere;
   }
   
-  /* 모바일 편집 버튼 항상 노출 (터치 디바이스 호환) */
   .edit-btn { opacity: 0.8; }
 
-  /* 상태 / 예약일시 플립 맞춤 가변 레이아웃 */
   td[data-label="상태 / 예약일시"] {
     align-items: flex-start !important;
     flex-direction: column !important;
@@ -433,20 +430,18 @@
   }
 
   .status-cell-content .date-short {
-    width: 58% !important;
+    width: 60% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
     font-size: 12px !important;
-    padding: 6px !important;
+    padding: 6px 4px !important;
     box-sizing: border-box;
   }
 
   .status-cell-content .time-short {
-    width: 42% !important;
+    width: 40% !important;
     min-width: 0 !important;
-    max-width: 100% !important;
     font-size: 12px !important;
-    padding: 6px !important;
+    padding: 6px 2px !important;
     box-sizing: border-box;
   }
 }
@@ -597,15 +592,15 @@
     <table>
       <thead>
         <tr>
-          <th>지역</th>
+          <th style="width: 55px;">지역</th>
           <th>체험단 이름</th>
           <th>제공내역</th>
-          <th>상태 / 예약일시</th>
-          <th>플랫폼</th>
+          <th style="min-width: 200px;">상태 / 예약일시</th>
+          <th style="width: 110px;">플랫폼</th>
           <th>주소</th>
           <th>예약문의</th>
           <th>주차장</th>
-          <th></th>
+          <th style="width: 30px;"></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
