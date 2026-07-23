@@ -244,7 +244,6 @@
   .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
   .cat-cell{color:var(--sub);font-size:12.5px;}
 
-  /* 🌟 수정 / 삭제 버튼 디자인 전면 개편 */
   .row-actions {
     display: flex;
     align-items: center;
@@ -579,7 +578,7 @@
 
 <script>
 /* ===========================================================
-   Apps Script 연동 설정
+   Apps Script 연동 설정 + 프론트엔드 로컬스토리지 캐싱
    =========================================================== */
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
 const SITE_KEY = "130702"; 
@@ -616,14 +615,24 @@ function changeMonth(offset){
 }
 
 async function loadCategories(){
+  // 카테고리 로컬스토리지 복원
+  const cachedCat = localStorage.getItem("ledger_categories");
+  if(cachedCat) {
+    try { categories = JSON.parse(cachedCat); } catch(e){}
+  }
+  initTypeSelect();
+
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=categories`, { cache:"no-store" });
     const data = await res.json();
-    if(data.ok && data.categories) categories = data.categories;
+    if(data.ok && data.categories) {
+      categories = data.categories;
+      localStorage.setItem("ledger_categories", JSON.stringify(categories));
+      initTypeSelect();
+    }
   }catch(e){
-    console.error("카테고리 로드 실패:", e);
+    console.error("카테고리 백그라운드 로드 실패:", e);
   }
-  initTypeSelect();
 }
 
 function initTypeSelect(){
@@ -673,18 +682,30 @@ function toggleYearlyPanel() {
 }
 
 async function loadYearlySummary(){
+  // 🌟 연간 요약 로컬스토리지 0초 즉시 출력
+  const cachedYearly = localStorage.getItem("ledger_yearly_summary");
+  if(cachedYearly) {
+    try {
+      cachedMonthsData = JSON.parse(cachedYearly);
+      renderYearlySummary(cachedMonthsData);
+    } catch(e){}
+  }
+
   try {
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
     const data = await res.json();
     
     if (data && data.ok && Array.isArray(data.items)) {
       cachedMonthsData = data.items;
+      localStorage.setItem("ledger_yearly_summary", JSON.stringify(data.items));
       renderYearlySummary(data.items);
       isYearlyLoaded = true;
     }
   } catch(e) {
     console.error("연간 요약 로드 실패:", e);
-    document.getElementById('yearlySummary').innerHTML = `<div class="yearly-loading">데이터를 불러오지 못했습니다. 다시 시도해 주세요.</div>`;
+    if(!cachedYearly) {
+      document.getElementById('yearlySummary').innerHTML = `<div class="yearly-loading">데이터를 불러오지 못했습니다. 다시 시도해 주세요.</div>`;
+    }
   }
 }
 
@@ -723,7 +744,6 @@ function renderYearlySummary(monthsData){
     const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
     const sum = arr => arr.reduce((a, b) => a + b, 0);
 
-    // 1. PC용 렌더링
     const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
 
     const pcTable1 = `
@@ -785,7 +805,6 @@ function renderYearlySummary(monthsData){
       </table>
     `;
 
-    // 2. 모바일용 렌더링
     const totalIncome = sum(incomeByMonth);
     const totalExpense = sum(totalExpenseByMonth);
     const totalBalance = sum(balanceByMonth);
@@ -919,15 +938,31 @@ function toggleAccordion(id){
   if(el) el.classList.toggle('open');
 }
 
+// 🌟 [로컬스토리지 0초 즉시 로딩 적용]
 async function loadEntries(){
+  const cacheKey = `ledger_entries_${currentMonth}`;
+  const cachedData = localStorage.getItem(cacheKey);
+
+  // 1. 브라우저 캐시 존재 시 0초 만에 바로 출력!
+  if(cachedData) {
+    try {
+      entries = JSON.parse(cachedData);
+      render();
+    } catch(e){}
+  }
+
+  // 2. 백그라운드 서버 최신 데이터 동기화
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${currentMonth}`, { cache:"no-store" });
     const data = await res.json();
-    if(data.ok && Array.isArray(data.items)) entries = data.items;
+    if(data.ok && Array.isArray(data.items)) {
+      entries = data.items;
+      localStorage.setItem(cacheKey, JSON.stringify(entries)); // 최신 데이터 캐시 업데이트
+      render(); // 새 데이터로 화면 최신화
+    }
   }catch(e){
-    console.error("거래 로드 실패:", e);
+    console.error("거래 내역 백그라운드 동기화 실패:", e);
   }
-  render();
 }
 
 function render(){
@@ -1029,7 +1064,7 @@ async function addEntry(){
       res = await fetch(API_URL, {
         method:"POST",
         headers:{"Content-Type":"text/plain;charset=utf-8"},
-        body: JSON.stringify({ action:"update", key:SITE_KEY, month:currentMonth, rowIndex:editingRowIndex, item })
+        body: JSON.stringify({ action:"update", key:SITE_KEY, month:currentMonth, item })
       });
     } else {
       res = await fetch(API_URL, {
@@ -1041,6 +1076,8 @@ async function addEntry(){
     data = await res.json();
     if(!data.ok) throw new Error(data.error);
     entries = data.items;
+    localStorage.setItem(`ledger_entries_${currentMonth}`, JSON.stringify(entries));
+    localStorage.removeItem("ledger_yearly_summary"); // 연간 캐시 초기화
   }catch(err){
     alert("저장 실패: " + err.message);
     btn.disabled = false;
@@ -1091,6 +1128,8 @@ async function deleteEntry(rowIndex){
     const data = await res.json();
     if(!data.ok) throw new Error(data.error);
     entries = data.items;
+    localStorage.setItem(`ledger_entries_${currentMonth}`, JSON.stringify(entries));
+    localStorage.removeItem("ledger_yearly_summary");
   }catch(err){
     alert("삭제 실패: " + err.message);
     return;
