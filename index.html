@@ -379,7 +379,6 @@
     header { margin-bottom: 16px; }
     h1 { font-size: 22px; }
     
-    /* 🌟 상단 도구 카드 3개를 한 줄로 가로 배치 */
     .grid {
       grid-template-columns: repeat(3, 1fr) !important;
       gap: 8px !important;
@@ -456,16 +455,17 @@
       <div class="desc">블로그관리</div>
     </a>
 
-    <a class="card" href="./task.html">
-      <div class="icon">✅</div>
-      <div class="title">Task</div>
-      <div class="desc">개인업무</div>
-    </a>
-
+    <!-- 🌟 위치 교체: 가계부가 2번째, Task가 3번째로 배치됨 -->
     <a class="card" href="./ledger.html">
       <div class="icon">💰</div>
       <div class="title">가계부</div>
       <div class="desc">가계부관리</div>
+    </a>
+
+    <a class="card" href="./task.html">
+      <div class="icon">✅</div>
+      <div class="title">Task</div>
+      <div class="desc">개인업무</div>
     </a>
   </div>
 
