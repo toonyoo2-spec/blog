@@ -105,6 +105,17 @@
       auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
     });
 
+    // 탭이 백그라운드로 갔다가 다시 보일 때 자동 토큰 갱신을 확실히 재개시킴.
+    // (모바일 브라우저는 백그라운드에서 타이머를 멈추기 때문에, 이걸 안 해주면
+    //  한동안 안 보다가 돌아왔을 때 토큰이 만료되어 로그인이 풀릴 수 있음)
+    document.addEventListener('visibilitychange', () => {
+      if(document.visibilityState === 'visible'){
+        sb.auth.startAutoRefresh();
+      } else {
+        sb.auth.stopAutoRefresh();
+      }
+    });
+
     const { data: { session } } = await sb.auth.getSession();
     if(session) unlock(); else showGate(sb);
 
