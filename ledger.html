@@ -224,8 +224,11 @@
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 ---- */
+  /* ---- 연간 한눈에 보기 (PC 전용 스타일) ---- */
   .yearly-panel{padding-bottom:16px;}
+  .yearly-pc { display: block; }
+  .yearly-mobile { display: none; }
+
   .yearly-scroll{overflow-x:auto;border-radius:8px;}
   .yearly-scroll + .yearly-scroll{margin-top:16px;}
   table.yearly-table{width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap;}
@@ -254,75 +257,142 @@
   .yearly-table tr.detail-row:hover td{background:#fafaf7;}
   .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
 
-  @media (max-width:900px){
-    .form-grid{grid-template-columns:1fr 1fr;}
-    .summary{grid-template-columns:repeat(2,1fr);}
-    table, thead, tbody, th, td, tr{display:block;}
-    thead{display:none;}
-    tbody tr{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;padding:10px 12px;}
-    tbody td{border:none;padding:6px 0;}
-    tbody td::before{content:attr(data-label);display:block;font-size:11px;color:var(--sub);margin-bottom:2px;}
-  }@media (max-width: 900px) {
-  body { padding: 16px 12px 60px; }
-  
-  /* 1. 월 이동 바 중앙 배치 및 보기 좋게 수정 */
-  .month-header { padding: 16px 12px; }
-  .current-month { font-size: 22px; }
-  .month-mini-summary { 
-    font-size: 12px; 
-    padding: 6px 14px; 
+  /* ============================================================
+     📱 모바일 반응형 최적화 (900px 이하)
+     ============================================================ */
+  @media (max-width: 900px) {
+    body { padding: 16px 12px 60px; }
+    
+    /* 연간보기 모바일 버전 켜기 / PC 스크롤 표 숨기기 */
+    .yearly-pc { display: none; }
+    .yearly-mobile { display: block; }
+
+    /* 모바일 연간 요약 카드 */
+    .m-yearly-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .m-y-card {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+    }
+    .m-y-card .lbl { font-size: 11px; color: var(--sub); }
+    .m-y-card .val { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .m-y-card.balance .val { color: var(--saving-ink); }
+    .m-y-card.rate .val { color: var(--income-ink); }
+
+    /* 모바일 연간 월 선택 칩 스크롤 */
+    .m-month-chips {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .m-chip {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      border-radius: 16px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      color: var(--sub);
+      cursor: pointer;
+    }
+    .m-chip.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      font-weight: 700;
+    }
+
+    /* 모바일 지출 카테고리 아코디언 */
+    .m-accordion-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .m-accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #fafaf7;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .m-accordion-header .amt { color: var(--expense-ink); }
+    .m-accordion-body {
+      display: none;
+      padding: 8px 12px;
+      border-top: 1px dashed var(--line);
+      font-size: 12px;
+    }
+    .m-accordion-item.open .m-accordion-body { display: block; }
+    .m-detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      color: var(--sub);
+    }
+    .m-detail-row .name { color: var(--ink); }
+
+    /* 일반 월 선택 및 폼 모바일 최적화 */
+    .month-header { padding: 16px 12px; }
+    .current-month { font-size: 22px; }
+    .month-mini-summary { font-size: 12px; padding: 6px 14px; }
+    
+    .form-grid {
+      grid-template-columns: 1fr !important;
+      gap: 10px;
+    }
+    .add-btn {
+      width: 100%;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    /* 내역 테이블 카드화 */
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    
+    tbody tr {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      padding: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    
+    tbody td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #f2f1ed;
+    }
+    tbody td:last-child { 
+      border-bottom: none; 
+      justify-content: flex-end;
+      padding-top: 10px;
+    }
+    
+    tbody td::before {
+      content: attr(data-label);
+      font-size: 12px;
+      color: var(--sub);
+      font-weight: 600;
+    }
   }
-  
-  /* 2. 입력 폼 1열 수직 정렬 */
-  .form-grid {
-    grid-template-columns: 1fr !important;
-    gap: 10px;
-  }
-  .add-btn {
-    width: 100%;
-    padding: 12px;
-    text-align: center;
-  }
-  
-  /* 3. 내역 테이블 카드 형태로 모바일 패브리케이션 */
-  table, thead, tbody, th, td, tr { display: block; }
-  thead { display: none; }
-  
-  tbody tr {
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    margin-bottom: 12px;
-    padding: 14px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-  }
-  
-  tbody td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid #f2f1ed;
-  }
-  tbody td:last-child { 
-    border-bottom: none; 
-    justify-content: flex-end;
-    padding-top: 10px;
-  }
-  
-  tbody td::before {
-    content: attr(data-label);
-    font-size: 12px;
-    color: var(--sub);
-    font-weight: 600;
-  }
-  
-  /* 4. 연간 한눈에 보기 표 스크롤 터치감 최적화 */
-  .yearly-scroll {
-    -webkit-overflow-scrolling: touch; /* iOS 터치 부드럽게 */
-    border: 1px solid var(--line);
-  }
-}
 </style>
 </head>
 <body>
@@ -426,7 +496,6 @@
 /* ===========================================================
    Apps Script 연동 설정
    =========================================================== */
-// 예전 파일(ledger_2.html)에 있던 잘 작동하던 원래 주소 복구!
 const API_URL = "https://script.google.com/macros/s/AKfycbz7JN-W--kgA4ZONXyNVBrc1Fl4n4xw1SNv1dNYIJW-nVBkSE42hXlBjT3bxXFECyNHhA/exec";
 const SITE_KEY = "130702"; 
 
@@ -434,6 +503,8 @@ let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
 let entries = [];
 let currentMonth = new Date().getMonth() + 1;
 let editingRowIndex = null;
+let cachedMonthsData = null; // 모바일 탭 변경용 캐시
+let selectedMobileMonth = 0; // 0: 연간 합계, 1~12: 해당 월
 
 const TYPES = ["수입","지출","저축","투자"];
 
@@ -494,7 +565,6 @@ function onLargeChange(){
   const list = (categories[type] || []).filter(c => c.large === large);
   const mids = [...new Set(list.map(c => c.mid))].filter(Boolean);
   const midSel = document.getElementById('in-mid');
-  // 중분류: 빈칸 선택지 추가
   midSel.innerHTML = `<option value="">- 선택 안함 -</option>` + mids.map(m => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join('');
   onMidChange();
 }
@@ -506,7 +576,6 @@ function onMidChange(){
   const list = (categories[type] || []).filter(c => c.large === large && c.mid === mid);
   const smalls = [...new Set(list.map(c => c.small))].filter(Boolean);
   const smallSel = document.getElementById('in-small');
-  // 소분류: 빈칸 선택지 추가
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
@@ -526,6 +595,7 @@ async function loadYearlySummary(){
   const monthsData = await Promise.all(
     Array.from({length:12}, (_, i) => fetchMonthEntries(i + 1))
   );
+  cachedMonthsData = monthsData;
   renderYearlySummary(monthsData);
 }
 
@@ -563,10 +633,12 @@ function renderYearlySummary(monthsData){
   const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
   const sum = arr => arr.reduce((a, b) => a + b, 0);
 
+  // ==========================================
+  // 1. PC용 렌더링 (기존 12개월 테이블 구조 유지)
+  // ==========================================
   const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
 
-  // ---- 표 1: 수입 - 지출 / 저축율 ----
-  const table1 = `
+  const pcTable1 = `
     <table class="yearly-table">
       <thead>
         <tr><th class="label" colspan="2">수입 - 지출</th>${monthHeaders}<th>연간 Balance</th></tr>
@@ -586,18 +658,17 @@ function renderYearlySummary(monthsData){
     </table>
   `;
 
-  // ---- 표 2: 지출 상세 (고정지출/변동지출 → 중분류 → 소분류) ----
   const order = { "고정지출":0, "변동지출":1 };
   const largeOrder = Object.keys(largeTotal).sort((a, b) => {
     const ao = order[a] !== undefined ? order[a] : 2;
-    const bo = order[b] !== undefined ? order[b] : 2;
+    const bo = order[b] !== undefined ? order[bo] : 2;
     return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
   });
 
-  let rows = `<tr class="total-row"><td class="label" colspan="3">지출 합계</td>${totalExpenseByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(totalExpenseByMonth))}</td></tr>`;
+  let pcRows = `<tr class="total-row"><td class="label" colspan="3">지출 합계</td>${totalExpenseByMonth.map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(totalExpenseByMonth))}</td></tr>`;
 
   largeOrder.forEach(large => {
-    rows += `<tr class="sub-total-row"><td class="label" colspan="3">${escapeHtml(large)}</td>${largeTotal[large].map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(largeTotal[large]))}</td></tr>`;
+    pcRows += `<tr class="sub-total-row"><td class="label" colspan="3">${escapeHtml(large)}</td>${largeTotal[large].map(v => `<td>${formatMoney(v)}</td>`).join('')}<td>${formatMoney(sum(largeTotal[large]))}</td></tr>`;
   });
 
   largeOrder.forEach(large => {
@@ -606,7 +677,7 @@ function renderYearlySummary(monthsData){
       const smalls = mids[mid];
       Object.keys(smalls).forEach(small => {
         const arr = smalls[small];
-        rows += `<tr class="detail-row">
+        pcRows += `<tr class="detail-row">
           <td class="label">${escapeHtml(large)}</td>
           <td class="label">${escapeHtml(mid)}</td>
           <td class="label">${escapeHtml(small)}</td>
@@ -617,19 +688,148 @@ function renderYearlySummary(monthsData){
     });
   });
 
-  const table2 = `
+  const pcTable2 = `
     <table class="yearly-table">
       <thead>
         <tr><th class="label">대분류</th><th class="label">중분류</th><th class="label">소분류</th>${monthHeaders}<th>합계</th></tr>
       </thead>
-      <tbody>${rows}</tbody>
+      <tbody>${pcRows}</tbody>
     </table>
   `;
 
-  document.getElementById('yearlySummary').innerHTML = `
-    <div class="yearly-scroll">${table1}</div>
-    <div class="yearly-scroll">${table2}</div>
+  // ==========================================
+  // 2. 모바일용 렌더링 (카드 + 월별 아코디언)
+  // ==========================================
+  const totalIncome = sum(incomeByMonth);
+  const totalExpense = sum(totalExpenseByMonth);
+  const totalBalance = sum(balanceByMonth);
+  const validRates = savingRateByMonth.filter(r => r !== null);
+  const avgRate = validRates.length > 0 ? (validRates.reduce((a,b)=>a+b,0) / validRates.length).toFixed(1) : '-';
+
+  const mobileSummaryCards = `
+    <div class="m-yearly-cards">
+      <div class="m-y-card"><div class="lbl">연간 총수입</div><div class="val">${formatMoney(totalIncome)}원</div></div>
+      <div class="m-y-card"><div class="lbl">연간 총지출</div><div class="val">${formatMoney(totalExpense)}원</div></div>
+      <div class="m-y-card balance"><div class="lbl">연간 순수익(Balance)</div><div class="val">${formatMoney(totalBalance)}원</div></div>
+      <div class="m-y-card rate"><div class="lbl">평균 저축률</div><div class="val">${avgRate}%</div></div>
+    </div>
   `;
+
+  let mobileChips = `<div class="m-month-chips">`;
+  mobileChips += `<button class="m-chip ${selectedMobileMonth===0?'active':''}" onclick="selectMobileMonth(0)">연간 합계</button>`;
+  for(let m=1; m<=12; m++){
+    mobileChips += `<button class="m-chip ${selectedMobileMonth===m?'active':''}" onclick="selectMobileMonth(${m})">${m}월</button>`;
+  }
+  mobileChips += `</div>`;
+
+  const mobileAccordion = buildMobileAccordion(tree, largeTotal, selectedMobileMonth);
+
+  // 최종 결합
+  document.getElementById('yearlySummary').innerHTML = `
+    <div class="yearly-pc">
+      <div class="yearly-scroll">${pcTable1}</div>
+      <div class="yearly-scroll">${pcTable2}</div>
+    </div>
+    <div class="yearly-mobile">
+      ${mobileSummaryCards}
+      ${mobileChips}
+      <div id="mobileAccordionContainer">${mobileAccordion}</div>
+    </div>
+  `;
+}
+
+function selectMobileMonth(m){
+  selectedMobileMonth = m;
+  const chips = document.querySelectorAll('.m-chip');
+  chips.forEach((c, idx) => {
+    if(idx === m) c.classList.add('active');
+    else c.classList.remove('active');
+  });
+
+  if(cachedMonthsData){
+    // 트리 재계산
+    const N = 12;
+    const tree = {};
+    const largeTotal = {};
+    cachedMonthsData.forEach((entries, idx) => {
+      entries.forEach(it => {
+        if(it.type === "지출"){
+          const amt = Number(it.amount) || 0;
+          const large = it.large || "기타";
+          const mid = it.mid || "기타";
+          const small = it.small || "기타";
+
+          if(!tree[large]) tree[large] = {};
+          if(!tree[large][mid]) tree[large][mid] = {};
+          if(!tree[large][mid][small]) tree[large][mid][small] = new Array(N).fill(0);
+          tree[large][mid][small][idx] += amt;
+
+          if(!largeTotal[large]) largeTotal[large] = new Array(N).fill(0);
+          largeTotal[large][idx] += amt;
+        }
+      });
+    });
+    document.getElementById('mobileAccordionContainer').innerHTML = buildMobileAccordion(tree, largeTotal, m);
+  }
+}
+
+function buildMobileAccordion(tree, largeTotal, month){
+  const sum = arr => arr.reduce((a, b) => a + b, 0);
+  const getValue = arr => month === 0 ? sum(arr) : (arr[month - 1] || 0);
+
+  const order = { "고정지출":0, "변동지출":1 };
+  const largeOrder = Object.keys(largeTotal).sort((a, b) => {
+    const ao = order[a] !== undefined ? order[a] : 2;
+    const bo = order[b] !== undefined ? order[b] : 2;
+    return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
+  });
+
+  if(largeOrder.length === 0){
+    return `<div style="text-align:center; padding:20px; color:var(--sub); font-size:12px;">지출 내역이 없습니다.</div>`;
+  }
+
+  let html = "";
+  largeOrder.forEach((large, idx) => {
+    const lAmt = getValue(largeTotal[large]);
+    if(lAmt === 0) return;
+
+    const mids = tree[large] || {};
+    let detailsHtml = "";
+
+    Object.keys(mids).forEach(mid => {
+      const smalls = mids[mid];
+      Object.keys(smalls).forEach(small => {
+        const sAmt = getValue(smalls[small]);
+        if(sAmt > 0){
+          detailsHtml += `
+            <div class="m-detail-row">
+              <span class="name">${escapeHtml(mid)} > ${escapeHtml(small)}</span>
+              <span>${formatMoney(sAmt)}원</span>
+            </div>
+          `;
+        }
+      });
+    });
+
+    html += `
+      <div class="m-accordion-item" id="accItem_${idx}">
+        <div class="m-accordion-header" onclick="toggleAccordion('accItem_${idx}')">
+          <span>${escapeHtml(large)}</span>
+          <span class="amt">${formatMoney(lAmt)}원 ▾</span>
+        </div>
+        <div class="m-accordion-body">
+          ${detailsHtml}
+        </div>
+      </div>
+    `;
+  });
+
+  return html || `<div style="text-align:center; padding:20px; color:var(--sub); font-size:12px;">해당 월 지출 내역이 없습니다.</div>`;
+}
+
+function toggleAccordion(id){
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
 }
 
 // ---- 거래 로드 & 렌더 ----
@@ -709,7 +909,7 @@ function collectFormItem(){
     detail: document.getElementById('in-detail').value.trim(),
     amount: Number(document.getElementById('in-amount').value) || 0,
     payment: document.getElementById('in-payment').value.trim(),
-    review: "", // 시트의 리뷰 열에 대응하기 위해 빈 값으로 전송
+    review: "",
     note: document.getElementById('in-note').value.trim()
   };
 }
@@ -721,7 +921,6 @@ function resetForm(){
   document.getElementById('in-payment').value = "";
   document.getElementById('in-note').value = "";
   
-  // 폼 초기화 시 셀렉트 박스도 첫 번째 값으로 초기화
   document.getElementById('in-type').selectedIndex = 0;
   onTypeChange();
   
@@ -773,7 +972,6 @@ function startEdit(rowIndex){
 
   document.getElementById('in-date').value = it.date;
   
-  // 값 세팅 후 옵션 다시 불러오기
   document.getElementById('in-type').value = it.type;
   onTypeChange();
   
