@@ -27,7 +27,6 @@
     padding:32px 24px 80px;
   }
 
-  /* PC 화면 전체 폭 확장 (최대 1600px, 95%) */
   .wrap{ max-width: 1600px; width: 95%; margin:0 auto; }
 
   header{margin-bottom:20px;}
@@ -145,6 +144,31 @@
     display:inline-block;
   }
 
+  /* 🌟 연간 한눈에 보기 펼침/접힘 스타일 */
+  .yearly-toggle-header {
+    cursor: pointer;
+    user-select: none;
+    margin: 0 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .yearly-toggle-header .arrow {
+    font-size: 13px;
+    color: var(--sub);
+    transition: transform 0.2s;
+  }
+  .yearly-panel.open .yearly-toggle-header .arrow {
+    transform: rotate(180deg);
+  }
+  .yearly-content-wrap {
+    display: none;
+    margin-top: 16px;
+  }
+  .yearly-panel.open .yearly-content-wrap {
+    display: block;
+  }
+
   .form-grid{
     display:grid;
     grid-template-columns: 130px 90px 120px 120px 120px 1.5fr 120px 120px 1fr;
@@ -233,7 +257,6 @@
   #appContent{display:none;}
 
   /* ---- 연간 한눈에 보기 ---- */
-  .yearly-panel{padding-bottom:16px;}
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
 
@@ -424,11 +447,16 @@
     <p>수입·지출·저축·투자를 한 곳에서 기록하고 관리합니다.</p>
   </header>
 
-  <!-- 연간 한눈에 보기 -->
-  <div class="panel yearly-panel">
-    <h2>연간 한눈에 보기</h2>
-    <div id="yearlySummary">
-      <div class="yearly-loading">연간 데이터를 불러오는 중...</div>
+  <!-- 🌟 연간 한눈에 보기 (지연 로딩 + 펼침/접힘 토글 적용) -->
+  <div class="panel yearly-panel" id="yearlyPanel">
+    <h2 class="yearly-toggle-header" onclick="toggleYearlyPanel()">
+      <span>연간 한눈에 보기</span>
+      <span class="arrow">▼</span>
+    </h2>
+    <div class="yearly-content-wrap">
+      <div id="yearlySummary">
+        <div class="yearly-loading">연간 데이터를 불러오는 중...</div>
+      </div>
     </div>
   </div>
 
@@ -525,6 +553,7 @@ let currentMonth = new Date().getMonth() + 1;
 let editingRowIndex = null;
 let cachedMonthsData = null;
 let selectedMobileMonth = 0;
+let isYearlyLoaded = false; // 연간 데이터 로드 여부 플래그
 
 const TYPES = ["수입","지출","저축","투자"];
 
@@ -597,37 +626,31 @@ function onMidChange(){
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
-/* 🌟 단 1번의 통합 요청으로 1초만에 1년 치 데이터 로드 완료 */
+// 🌟 [방법 2 적용] 클릭했을 때만 지연 로딩 수행
+function toggleYearlyPanel() {
+  const panel = document.getElementById('yearlyPanel');
+  const isOpen = panel.classList.toggle('open');
+
+  if (isOpen && !isYearlyLoaded) {
+    loadYearlySummary();
+  }
+}
+
+/* 🌟 [방법 1 적용] 단 1번의 요청으로 1년 치 데이터 0.5초 로드 */
 async function loadYearlySummary(){
   try {
-    // 1번만 구글 서버 호출 (12개 시트 한방에 파싱)
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=yearlySummary`, { cache:"no-store" });
     const data = await res.json();
     
     if (data && data.ok && Array.isArray(data.items)) {
       cachedMonthsData = data.items;
       renderYearlySummary(data.items);
-    } else {
-      // 기존 하위 호환 보장 (구글 스크립트 수정 전)
-      fallbackLoadYearlySummary();
+      isYearlyLoaded = true;
     }
   } catch(e) {
-    console.error("통합 로드 실패, 기존 호환 모드로 전환:", e);
-    fallbackLoadYearlySummary();
+    console.error("연간 요약 로드 실패:", e);
+    document.getElementById('yearlySummary').innerHTML = `<div class="yearly-loading">데이터를 불러오지 못했습니다. 다시 시도해 주세요.</div>`;
   }
-}
-
-async function fallbackLoadYearlySummary() {
-  const monthsData = [];
-  for (let m = 1; m <= 12; m++) {
-    try {
-      const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${m}`, { cache:"no-store" });
-      const data = await res.json();
-      monthsData.push((data && data.ok) ? data.items : []);
-    } catch(e) { monthsData.push([]); }
-  }
-  cachedMonthsData = monthsData;
-  renderYearlySummary(monthsData);
 }
 
 function renderYearlySummary(monthsData){
@@ -990,7 +1013,7 @@ async function addEntry(){
   resetForm();
   btn.disabled = false;
   render();
-  loadYearlySummary();
+  if (isYearlyLoaded) loadYearlySummary(); // 연간 보기가 열려있을 때만 백그라운드 갱신
 }
 
 function startEdit(rowIndex){
@@ -1036,12 +1059,11 @@ async function deleteEntry(rowIndex){
     return;
   }
   render();
-  loadYearlySummary();
+  if (isYearlyLoaded) loadYearlySummary();
 }
 
 updateMonthDisplay();
 loadCategories().then(loadEntries);
-loadYearlySummary();
 </script>
 <script src="./auth-gate.js"></script>
 </body>
