@@ -154,9 +154,9 @@
   }
   .cal-item .detail { overflow: hidden; text-overflow: ellipsis; }
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
-  .cal-item .unit { display: inline; } /* PC 기본값 '원' 표시 */
+  .cal-item .unit { display: inline; }
 
-  /* 월 선택 컨트롤 */
+  /* 월 선택 컨트롤 (맨 위로 이동) */
   .month-header {
     display: flex;
     flex-direction: column;
@@ -213,10 +213,10 @@
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
-  /* 📊 항목별 토탈 금액 카드 영역 */
+  /* 📊 항목별 토탈 금액 카드 영역 (4개 항목 4열 배치) */
   .summary {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
     margin-bottom: 22px;
   }
@@ -234,12 +234,10 @@
     top: 0; left: 0; bottom: 0;
     width: 5px;
   }
-  /* 항목별 컬러 테두리 포인트 */
   .sum-card.type-joint::before { background: #343A40; }
   .sum-card.type-car::before { background: #ADB5BD; }
   .sum-card.type-bora::before { background: #E83E8C; }
   .sum-card.type-gwan::before { background: #28A745; }
-  .sum-card.type-income::before { background: #007BFF; }
 
   .sum-card .lbl { font-size: 12.5px; color: var(--sub); margin-bottom: 6px; font-weight: 600; }
   .sum-card .num {
@@ -250,7 +248,6 @@
     text-overflow: ellipsis;
     color: var(--ink);
   }
-  .sum-card.type-income .num { color: #007BFF; }
 
   /* 연간 한눈에 보기 */
   .yearly-panel h2 { font-size:16px; }
@@ -333,7 +330,7 @@
     opacity: 1;
   }
 
-  /* 📱 모바일 반응형 최적화 (화면 너비 900px 이하) */
+  /* 📱 모바일 반응형 최적화 */
   @media (max-width: 900px) {
     body { padding: 16px 10px 40px; overflow-x: hidden; }
     .wrap { max-width: 100%; width: 100%; }
@@ -341,7 +338,6 @@
     .ledger-cal-grid { gap: 3px; }
     .cal-cell { min-height: 60px; padding: 2px; border-radius: 6px; }
     
-    /* 🌟 모바일에서는 '원' 글자 전면 제거 */
     .cal-item .unit, .sum-card .unit { display: none !important; }
 
     .cal-item { 
@@ -356,13 +352,9 @@
     .cal-legend { font-size: 11.5px; gap: 8px; }
     .color-dot { width: 8px; height: 8px; }
 
-    /* 모바일에서 5개 항목을 2/3배치 모드로 전환 */
     .summary {
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-    }
-    .summary .sum-card:last-child {
-      grid-column: span 2; /* 수입 카드는 가로 전면 배치 */
     }
     .sum-card { padding: 12px 10px; }
     .sum-card .lbl { font-size: 11px; margin-bottom: 2px; }
@@ -471,25 +463,7 @@
     <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
   </header>
 
-  <!-- 1. 맨 위 캘린더 영역 -->
-  <div class="panel">
-    <div class="cal-header-wrap">
-      <h2 id="calTitleHeader">7월 캘린더</h2>
-      
-      <!-- 🎨 범례 디자인 -->
-      <div class="cal-legend">
-        <span class="legend-item"><span class="color-dot" style="background:#343A40;"></span>공동</span>
-        <span class="legend-item"><span class="color-dot" style="background:#FFFFFF; border:1px solid #CED4DA;"></span>자동차</span>
-        <span class="legend-item"><span class="color-dot" style="background:#E83E8C;"></span>보라</span>
-        <span class="legend-item"><span class="color-dot" style="background:#28A745;"></span>관</span>
-        <span class="legend-item"><span class="color-dot" style="background:#007BFF;"></span>수입</span>
-      </div>
-    </div>
-    
-    <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
-  </div>
-
-  <!-- 2. 월 선택 컨트롤 -->
+  <!-- 1. 월 선택 및 미니 요약 컨트롤 (맨 위로 이동) -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -503,7 +477,24 @@
     </div>
   </div>
 
-  <!-- 3. 항목별 토탈 금액 카드 (공동/자동차/보라/관/수입) -->
+  <!-- 2. 맨 위 캘린더 영역 -->
+  <div class="panel">
+    <div class="cal-header-wrap">
+      <h2 id="calTitleHeader">7월 캘린더</h2>
+      
+      <!-- 🎨 범례 디자인 -->
+      <div class="cal-legend">
+        <span class="legend-item"><span class="color-dot" style="background:#343A40;"></span>공동</span>
+        <span class="legend-item"><span class="color-dot" style="background:#FFFFFF; border:1px solid #CED4DA;"></span>자동차</span>
+        <span class="legend-item"><span class="color-dot" style="background:#E83E8C;"></span>보라</span>
+        <span class="legend-item"><span class="color-dot" style="background:#28A745;"></span>관</span>
+      </div>
+    </div>
+    
+    <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
+  </div>
+
+  <!-- 3. 항목별 토탈 금액 카드 (공동/자동차/보라/관 - 4개 4열 배치) -->
   <div class="summary" id="summary"></div>
 
   <!-- 4. 연간 한눈에 보기 -->
@@ -610,16 +601,16 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
-/* 📊 5가지 항목별 (공동, 자동차, 보라, 관, 수입) 토탈 계산 및 렌더링 */
+/* 📊 4가지 항목별 (공동, 자동차, 보라, 관) 토탈 계산 및 렌더링 */
 function renderSummary(entries){
   const totals = {
     "공동": 0,
     "자동차": 0,
     "보라": 0,
-    "관": 0,
-    "수입": 0
+    "관": 0
   };
   
+  let totalIncome = 0;
   let totalExpense = 0;
 
   entries.forEach(it => {
@@ -628,13 +619,13 @@ function renderSummary(entries){
     const amt = Number(it.amount) || 0;
 
     if (typeStr === "수입") {
-      totals["수입"] += amt;
+      totalIncome += amt;
     } else {
       totalExpense += amt;
       if (totals[ownerStr] !== undefined) {
         totals[ownerStr] += amt;
       } else {
-        totals["공동"] += amt; // 기타 항목은 기본 공동으로 포함
+        totals["공동"] += amt; 
       }
     }
   });
@@ -656,13 +647,9 @@ function renderSummary(entries){
       <div class="lbl">관</div>
       <div class="num">${formatMoney(totals["관"])}<span class="unit">원</span></div>
     </div>
-    <div class="sum-card type-income">
-      <div class="lbl">수입</div>
-      <div class="num">${formatMoney(totals["수입"])}<span class="unit">원</span></div>
-    </div>
   `;
 
-  document.getElementById('miniIncome').textContent = formatMoney(totals["수입"]);
+  document.getElementById('miniIncome').textContent = formatMoney(totalIncome);
   document.getElementById('miniExpense').textContent = formatMoney(totalExpense);
 }
 
@@ -701,7 +688,6 @@ function renderCalendar(entries){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
 
-  // 정렬 순서 가중치 정의: 수입 -> 공동 -> 자동차 -> 보라 -> 관
   const ownerOrder = {
     "수입": 0,
     "공동": 1,
