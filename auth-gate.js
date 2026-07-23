@@ -12,6 +12,16 @@
 */
 (function(){
   const SITE_PASSWORD = "130702";
+  const SITE_AUTH_KEY = "kwanHubAuth"; // index.html 로그인 시 저장되는 공용 인증 플래그
+
+  function isSiteAuthed(){
+    return sessionStorage.getItem('siteAuth') === 'ok' || localStorage.getItem(SITE_AUTH_KEY) === 'ok';
+  }
+
+  function markAuthed(){
+    sessionStorage.setItem('siteAuth', 'ok');
+    localStorage.setItem(SITE_AUTH_KEY, 'ok');
+  }
 
   function unlock(){
     const el = document.getElementById('appContent');
@@ -47,7 +57,7 @@
     function tryLogin(){
       const val = document.getElementById('authInput').value;
       if(val === SITE_PASSWORD){
-        sessionStorage.setItem('siteAuth', 'ok');
+        markAuthed();
         unlock();
       }else{
         document.getElementById('authErr').textContent = '비밀번호가 올바르지 않습니다.';
@@ -64,7 +74,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function(){
-    if(sessionStorage.getItem('siteAuth') === 'ok'){
+    if(isSiteAuthed()){
       unlock();
     }else{
       showGate();

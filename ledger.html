@@ -225,34 +225,6 @@
   /* 화면 표시 숨김 해제 */
   #appContent{display:none;}
 
-  /* ── 비밀번호 게이트 ── */
-  #gateOverlay{
-    position:fixed;inset:0;z-index:9999;
-    background:var(--bg);
-    display:flex;align-items:center;justify-content:center;
-  }
-  #gateOverlay.hidden{display:none;}
-  .gate-box{
-    background:var(--card);border:1px solid var(--line);
-    border-radius:16px;padding:40px 36px;width:320px;max-width:88vw;
-    text-align:center;
-  }
-  .gate-box h2{font-size:20px;margin:0 0 6px;letter-spacing:-0.02em;}
-  .gate-box p{font-size:13px;color:var(--sub);margin:0 0 24px;}
-  .gate-box input{
-    width:100%;padding:11px 14px;border:1px solid var(--line);
-    border-radius:8px;font-size:15px;text-align:center;
-    font-family:inherit;margin-bottom:16px;box-sizing:border-box;
-  }
-  .gate-box input:focus{outline:none;border-color:var(--accent);}
-  .gate-box button{
-    width:100%;padding:11px;background:var(--accent);color:#fff;
-    border:none;border-radius:8px;font-size:14px;font-weight:600;
-    cursor:pointer;font-family:inherit;
-  }
-  .gate-box button:hover{opacity:0.9;}
-  #gateError{color:#b3452f;font-size:12.5px;margin-top:10px;display:none;} 
-
   /* 📱 태블릿/모바일 (900px 이하) */
   @media (max-width:900px){
     .form-grid{grid-template-columns:1fr 1fr;}
@@ -343,22 +315,10 @@
     .current-month{font-size:20px;min-width:70px;}
     .month-mini-summary{font-size:12px;padding:6px 12px;flex-wrap:wrap;justify-content:center;}
     .month-mini-summary .divider{margin:0 8px;}
-    .gate-box{padding:32px 22px;}
   }
 </style>
 </head>
 <body>
-  <!-- ── 비밀번호 게이트 오버레이 ── -->
-  <div id="gateOverlay">
-    <div class="gate-box">
-      <h2>ledger</h2>
-      <p>접속하려면 비밀번호를 입력하세요</p>
-      <input type="password" id="gateInput" placeholder="비밀번호" onkeydown="if(event.key==='Enter')checkGate()">
-      <button onclick="checkGate()">입장하기</button>
-      <div id="gateError">비밀번호가 올바르지 않습니다</div>
-    </div>
-  </div>
-
 <div class="wrap" id="appContent">
 
   <header>
@@ -715,23 +675,12 @@ async function deleteEntry(rowIndex){
   render();
 }
 
-// ---- 비밀번호 게이트 ----
-const GATE_KEY = "130702";
-function checkGate(){
-  const val = document.getElementById('gateInput').value.trim();
-  if(val === GATE_KEY){
-    document.getElementById('gateOverlay').classList.add('hidden');
-    document.getElementById('appContent').style.display = '';
-    updateMonthDisplay();
-    loadCategories().then(loadEntries);
-  } else {
-    document.getElementById('gateError').style.display = 'block';
-    document.getElementById('gateInput').value = '';
-  }
-}
-
 // ---- 초기화 ----
+// (비밀번호 게이트는 auth-gate-ledger.js가 담당: 화면을 가리고 있는 동안
+//  데이터는 미리 백그라운드에서 불러와 둡니다. 게이트가 열리면 appContent만 보이면 됩니다.)
+updateMonthDisplay();
+loadCategories().then(loadEntries);
 </script>
-<script src="./auth-gate.js"></script>
+<script src="./auth-gate-ledger.js"></script>
 </body>
 </html>
