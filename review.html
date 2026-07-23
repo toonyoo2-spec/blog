@@ -138,7 +138,7 @@
 
   .toolbar{
     display:flex;
-    justify-space-between;
+    justify-content:space-between;
     align-items:center;
     flex-wrap:wrap;
     gap:12px;
@@ -240,7 +240,7 @@
   .deadline-cell.urgent{color:#b3452f;font-weight:600;}
   .status-select{
     font-size:12px;
-    padding:4px 6px;
+    padding:6px 8px;
     border-radius:6px;
     border:1px solid transparent;
     font-weight:600;
@@ -254,7 +254,7 @@
 
   .platform-select{
     font-size:12px;
-    padding:4px 6px;
+    padding:6px 8px;
     border-radius:6px;
     border:1px solid var(--line);
     background:#f5f4f0;
@@ -263,27 +263,25 @@
   }
 
   .address-input, .contact-input {
-    font-size:12px;
-    padding:4px 6px;
-    min-width:110px;
+    font-size:12.5px;
+    padding:6px 8px;
   }
 
-  /* 🔧 PC 및 공통: 상태/예약일시 칸 날짜 잘림 수정 핵심 */
   .resv-row {
     display:flex;
-    gap:4px;
+    gap:6px;
     margin-top:4px;
     width: 100%;
   }
   .resv-input {
     font-size:12px;
-    padding:4px 2px;
+    padding:6px 6px;
     border:1px solid var(--line);
-    border-radius:4px;
+    border-radius:6px;
     box-sizing: border-box;
   }
   .date-short {
-    width: 118px; /* 70px -> 118px로 확장하여 날짜 잘림 완벽 방지 */
+    width: 118px;
     flex-shrink: 0;
   }
   .time-short {
@@ -310,7 +308,7 @@
   #appContent{display:none;}
 
 /* ============================================================
-   📱 모바일 반응형 최적화 (갤럭시 플립 포함 모든 모바일 완벽 대응)
+   📱 모바일 반응형 최적화 (카드 정렬 완벽 보정)
    ============================================================ */
 @media (max-width:820px){
 
@@ -340,17 +338,19 @@
   tbody tr{
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:10px;
-    padding:10px 12px;
-    margin-bottom:12px;
+    border-radius:12px;
+    padding:12px 14px;
+    margin-bottom:14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
     box-sizing:border-box;
   }
 
+  /* 🌟 모바일 행(row) 정렬의 핵심 보정 */
   tbody td{
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    gap:8px;
+    justify-content:flex-start; /* 좌측 기준 고정 정렬 */
+    gap:10px;
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
@@ -358,28 +358,29 @@
     border-bottom:1px dashed var(--line);
     box-sizing:border-box;
   }
-  tbody td:last-child{ border-bottom:none; }
+  tbody td:last-child{ border-bottom:none; padding-bottom: 0; }
 
+  /* 🌟 좌측 라벨 크기 일괄 고정 (85px) -> 우측 요소 완벽 정렬 */
   tbody td::before{
     content: attr(data-label);
-    flex:0 0 auto;
-    font-size:12px;
-    font-weight:600;
-    color:var(--sub);
-    margin-right:6px;
+    flex: 0 0 85px !important; /* 모든 좌측 라벨 폭 85px 고정 */
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sub);
+    text-align: left;
   }
   
   tbody td:not([data-label]) ::before,
   tbody td[data-label=""]::before{ display:none; }
   tbody td[data-label=""]{ justify-content:flex-end; }
 
+  /* 우측 입력창 및 선택창 가변 정렬 */
   tbody td select,
   tbody td input{
-    flex:1 1 auto;
-    width:auto;
-    max-width:100%;
-    min-width:0 !important;
-    box-sizing:border-box;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0 !important;
+    box-sizing: border-box;
   }
   
   .address-input, .contact-input {
@@ -395,10 +396,12 @@
   
   .edit-btn { opacity: 0.8; }
 
+  /* 🌟 '상태 / 예약일시' 세로 스택 모듈화 */
   td[data-label="상태 / 예약일시"] {
     align-items: flex-start !important;
     flex-direction: column !important;
     gap: 6px !important;
+    padding: 10px 0 !important;
   }
 
   td[data-label="상태 / 예약일시"]::before {
@@ -411,14 +414,12 @@
     align-items: stretch;
     gap: 6px;
     width: 100% !important;
-    max-width: 100% !important;
   }
 
   .status-cell-content .status-select {
     width: 100% !important;
     font-size: 13px !important;
-    padding: 6px 8px !important;
-    box-sizing: border-box;
+    padding: 7px 10px !important;
   }
 
   .status-cell-content .resv-row {
@@ -430,19 +431,15 @@
   }
 
   .status-cell-content .date-short {
-    width: 60% !important;
-    min-width: 0 !important;
+    width: 62% !important;
     font-size: 12px !important;
-    padding: 6px 4px !important;
-    box-sizing: border-box;
+    padding: 6px 8px !important;
   }
 
   .status-cell-content .time-short {
-    width: 40% !important;
-    min-width: 0 !important;
+    width: 38% !important;
     font-size: 12px !important;
-    padding: 6px 2px !important;
-    box-sizing: border-box;
+    padding: 6px 6px !important;
   }
 }
 </style>
