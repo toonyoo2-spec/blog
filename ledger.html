@@ -232,7 +232,7 @@
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 ---- */
+  /* ---- 연간 한눈에 보기 (PC 기본 설정) ---- */
   .yearly-panel{padding-bottom:16px;}
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
@@ -266,7 +266,7 @@
   .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
 
   /* ============================================================
-     📱 모바일 반응형 최적화 (금액 1줄 정렬 완벽 보정)
+     📱 모바일 반응형 최적화 (900px 이하) - 연간보기 노출 완벽 보정
      ============================================================ */
   @media (max-width: 900px) {
     body { padding: 16px 10px 40px; overflow-x: hidden; }
@@ -285,8 +285,9 @@
       letter-spacing: -0.03em;
     }
 
-    .yearly-pc { display: none; }
-    .yearly-mobile { display: block; }
+    /* 🌟 모바일 연간보기 노출 강제 지정 */
+    .yearly-pc { display: none !important; }
+    .yearly-mobile { display: block !important; }
 
     .m-yearly-cards {
       display: grid;
@@ -616,7 +617,6 @@ async function fetchMonthEntries(month){
   return [];
 }
 
-/* 🌟 서버 차단 방지: 12개월 분량 데이터를 안전하게 수집 */
 async function loadYearlySummary(){
   try {
     const monthsData = [];
