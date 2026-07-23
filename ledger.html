@@ -24,9 +24,11 @@
     font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
     background:var(--bg);
     color:var(--ink);
-    padding:32px 20px 80px;
+    padding:32px 24px 80px;
   }
-  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* PC 화면 전체 폭 확장 (최대 1600px, 95%) */
+  .wrap{ max-width: 1600px; width: 95%; margin:0 auto; }
 
   header{margin-bottom:20px;}
   .home-btn{
@@ -100,7 +102,7 @@
   .summary{
     display:grid;
     grid-template-columns:repeat(4,1fr);
-    gap:10px;
+    gap:12px;
     margin-bottom:22px;
   }
   .sum-card{
@@ -109,7 +111,13 @@
     border-radius:10px;
     padding:14px 16px;
   }
-  .sum-card .num{font-size:19px;font-weight:700;}
+  .sum-card .num{
+    font-size:19px;
+    font-weight:700;
+    white-space:nowrap; /* 금액 1줄 유지 */
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
   .sum-card .lbl{font-size:12px;color:var(--sub);margin-top:2px;}
   .sum-card.income .num{color:var(--income-ink);}
   .sum-card.expense .num{color:var(--expense-ink);}
@@ -139,8 +147,8 @@
 
   .form-grid{
     display:grid;
-    grid-template-columns:90px 100px 1fr 1fr 1fr 110px 100px 100px 1fr;
-    gap:8px;
+    grid-template-columns: 130px 90px 120px 120px 120px 1.5fr 120px 120px 1fr;
+    gap:10px;
     align-items:end;
   }
   .field label{
@@ -182,18 +190,18 @@
   .type-select.저축{background:var(--saving-bg);color:var(--saving-ink);}
   .type-select.투자{background:var(--invest-bg);color:var(--invest-ink);}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
   thead th{
     text-align:left;
-    font-size:11.5px;
+    font-size:12px;
     color:var(--sub);
     font-weight:600;
-    padding:0 8px 8px;
+    padding:0 8px 10px;
     border-bottom:1px solid var(--line);
     white-space:nowrap;
   }
   tbody td{
-    padding:9px 8px;
+    padding:10px 8px;
     border-bottom:1px solid var(--line);
     vertical-align:middle;
   }
@@ -210,7 +218,7 @@
   .type-badge.저축{background:var(--saving-bg);color:var(--saving-ink);}
   .type-badge.투자{background:var(--invest-bg);color:var(--invest-ink);}
   .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
-  .cat-cell{color:var(--sub);font-size:12px;}
+  .cat-cell{color:var(--sub);font-size:12.5px;}
   .del-btn{
     background:none;border:none;color:#b7b5ac;cursor:pointer;font-size:15px;line-height:1;
   }
@@ -224,7 +232,7 @@
 
   #appContent{display:none;}
 
-  /* ---- 연간 한눈에 보기 (PC 전용 스타일) ---- */
+  /* ---- 연간 한눈에 보기 (PC/모바일 분기) ---- */
   .yearly-panel{padding-bottom:16px;}
   .yearly-pc { display: block; }
   .yearly-mobile { display: none; }
@@ -258,16 +266,29 @@
   .yearly-loading{padding:20px 0;text-align:center;color:var(--sub);font-size:13px;}
 
   /* ============================================================
-     📱 모바일 반응형 최적화 (900px 이하)
+     📱 모바일 반응형 최적화 (금액 1줄 정렬 완벽 보정)
      ============================================================ */
   @media (max-width: 900px) {
-    body { padding: 16px 12px 60px; }
+    body { padding: 16px 10px 40px; overflow-x: hidden; }
+    .wrap { max-width: 100%; width: 100%; }
     
-    /* 연간보기 모바일 버전 켜기 / PC 스크롤 표 숨기기 */
+    /* 🌟 상단 4개 요약 카드 모바일 무조건 1줄 정렬 보정 */
+    .summary {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .sum-card {
+      padding: 12px 10px;
+    }
+    .sum-card .num {
+      font-size: 15.5px !important;
+      white-space: nowrap !important; /* 모바일에서 3,607,190원 절대 안꺾임 */
+      letter-spacing: -0.03em;
+    }
+
     .yearly-pc { display: none; }
     .yearly-mobile { display: block; }
 
-    /* 모바일 연간 요약 카드 */
     .m-yearly-cards {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -281,11 +302,16 @@
       border: 1px solid var(--line);
     }
     .m-y-card .lbl { font-size: 11px; color: var(--sub); }
-    .m-y-card .val { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .m-y-card .val {
+      font-size: 14px;
+      font-weight: 700;
+      margin-top: 2px;
+      white-space: nowrap; /* 연간 총액 무조건 1줄 */
+      letter-spacing: -0.03em;
+    }
     .m-y-card.balance .val { color: var(--saving-ink); }
     .m-y-card.rate .val { color: var(--income-ink); }
 
-    /* 모바일 연간 월 선택 칩 스크롤 */
     .m-month-chips {
       display: flex;
       gap: 6px;
@@ -311,7 +337,6 @@
       font-weight: 700;
     }
 
-    /* 모바일 지출 카테고리 아코디언 */
     .m-accordion-item {
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -329,7 +354,7 @@
       font-size: 13px;
       font-weight: 600;
     }
-    .m-accordion-header .amt { color: var(--expense-ink); }
+    .m-accordion-header .amt { color: var(--expense-ink); white-space: nowrap; }
     .m-accordion-body {
       display: none;
       padding: 8px 12px;
@@ -345,10 +370,9 @@
     }
     .m-detail-row .name { color: var(--ink); }
 
-    /* 일반 월 선택 및 폼 모바일 최적화 */
     .month-header { padding: 16px 12px; }
     .current-month { font-size: 22px; }
-    .month-mini-summary { font-size: 12px; padding: 6px 14px; }
+    .month-mini-summary { font-size: 12px; padding: 6px 14px; white-space: nowrap; }
     
     .form-grid {
       grid-template-columns: 1fr !important;
@@ -360,7 +384,6 @@
       text-align: center;
     }
     
-    /* 내역 테이블 카드화 */
     table, thead, tbody, th, td, tr { display: block; }
     thead { display: none; }
     
@@ -392,6 +415,12 @@
       color: var(--sub);
       font-weight: 600;
     }
+
+    /* 내역 카드 금액 1줄 정렬 */
+    .amount-cell {
+      white-space: nowrap !important;
+      letter-spacing: -0.02em;
+    }
   }
 </style>
 </head>
@@ -412,7 +441,7 @@
     </div>
   </div>
 
-  <!-- 변경된 월 선택 UI -->
+  <!-- 월 선택 UI -->
   <div class="month-header">
     <div class="month-controls">
       <button onclick="changeMonth(-1)">❮</button>
@@ -475,14 +504,14 @@
     <table>
       <thead>
         <tr>
-          <th>날짜</th>
-          <th>구분</th>
-          <th>카테고리</th>
+          <th style="width:110px;">날짜</th>
+          <th style="width:70px;">구분</th>
+          <th style="width:220px;">카테고리</th>
           <th>세부내용</th>
-          <th>금액</th>
-          <th>결제수단</th>
-          <th>비고</th>
-          <th></th>
+          <th style="width:130px; text-align:right;">금액</th>
+          <th style="width:130px;">결제수단</th>
+          <th style="width:150px;">비고</th>
+          <th style="width:60px;"></th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -503,8 +532,8 @@ let categories = { "수입":[], "지출":[], "저축":[], "투자":[] };
 let entries = [];
 let currentMonth = new Date().getMonth() + 1;
 let editingRowIndex = null;
-let cachedMonthsData = null; // 모바일 탭 변경용 캐시
-let selectedMobileMonth = 0; // 0: 연간 합계, 1~12: 해당 월
+let cachedMonthsData = null;
+let selectedMobileMonth = 0;
 
 const TYPES = ["수입","지출","저축","투자"];
 
@@ -515,7 +544,6 @@ function formatMoney(n){
   return (Number(n)||0).toLocaleString('ko-KR');
 }
 
-// ---- 직관적인 월 선택 (좌우 이동) ----
 function updateMonthDisplay(){
   document.getElementById('monthDisplay').textContent = currentMonth + "월";
 }
@@ -530,7 +558,6 @@ function changeMonth(offset){
   loadEntries();
 }
 
-// ---- 카테고리 로드 & 캐스케이딩 선택 ----
 async function loadCategories(){
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=categories`, { cache:"no-store" });
@@ -579,7 +606,6 @@ function onMidChange(){
   smallSel.innerHTML = `<option value="">- 선택 안함 -</option>` + smalls.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
 }
 
-// ---- 연간 한눈에 보기 ----
 async function fetchMonthEntries(month){
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${month}`, { cache:"no-store" });
@@ -602,8 +628,8 @@ async function loadYearlySummary(){
 function renderYearlySummary(monthsData){
   const N = 12;
   const incomeByMonth = new Array(N).fill(0);
-  const tree = {};       // tree[large][mid][small] = [12개월 금액]
-  const largeTotal = {}; // largeTotal[large] = [12개월 금액]
+  const tree = {};       
+  const largeTotal = {}; 
 
   monthsData.forEach((entries, idx) => {
     entries.forEach(it => {
@@ -633,9 +659,7 @@ function renderYearlySummary(monthsData){
   const savingRateByMonth = incomeByMonth.map((inc, i) => inc > 0 ? (balanceByMonth[i] / inc * 100) : null);
   const sum = arr => arr.reduce((a, b) => a + b, 0);
 
-  // ==========================================
-  // 1. PC용 렌더링 (기존 12개월 테이블 구조 유지)
-  // ==========================================
+  // 1. PC용 렌더링
   const monthHeaders = Array.from({length:N}, (_, i) => `<th>${i+1}월</th>`).join('');
 
   const pcTable1 = `
@@ -661,7 +685,7 @@ function renderYearlySummary(monthsData){
   const order = { "고정지출":0, "변동지출":1 };
   const largeOrder = Object.keys(largeTotal).sort((a, b) => {
     const ao = order[a] !== undefined ? order[a] : 2;
-    const bo = order[b] !== undefined ? order[bo] : 2;
+    const bo = order[b] !== undefined ? order[b] : 2;
     return ao !== bo ? ao - bo : a.localeCompare(b, 'ko');
   });
 
@@ -697,9 +721,7 @@ function renderYearlySummary(monthsData){
     </table>
   `;
 
-  // ==========================================
-  // 2. 모바일용 렌더링 (카드 + 월별 아코디언)
-  // ==========================================
+  // 2. 모바일용 렌더링
   const totalIncome = sum(incomeByMonth);
   const totalExpense = sum(totalExpenseByMonth);
   const totalBalance = sum(balanceByMonth);
@@ -724,7 +746,6 @@ function renderYearlySummary(monthsData){
 
   const mobileAccordion = buildMobileAccordion(tree, largeTotal, selectedMobileMonth);
 
-  // 최종 결합
   document.getElementById('yearlySummary').innerHTML = `
     <div class="yearly-pc">
       <div class="yearly-scroll">${pcTable1}</div>
@@ -747,7 +768,6 @@ function selectMobileMonth(m){
   });
 
   if(cachedMonthsData){
-    // 트리 재계산
     const N = 12;
     const tree = {};
     const largeTotal = {};
@@ -832,7 +852,6 @@ function toggleAccordion(id){
   if(el) el.classList.toggle('open');
 }
 
-// ---- 거래 로드 & 렌더 ----
 async function loadEntries(){
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${currentMonth}`, { cache:"no-store" });
@@ -898,7 +917,6 @@ function renderTable(){
   `).join('');
 }
 
-// ---- 추가/수정/삭제 ----
 function collectFormItem(){
   return {
     date: document.getElementById('in-date').value,
@@ -1012,7 +1030,6 @@ async function deleteEntry(rowIndex){
   loadYearlySummary();
 }
 
-// ---- 초기화 ----
 updateMonthDisplay();
 loadCategories().then(loadEntries);
 loadYearlySummary();
