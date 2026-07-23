@@ -244,6 +244,7 @@
   .amount-cell{font-weight:700;text-align:right;white-space:nowrap;}
   .cat-cell{color:var(--sub);font-size:12.5px;}
 
+  /* 수정 / 삭제 버튼 스타일 */
   .row-actions {
     display: flex;
     align-items: center;
@@ -262,7 +263,6 @@
     cursor: pointer;
     transition: all 0.15s ease;
     line-height: 1.2;
-    margin-right: 0;
   }
   .edit-btn:hover {
     background: var(--accent);
@@ -454,10 +454,13 @@
       padding: 6px 0;
       border-bottom: 1px solid #f2f1ed;
     }
+    
+    /* 🌟 모바일 '관리' 행 정렬 완벽 보정 */
     tbody td:last-child { 
       border-bottom: none; 
-      justify-content: flex-end;
       padding-top: 10px;
+      margin-top: 4px;
+      border-top: 1px dashed var(--line); /* 관리 버튼 상단에 은은한 구분선 추가 */
     }
     
     tbody td::before {
@@ -470,6 +473,10 @@
     .amount-cell {
       white-space: nowrap !important;
       letter-spacing: -0.02em;
+    }
+
+    .row-actions {
+      width: auto;
     }
   }
 </style>
@@ -615,7 +622,6 @@ function changeMonth(offset){
 }
 
 async function loadCategories(){
-  // 카테고리 로컬스토리지 복원
   const cachedCat = localStorage.getItem("ledger_categories");
   if(cachedCat) {
     try { categories = JSON.parse(cachedCat); } catch(e){}
@@ -682,7 +688,6 @@ function toggleYearlyPanel() {
 }
 
 async function loadYearlySummary(){
-  // 🌟 연간 요약 로컬스토리지 0초 즉시 출력
   const cachedYearly = localStorage.getItem("ledger_yearly_summary");
   if(cachedYearly) {
     try {
@@ -938,12 +943,10 @@ function toggleAccordion(id){
   if(el) el.classList.toggle('open');
 }
 
-// 🌟 [로컬스토리지 0초 즉시 로딩 적용]
 async function loadEntries(){
   const cacheKey = `ledger_entries_${currentMonth}`;
   const cachedData = localStorage.getItem(cacheKey);
 
-  // 1. 브라우저 캐시 존재 시 0초 만에 바로 출력!
   if(cachedData) {
     try {
       entries = JSON.parse(cachedData);
@@ -951,14 +954,13 @@ async function loadEntries(){
     } catch(e){}
   }
 
-  // 2. 백그라운드 서버 최신 데이터 동기화
   try{
     const res = await fetch(`${API_URL}?key=${encodeURIComponent(SITE_KEY)}&resource=ledger&month=${currentMonth}`, { cache:"no-store" });
     const data = await res.json();
     if(data.ok && Array.isArray(data.items)) {
       entries = data.items;
-      localStorage.setItem(cacheKey, JSON.stringify(entries)); // 최신 데이터 캐시 업데이트
-      render(); // 새 데이터로 화면 최신화
+      localStorage.setItem(cacheKey, JSON.stringify(entries));
+      render();
     }
   }catch(e){
     console.error("거래 내역 백그라운드 동기화 실패:", e);
@@ -1077,7 +1079,7 @@ async function addEntry(){
     if(!data.ok) throw new Error(data.error);
     entries = data.items;
     localStorage.setItem(`ledger_entries_${currentMonth}`, JSON.stringify(entries));
-    localStorage.removeItem("ledger_yearly_summary"); // 연간 캐시 초기화
+    localStorage.removeItem("ledger_yearly_summary");
   }catch(err){
     alert("저장 실패: " + err.message);
     btn.disabled = false;
