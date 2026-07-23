@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KWAN 도구 허브</title>
+<title>BORAKWAN</title>
 <style>
   :root{
     --bg:#f6f5f1;
@@ -33,32 +33,11 @@
   }
   .wrap{max-width:960px;margin:0 auto;}
 
-  header{margin-bottom:36px;}
+  header{margin-bottom:28px;}
   h1{
     font-size:28px;
     letter-spacing:-0.02em;
-    margin:0 0 6px;
-  }
-  header p{
     margin:0;
-    color:var(--sub);
-    font-size:14px;
-  }
-
-  .section-title{
-    font-size:13px;
-    font-weight:600;
-    color:var(--sub);
-    margin:0 0 12px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .section-title::before{
-    content:"";
-    width:6px;height:6px;border-radius:50%;
-    background:var(--accent);
-    display:inline-block;
   }
 
   .grid{
@@ -95,28 +74,6 @@
   .card .title{font-size:15.5px;font-weight:700;}
   .card .desc{font-size:12.5px;color:var(--sub);line-height:1.4;}
 
-  .card.empty{
-    border-style:dashed;
-    align-items:center;
-    justify-content:center;
-    color:var(--sub);
-    font-size:13px;
-    text-align:center;
-    min-height:110px;
-  }
-
-  footer{
-    margin-top:30px;
-    font-size:12px;
-    color:var(--sub);
-    border-top:1px solid var(--line);
-    padding-top:16px;
-  }
-  footer code{
-    background:#eeece5;
-    padding:1px 5px;
-    border-radius:4px;
-  }
   #appContent{display:block;}
 
   /* ---- 캘린더 ---- */
@@ -260,14 +217,8 @@
   .cal-event.owner-bora{background:var(--owner-bora-bg);color:var(--owner-bora-ink);font-weight:600;}
   .cal-event.owner-common{background:var(--owner-common-bg);color:var(--owner-common-ink);font-weight:600;}
   .cal-event-time{font-weight:700;margin-right:3px;}
-  .cal-empty-msg{
-    text-align:center;
-    padding:30px 0;
-    color:var(--sub);
-    font-size:13px;
-  }
 
-  /* ---- 이벤트 상세 팝업 (공통) ---- */
+  /* ---- 이벤트 상세 팝업 ---- */
   .cal-modal-overlay{
     position:fixed;inset:0;
     background:rgba(34,34,31,0.45);
@@ -278,7 +229,6 @@
     padding:20px;
   }
   .cal-modal-overlay.open{display:flex;}
-  /* 부부 일정 로그인 게이트: 다른 팝업과 달리 뒤 배경이 전혀 비치지 않는 완전 단독 화면 */
   #coupleLoginOverlay{
     background:var(--bg);
     z-index:10000;
@@ -327,20 +277,38 @@
   }
   .cal-modal-row .k{color:var(--sub);flex-shrink:0;}
   .cal-modal-row .v{text-align:right;word-break:break-all;}
+  
+  .cal-modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .cal-modal-edit-btn{
+    flex: 2;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 0;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .cal-modal-edit-btn:hover { opacity: 0.9; }
+
   .cal-modal-del-btn{
-    margin-top:16px;
-    width:100%;
+    flex: 1;
     background:none;
     border:1px solid var(--line);
     color:var(--sub);
-    padding:9px 0;
+    padding:10px 0;
     border-radius:8px;
     font-size:13px;
     cursor:pointer;
   }
   .cal-modal-del-btn:hover{border-color:#b3452f;color:#b3452f;}
 
-  /* ---- 부부 일정 추가 폼 ---- */
+  /* ---- 부부 일정 추가/수정 폼 ---- */
   .couple-field{margin-bottom:12px;}
   .couple-field label{
     display:block;
@@ -405,113 +373,75 @@
     text-align:center;
   }
 
-  /* 📱 모바일 화면 최적화 (640px 이하) */
+  /* 📱 모바일 화면 최적화 */
   @media (max-width:640px){
-    body{padding:24px 14px 60px;}
+    body{padding:16px 12px 60px;}
+    header { margin-bottom: 20px; }
+    h1 { font-size: 22px; }
     .grid{grid-template-columns:1fr;}
-    .cal-panel{padding:14px 10px;}
-    .cal-cell{min-height:64px;padding:4px 3px;gap:2px;}
-    .cal-daynum{font-size:10.5px;}
-    .cal-event{font-size:9px;padding:1px 3px;}
+    
+    .cal-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cal-title { font-size: 16px; order: 1; min-width: auto; }
+    .cal-nav-btn { order: 1; }
+    .cal-add-couple-btn {
+      order: 2;
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px 0;
+      text-align: center;
+      position: static;
+      transform: none;
+    }
+
+    .cal-panel{padding:12px 8px;}
+    .cal-cell{min-height:54px;padding:3px 2px;}
+    .cal-daynum{font-size:10px;}
+    .cal-event{font-size:9px;padding:2px 3px;border-radius:3px;}
     .cal-bar-slot{height:13px;}
     .cal-bar{font-size:9px;padding:1px 4px;}
-    .cal-add-couple-btn{
-      position:static;
-      transform:none;
-      display:block;
-      margin:10px auto 0;
+
+    .cal-modal {
+      max-width: 100%;
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+      margin-top: auto;
     }
-    .cal-header{flex-wrap:wrap;}
-  }@media (max-width: 640px) {
-  body { padding: 16px 12px 60px; }
-  
-  /* 1. 상단 타이틀 간격 및 글자 크기 축소 */
-  header { margin-bottom: 20px; }
-  h1 { font-size: 22px; }
-  
-  /* 2. 헤더 및 컨트롤 버튼 배치 재설정 */
-  .cal-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
   }
-  .cal-title { 
-    font-size: 16px; 
-    order: 1; 
-    min-width: auto; 
-  }
-  .cal-nav-btn { order: 1; }
-  .cal-add-couple-btn {
-    order: 2;
-    width: 100%; /* 모바일에서는 일정 추가 버튼을 하단 전체 너비로 */
-    margin-top: 6px;
-    padding: 8px 0;
-    text-align: center;
-  }
-  
-  /* 3. 달력 셀 최소 높이 및 스크롤 여유 확보 */
-  .cal-panel { padding: 12px 8px; }
-  .cal-cell { 
-    min-height: 54px; 
-    padding: 3px 2px; 
-  }
-  .cal-daynum { font-size: 10px; }
-  
-  /* 4. 이벤트 바/텍스트 폰트 조율 */
-  .cal-event { 
-    font-size: 9px; 
-    padding: 2px 3px; 
-    border-radius: 3px; 
-  }
-  .cal-bar { font-size: 9px; }
-  
-  /* 5. 모달(팝업) 하단 시트(Bottom Sheet) 느낌으로 변환 */
-  .cal-modal {
-    max-width: 100%;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-top: auto; /* 화면 하단에 붙도록 설정 */
-  }
-}
 </style>
 </head>
 <body>
 <div class="wrap" id="appContent">
 
   <header>
-    <h1>KWAN 도구 허브</h1>
-    <p>업무·개인용 도구 모음. 필요할 때 하나씩 열어서 씁니다.</p>
+    <h1>BORAKWAN</h1>
   </header>
 
-  <div class="section-title">체험단 / 콘텐츠</div>
   <div class="grid">
     <a class="card" href="./review.html">
       <div class="icon">📋</div>
       <div class="title">Blog</div>
-      <div class="desc">지역·제공내역·마감일·상태·예약일시·플랫폼까지 한 번에 관리</div>
+      <div class="desc">블로그관리</div>
     </a>
 
     <a class="card" href="./task.html">
       <div class="icon">✅</div>
       <div class="title">Task</div>
-      <div class="desc">노션 개인 페이지 연동 (할 일 관리)</div>
+      <div class="desc">개인업무</div>
     </a>
 
-    <div class="card empty">+ 다음 도구 추가 예정</div>
-  </div>
-
-  <div class="section-title">가계부</div>
-  <div class="grid">
     <a class="card" href="./ledger.html">
       <div class="icon">💰</div>
       <div class="title">가계부</div>
-      <div class="desc">수입·지출·저축·투자를 월별로 기록하고 관리</div>
+      <div class="desc">가계부관리</div>
     </a>
   </div>
 
-  <div class="section-title">체험단 캘린더</div>
   <div class="cal-panel">
     <div class="cal-header">
       <button class="cal-nav-btn" onclick="calChangeMonth(-1)">‹</button>
@@ -531,7 +461,7 @@
     </div>
   </div>
 
-  <!-- 이벤트 상세 팝업 (체험단 / 부부 일정 공용) -->
+  <!-- 이벤트 요약 상세 팝업 (체험단 / 부부 일정 공용) -->
   <div class="cal-modal-overlay" id="calModalOverlay" onclick="if(event.target===this) calCloseDetail()">
     <div class="cal-modal">
       <button class="cal-modal-close" onclick="calCloseDetail()">✕</button>
@@ -539,7 +469,7 @@
     </div>
   </div>
 
-  <!-- 부부 일정 로그인 팝업 (아이디+비밀번호) -->
+  <!-- 부부 일정 로그인 팝업 -->
   <div class="cal-modal-overlay open" id="coupleLoginOverlay">
     <div class="cal-modal">
       <div class="cal-modal-title" style="margin-bottom:6px;">로그인</div>
@@ -557,7 +487,7 @@
     </div>
   </div>
 
-  <!-- 부부 일정 추가 팝업 -->
+  <!-- 부부 일정 추가/수정 입력폼 팝업 -->
   <div class="cal-modal-overlay" id="coupleAddOverlay" onclick="if(event.target===this) coupleCloseAdd()">
     <div class="cal-modal">
       <button class="cal-modal-close" onclick="coupleCloseAdd()">✕</button>
@@ -592,7 +522,7 @@
         <textarea id="couple-in-memo" placeholder="장소, 준비물 등"></textarea>
       </div>
       <button class="couple-save-btn" id="coupleSaveBtn" onclick="coupleAddEvent()">저장</button>
-      <button class="cal-modal-del-btn" id="coupleModalDelBtn" style="display:none;" onclick="coupleDeleteEvent(coupleEditId)">삭제</button>
+      <button class="cal-modal-del-btn" id="coupleModalDelBtn" style="display:none; margin-top:8px; width:100%;" onclick="coupleDeleteEvent(coupleEditId)">삭제</button>
       <div class="couple-status-msg" id="coupleStatusMsg"></div>
     </div>
   </div>
@@ -602,15 +532,11 @@
 <script src="./supabase-config.js"></script>
 <script>
 /* ===========================================================
-   체험단 캘린더 + 부부 일정(events) 데이터: 둘 다 Apps Script(구글 시트) 사용.
-   로그인만 Supabase Auth 유지 (부부 일정을 보고 수정하려면 로그인 필요).
+   체험단 캘린더 + 부부 일정(events) 데이터 연동
    =========================================================== */
 const CAL_API_URL = "https://script.google.com/macros/s/AKfycbzMSBUZ5hBbLR2T-lx7m0G2ODIcXKu7oUqvXbA9iiSL_QtJNcevO_aws-Jb1DhhOImX/exec";
-// ⚠️ Apps Script(Code.gs)의 SECRET_KEY와 반드시 동일해야 함.
 const CAL_SITE_KEY = "130702";
 
-/* Supabase 프로젝트 값(SUPABASE_URL / SUPABASE_ANON_KEY)은 이제 이 파일이 아니라
-   ./supabase-config.js 한 곳에서만 관리합니다. */
 const sb = supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true }
 });
@@ -623,11 +549,11 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-let calItems = [];       // 체험단 항목 (Apps Script, resource=blog)
-let coupleItems = [];    // 부부 일정 항목 (Apps Script, resource=events)
-let coupleEditId = null; // 수정 중인 부부 일정 id (null이면 신규 추가 모드)
+let calItems = [];       // 체험단 항목
+let coupleItems = [];    // 부부 일정 항목
+let coupleEditId = null; // 수정 중인 부부 일정 id
 let coupleSelectedOwner = "관";
-let coupleLoggedIn = false; // Supabase 로그인 상태
+let coupleLoggedIn = false;
 let calCursor = new Date();
 calCursor.setDate(1);
 
@@ -643,7 +569,6 @@ function calNormalizeDate(v){
   return `${y}-${m}-${day}`;
 }
 
-// 시작일~종료일을 하루 단위 날짜 문자열 배열로 펼침 (여러 날에 걸친 부부 일정용)
 function calDateRange(start, end){
   const startStr = calNormalizeDate(start);
   if(!startStr) return [];
@@ -670,7 +595,6 @@ function calEscapeHtml(str){
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
 
-/* ---- Apps Script "events" 시트 row <-> 프론트 item ---- */
 function coupleRowToItem(row){
   return {
     id: row.id,
@@ -698,7 +622,6 @@ function coupleItemToRow(item){
   };
 }
 
-/* ---- 체험단(기존): 예약완료(confirm) 상태만 예약일자 기준으로 표시 ---- */
 function calEventDate(it){
   if(it.status !== "confirm" || !it.resvDate) return "";
   return calNormalizeDate(it.resvDate);
@@ -720,11 +643,11 @@ function coupleTimeLabel(it, isGlobalStart, isGlobalEnd){
   return parts.join('~');
 }
 
-let calCurrentSegments = []; // 현재 렌더링된 다일 일정 바 세그먼트 (리사이즈 시 재측정용)
+let calCurrentSegments = [];
 
 function calRender(){
   const y = calCursor.getFullYear();
-  const m = calCursor.getMonth(); // 0-11
+  const m = calCursor.getMonth(); 
   document.getElementById('calTitle').textContent = `${y}년 ${m+1}월`;
 
   const byDate = {};
@@ -805,7 +728,6 @@ function calRender(){
   const dowLabels = ['일','월','화','수','목','금','토'];
   dowLabels.forEach(l => cells.push(`<div class="cal-dow">${l}</div>`));
 
-  // 이전 달 채우기
   for(let i = startOffset - 1; i >= 0; i--){
     cells.push(`<div class="cal-cell other-month"><div class="cal-daynum">${daysInPrevMonth - i}</div></div>`);
   }
@@ -827,7 +749,6 @@ function calRender(){
     return html;
   }
 
-  // 이번 달
   for(let d = 1; d <= daysInMonth; d++){
     const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayStr;
@@ -857,7 +778,6 @@ function calRender(){
     cells.push(`<div class="cal-cell ${isToday?'today':''}"><div class="cal-daynum">${d}</div>${slotsHtml}${eventsHtml}</div>`);
   }
 
-  // 다음 달 채우기
   const totalSoFar = startOffset + daysInMonth;
   const trailing = (7 - (totalSoFar % 7)) % 7;
   for(let d = 1; d <= trailing; d++){
@@ -947,7 +867,7 @@ async function coupleLoad(){
   calRender();
 }
 
-/* ---- Supabase 로그인 상태 확인 및 부부 일정 로그인 게이트 ---- */
+/* ---- Supabase 로그인 및 게이트 ---- */
 function coupleShowLogin(){
   document.getElementById('coupleLoginOverlay').classList.add('open');
 }
@@ -999,7 +919,7 @@ setInterval(calLoad, 30000);
 coupleInitAuth();
 setInterval(() => { if(coupleLoggedIn) coupleLoad(); }, 30000);
 
-// ---- 이벤트 상세 팝업 (체험단 + 부부 일정 공용) ----
+// 이벤트 요약 상세 팝업
 const calFieldLabels = {
   region: "지역",
   provide: "제공내역",
@@ -1013,10 +933,44 @@ const calFieldLabels = {
 
 function calShowDetail(id, kind){
   if(kind === 'couple'){
-    coupleOpenEdit(id);
+    const it = coupleItems.find(i => i.id === id);
+    if(!it) return;
+
+    const dateStr = it.endDate ? `${it.date} ~ ${it.endDate}` : it.date;
+    let timeStr = it.time || "";
+    if(it.endTime) timeStr = timeStr ? `${timeStr} ~ ${it.endTime}` : it.endTime;
+
+    const ownerClass = coupleOwnerClass(it);
+
+    document.getElementById('calModalBody').innerHTML = `
+      <div class="cal-modal-title">${calEscapeHtml(it.title)}</div>
+      <div class="cal-modal-badge" style="background:var(--${ownerClass}-bg);color:var(--${ownerClass}-ink);">
+        ${calEscapeHtml(it.owner || '관')}
+      </div>
+      <div class="cal-modal-row">
+        <span class="k">일자</span>
+        <span class="v">${dateStr}</span>
+      </div>
+      ${timeStr ? `
+      <div class="cal-modal-row">
+        <span class="k">시간</span>
+        <span class="v">${calEscapeHtml(timeStr)}</span>
+      </div>` : ''}
+      ${it.memo ? `
+      <div class="cal-modal-row">
+        <span class="k">메모</span>
+        <span class="v">${calEscapeHtml(it.memo)}</span>
+      </div>` : ''}
+      <div class="cal-modal-actions">
+        <button class="cal-modal-edit-btn" onclick="calCloseDetail(); coupleOpenEdit('${it.id}');">✏️ 수정하기</button>
+        <button class="cal-modal-del-btn" onclick="calCloseDetail(); coupleDeleteEvent('${it.id}');">삭제</button>
+      </div>
+    `;
+    document.getElementById('calModalOverlay').classList.add('open');
     return;
   }
 
+  // 체험단 요약 팝업
   const it = calItems.find(i => i.id === id);
   if(!it) return;
 
