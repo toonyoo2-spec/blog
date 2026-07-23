@@ -422,7 +422,59 @@
       margin:10px auto 0;
     }
     .cal-header{flex-wrap:wrap;}
+  }@media (max-width: 640px) {
+  body { padding: 16px 12px 60px; }
+  
+  /* 1. 상단 타이틀 간격 및 글자 크기 축소 */
+  header { margin-bottom: 20px; }
+  h1 { font-size: 22px; }
+  
+  /* 2. 헤더 및 컨트롤 버튼 배치 재설정 */
+  .cal-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
   }
+  .cal-title { 
+    font-size: 16px; 
+    order: 1; 
+    min-width: auto; 
+  }
+  .cal-nav-btn { order: 1; }
+  .cal-add-couple-btn {
+    order: 2;
+    width: 100%; /* 모바일에서는 일정 추가 버튼을 하단 전체 너비로 */
+    margin-top: 6px;
+    padding: 8px 0;
+    text-align: center;
+  }
+  
+  /* 3. 달력 셀 최소 높이 및 스크롤 여유 확보 */
+  .cal-panel { padding: 12px 8px; }
+  .cal-cell { 
+    min-height: 54px; 
+    padding: 3px 2px; 
+  }
+  .cal-daynum { font-size: 10px; }
+  
+  /* 4. 이벤트 바/텍스트 폰트 조율 */
+  .cal-event { 
+    font-size: 9px; 
+    padding: 2px 3px; 
+    border-radius: 3px; 
+  }
+  .cal-bar { font-size: 9px; }
+  
+  /* 5. 모달(팝업) 하단 시트(Bottom Sheet) 느낌으로 변환 */
+  .cal-modal {
+    max-width: 100%;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-top: auto; /* 화면 하단에 붙도록 설정 */
+  }
+}
 </style>
 </head>
 <body>
