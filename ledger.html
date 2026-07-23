@@ -101,6 +101,7 @@
     font-weight: 700;
   }
   
+  /* 캘린더 칩 스타일 (동적 색상 지원) */
   .cal-item {
     font-size: 11px;
     padding: 3px 6px;
@@ -112,9 +113,11 @@
     justify-content: space-between;
     align-items: center;
     gap: 4px;
+    transition: transform 0.1s ease;
   }
-  .cal-item.수입 { background: var(--income-bg); color: var(--income-ink); }
-  .cal-item.지출 { background: var(--expense-bg); color: var(--expense-ink); }
+  .cal-item:hover {
+    transform: translateY(-1px);
+  }
   .cal-item .detail { overflow: hidden; text-overflow: ellipsis; }
   .cal-item .amt { font-weight: 700; flex-shrink: 0; }
 
@@ -171,7 +174,7 @@
     display: inline-flex;
     align-items: center;
   }
-  .month-mini-summary .income-text { color: var(--income-ink); font-weight: 700; }
+  .month-mini-summary .income-text { color: #1976D2; font-weight: 700; }
   .month-mini-summary .expense-text { color: var(--expense-ink); font-weight: 700; }
   .month-mini-summary .divider { margin: 0 12px; color: #d1cfc4; }
 
@@ -196,7 +199,7 @@
     overflow:hidden;
     text-overflow:ellipsis;
   }
-  .sum-card.income .num{color:var(--income-ink);}
+  .sum-card.income .num{color:#1976D2;}
   .sum-card.expense .num{color:var(--expense-ink);}
 
   /* 연간 한눈에 보기 펼침/접힘 토글 */
@@ -297,7 +300,7 @@
       letter-spacing: -0.03em;
     }
     .m-y-card.balance .val { color: #2f6b3c; }
-    .m-y-card.rate .val { color: var(--income-ink); }
+    .m-y-card.rate .val { color: #1976D2; }
 
     .m-month-chips {
       display: flex;
@@ -453,7 +456,7 @@ function toggleYearlyPanel() {
   panel.classList.toggle('open');
 }
 
-/* 🌟 Supabase DB에서 1년 전체 데이터 0.05초 만에 직통 로드 */
+/* 🌟 Supabase DB에서 1년 전체 데이터 로드 */
 async function initFullYearDataFromSupabase(){
   try {
     const { data, error } = await sb
@@ -467,7 +470,6 @@ async function initFullYearDataFromSupabase(){
       data.forEach(item => {
         const mIdx = item.month - 1;
         if (mIdx >= 0 && mIdx < 12) {
-          // 금액 유효성 보정 (숫자로 강제 변환)
           item.amount = Number(item.amount) || 0;
           monthMapped[mIdx].push(item);
         }
@@ -488,7 +490,7 @@ function renderCurrentMonth(){
   renderCalendar(entries);
 }
 
-/* 🌟 수입 / 지출 정교한 판별 및 총액 계산 */
+/* 🌟 수입 / 지출 요약 카드 계산 */
 function renderSummary(entries){
   const totals = { "수입":0, "지출":0 };
   
@@ -499,7 +501,6 @@ function renderSummary(entries){
     if (typeStr === "수입") {
       totals["수입"] += amt;
     } else {
-      // "지출", "저축", "투자" 또는 기타 구분 모두 지출로 처리
       totals["지출"] += amt;
     }
   });
@@ -519,6 +520,7 @@ function renderSummary(entries){
   document.getElementById('miniExpense').textContent = formatMoney(totals["지출"]);
 }
 
+/* 🌟 캘린더 렌더링 (DB의 color 및 owner 값 동적 바인딩) */
 function renderCalendar(entries){
   const y = currentYear;
   const m = currentMonth - 1; 
@@ -559,12 +561,31 @@ function renderCalendar(entries){
 
     const itemsHtml = dayEntries.map(it => {
       const typeStr = String(it.type || "").trim();
-      const typeCls = (typeStr === "수입") ? "수입" : "지출";
+      const ownerStr = String(it.owner || "").trim();
       const detailStr = escapeHtml(it.detail || it.small || it.large || "기타");
       const amt = Number(it.amount) || 0;
 
+      // 🎨 색상 판별 로직
+      let bgColor = it.color;
+      if (!bgColor) {
+        if (typeStr === "수입") {
+          bgColor = "#1976D2"; // 파란색
+        } else {
+          switch (ownerStr) {
+            case "관": bgColor = "#2E7D32"; break;      // 🟢 초록색
+            case "보라": bgColor = "#FFCDD2"; break;    // 🌸 연분홍
+            case "자동차": bgColor = "#37474F"; break;  // ⬛ 다크 차콜
+            case "공동":
+            default: bgColor = "#512DA8"; break;        // 🟣 보라색
+          }
+        }
+      }
+
+      // 글자색 대비 설정 (연분홍 배경일 경우만 어두운 글자, 나머지는 하얀색)
+      const textColor = (bgColor.toUpperCase() === "#FFCDD2" || ownerStr === "보라") && typeStr !== "수입" ? "#D32F2F" : "#FFFFFF";
+
       return `
-        <div class="cal-item ${typeCls}" title="${detailStr}: ${formatMoney(amt)}원">
+        <div class="cal-item" style="background-color: ${bgColor}; color: ${textColor};" title="[${ownerStr || typeStr}] ${detailStr}: ${formatMoney(amt)}원">
           <span class="detail">${detailStr}</span>
           <span class="amt">${formatMoney(amt)}원</span>
         </div>
