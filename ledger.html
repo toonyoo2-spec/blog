@@ -462,7 +462,7 @@
   <header>
     <a href="./index.html" class="home-btn">← 홈</a>
     <h1>가계부</h1>
-    <p>달력으로 지출 현황을 확인하고 연간 통계를 확인합니다.</p>
+    <p>한눈에 요약을 확인하고, 스크롤하여 달력으로 상세 지출을 확인합니다.</p>
   </header>
 
   <!-- 1. 월 선택 및 미니 요약 컨트롤 (맨 위) -->
@@ -479,7 +479,11 @@
     </div>
   </div>
 
-  <!-- 2. 캘린더 영역 -->
+  <!-- 2. 항목별 토탈 금액 카드 (요청 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
+  <!-- ⬆️ 요청사항: 페이지 진입 시 요약이 먼저 보이도록 캘린더보다 위로 이동 -->
+  <div class="summary" id="summary"></div>
+
+  <!-- 3. 캘린더 영역 -->
   <div class="panel">
     <div class="cal-header-wrap">
       <h2 id="calTitleHeader">7월 캘린더</h2>
@@ -498,9 +502,6 @@
     
     <div class="ledger-cal-grid" id="ledgerCalGrid"></div>
   </div>
-
-  <!-- 3. 항목별 토탈 금액 카드 (요청 순서: 공동, 관, 보라, 유류비, 고정지출, 기타) -->
-  <div class="summary" id="summary"></div>
 
   <!-- 4. 연간 한눈에 보기 -->
   <div class="panel yearly-panel" id="yearlyPanel">
@@ -570,18 +571,27 @@ function toggleYearlyPanel() {
   panel.classList.toggle('open');
 }
 
-/* 🌟 정확한 소분류(G열) & 사용자(K열) 기준 분류 로직 */
+/* 🌟 정확한 대분류(large) / 소분류(small) / 사용자(note) 기준 분류 로직
+   ------------------------------------------------------------------
+   ⚠️ 버그 수정 (2026-07-24):
+   기존 코드는 "고정지출" 여부를 item.type(구분: 수입/지출)에서 찾고 있었으나,
+   실제 데이터 구조상 "고정지출/변동지출"은 item.large(대분류)에 들어있음.
+   (연간 요약 renderYearlySummary()의 정렬 로직이 large 필드를 기준으로
+    "고정지출"/"변동지출"을 구분하고 있는 것과 대조해서 확인함)
+   → 이 불일치 때문에 고정지출 항목들이 전부 '공동'으로 잘못 합산되고 있었음.
+*/
 function getCategoryGroup(item) {
-  const typeStr = String(item.type || "").trim();      // D열 (지출/수입/고정지출/변동지출)
-  const smallStr = String(item.small || "").trim();    // G열 (소분류)
-  const detailStr = String(item.detail || "").trim();  // H열 (세부내용)
-  const ownerStr = String(item.note || "").trim();     // K열 (사용자: 공동/보라/자동차/관)
+  const typeStr = String(item.type || "").trim();      // D열 구분 (수입/지출)
+  const largeStr = String(item.large || "").trim();    // 대분류 (고정지출/변동지출/기타 등)
+  const smallStr = String(item.small || "").trim();    // 소분류
+  const detailStr = String(item.detail || "").trim();  // 세부내용
+  const ownerStr = String(item.note || "").trim();     // 사용자 (공동/보라/자동차/관)
 
   if (typeStr === "수입") {
     return "수입";
   }
 
-  // 1. 유류비: 소분류가 전기충전/주유비 이거나 K열 사용자가 '자동차'인 경우
+  // 1. 유류비: 소분류가 전기충전/주유비 이거나 사용자가 '자동차'인 경우
   if (
     smallStr === "전기충전" || smallStr === "주유비" ||
     ownerStr === "자동차" || detailStr.includes("차지비") || detailStr.includes("주유")
@@ -589,8 +599,8 @@ function getCategoryGroup(item) {
     return "유류비";
   }
 
-  // 2. 고정지출: (유류비 제외한 나머지 고정지출)
-  if (typeStr === "고정지출") {
+  // 2. 고정지출: 대분류(large)가 "고정지출"인 경우 ✅ 수정됨 (기존 typeStr → largeStr)
+  if (largeStr === "고정지출") {
     return "고정지출";
   }
 
