@@ -49,9 +49,9 @@
 <nav class="utilitybar" aria-label="블로그 관리 메뉴">
   <div class="utilitybar-inner">
     <ul>
-      <li><a href="/index.html">← 목록으로</a></li>
-      <li><a href="/write.html">글쓰기</a></li>
-      <li><a href="/stats.html">통계</a></li>
+      <li><a href="index.html">← 목록으로</a></li>
+      <li><a href="write.html">글쓰기</a></li>
+      <li><a href="stats.html">통계</a></li>
     </ul>
   </div>
 </nav>
@@ -82,7 +82,7 @@
       return;
     }
     box.innerHTML = tags.map(t=>`
-      <a class="tag-card" href="/index.html?tag=${encodeURIComponent(t)}">
+      <a class="tag-card" href="index.html?tag=${encodeURIComponent(t)}">
         #${escapeHtml(t)} <span class="count">${counts[t]}</span>
       </a>
     `).join('');
