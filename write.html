@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="markdown.js"></script>
 <style>
   :root{
     --paper:#F6F2EA; --paper-2:#EFE9DB; --paper-3:#E6DFCE;
@@ -52,6 +53,14 @@
   }
   .field input:focus, .field textarea:focus, .field select:focus{border-color:var(--accent);}
   .field textarea{min-height:220px;line-height:1.6;resize:vertical;font-family:'Inter',sans-serif;}
+  .md-toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;}
+  .md-toolbar button{
+    padding:6px 10px;border:1px solid var(--line);background:var(--paper);border-radius:2px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;cursor:pointer;color:var(--ink);
+  }
+  .md-toolbar button:hover{border-color:var(--ink);}
+  .md-toolbar button:disabled{opacity:.5;cursor:wait;}
+  .upload-status{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace;margin:4px 0 0;min-height:16px;}
   .btn{
     width:100%;padding:11px;border:none;border-radius:2px;background:var(--ink);color:var(--paper);
     font-weight:600;font-size:14px;cursor:pointer;
@@ -147,8 +156,23 @@
         </div>
       </div>
       <div class="field">
-        <label for="content">본문</label>
-        <textarea id="content" placeholder="내용을 입력하세요"></textarea>
+        <label for="tags">태그 (쉼표로 구분)</label>
+        <input id="tags" type="text" placeholder="예: 맥북, 리뷰, 서울">
+      </div>
+      <div class="field">
+        <label for="content">본문 (마크다운)</label>
+        <div class="md-toolbar">
+          <button type="button" onclick="wrapSelection('**','**')" title="굵게">B</button>
+          <button type="button" onclick="wrapSelection('*','*')" title="기울임"><i>I</i></button>
+          <button type="button" onclick="insertLinePrefix('## ')" title="제목">H</button>
+          <button type="button" onclick="insertLink()" title="링크">🔗 링크</button>
+          <button type="button" id="btnImage" onclick="document.getElementById('imageInput').click()" title="이미지 첨부">🖼 이미지</button>
+          <button type="button" id="btnVideo" onclick="document.getElementById('videoInput').click()" title="영상 첨부">🎬 영상</button>
+        </div>
+        <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="handleUpload(this,'image')">
+        <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleUpload(this,'video')">
+        <textarea id="content" placeholder="내용을 입력하세요 (마크다운 문법 지원: **굵게**, *기울임*, ## 제목, [링크](url))"></textarea>
+        <p class="upload-status" id="uploadStatus"></p>
       </div>
       <div class="editor-actions">
         <button class="btn-save" onclick="savePost()">저장</button>
@@ -167,7 +191,110 @@
 
 <script>
   const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const UPLOAD_WORKER_URL = 'https://blog-r2-presign-worker.kwan-yun.workers.dev/presign';
+  const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // Workers 무료 플랜 요청 제한
   let posts = [];
+
+  function getTextarea(){ return document.getElementById('content'); }
+
+  function wrapSelection(before, after){
+    const ta = getTextarea();
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const selected = ta.value.slice(start, end);
+    ta.value = ta.value.slice(0, start) + before + selected + after + ta.value.slice(end);
+    ta.focus();
+    ta.selectionStart = start + before.length;
+    ta.selectionEnd = start + before.length + selected.length;
+  }
+
+  function insertAtCursor(text){
+    const ta = getTextarea();
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    const needsNewlineBefore = start > 0 && ta.value[start-1] !== '\n';
+    const insert = (needsNewlineBefore ? '\n\n' : '') + text + '\n\n';
+    ta.value = ta.value.slice(0, start) + insert + ta.value.slice(end);
+    ta.focus();
+    const pos = start + insert.length;
+    ta.selectionStart = ta.selectionEnd = pos;
+  }
+
+  function insertLinePrefix(prefix){
+    const ta = getTextarea();
+    const start = ta.selectionStart;
+    const lineStart = ta.value.lastIndexOf('\n', start-1) + 1;
+    ta.value = ta.value.slice(0, lineStart) + prefix + ta.value.slice(lineStart);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = start + prefix.length;
+  }
+
+  function insertLink(){
+    const url = prompt('링크 URL을 입력하세요 (https://...)');
+    if(!url) return;
+    const text = prompt('링크에 표시할 텍스트', url) || url;
+    wrapSelection('[' + text + '](' + url + ')', '');
+  }
+
+  async function handleUpload(input, type){
+    const file = input.files[0];
+    input.value = '';
+    if(!file) return;
+
+    if(file.size > MAX_UPLOAD_BYTES){
+      alert('파일이 너무 큽니다 (최대 100MB). 압축 후 다시 시도해주세요.');
+      return;
+    }
+
+    const status = document.getElementById('uploadStatus');
+    const btnImage = document.getElementById('btnImage');
+    const btnVideo = document.getElementById('btnVideo');
+    btnImage.disabled = true;
+    btnVideo.disabled = true;
+    status.textContent = '업로드 중...';
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if(!session){
+        alert('로그인이 만료되었습니다. 다시 로그인해주세요.');
+        return;
+      }
+
+      const presignRes = await fetch(UPLOAD_WORKER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
+      });
+      if(!presignRes.ok){
+        const err = await presignRes.json().catch(()=>({}));
+        throw new Error(err.error || '업로드 URL 발급 실패');
+      }
+      const { uploadUrl, publicUrl } = await presignRes.json();
+
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if(!putRes.ok) throw new Error('R2 업로드 실패');
+
+      if(type === 'image'){
+        insertAtCursor(`![${file.name}](${publicUrl})`);
+      } else {
+        insertAtCursor(`!video[${file.name}](${publicUrl})`);
+      }
+      status.textContent = '업로드 완료: ' + file.name;
+    } catch(e){
+      console.error(e);
+      status.textContent = '';
+      alert('업로드 실패: ' + e.message);
+    } finally {
+      btnImage.disabled = false;
+      btnVideo.disabled = false;
+      setTimeout(()=>{ status.textContent = ''; }, 4000);
+    }
+  }
 
   async function checkSession(){
     const { data:{ session } } = await supabase.auth.getSession();
@@ -247,6 +374,7 @@
     document.getElementById('editId').value = p.id;
     document.getElementById('title').value = p.title;
     document.getElementById('category').value = p.category;
+    document.getElementById('tags').value = (p.tags||[]).join(', ');
     document.getElementById('content').value = p.content;
     document.getElementById('editorLabel').textContent = '글 수정';
     document.getElementById('editorTitle').textContent = '글 수정';
@@ -258,6 +386,7 @@
     document.getElementById('editId').value = '';
     document.getElementById('title').value = '';
     document.getElementById('category').value = 'IT';
+    document.getElementById('tags').value = '';
     document.getElementById('content').value = '';
     document.getElementById('editorLabel').textContent = '글쓰기';
     document.getElementById('editorTitle').textContent = '새 글 작성';
@@ -268,6 +397,7 @@
     const id = document.getElementById('editId').value;
     const title = document.getElementById('title').value.trim();
     const category = document.getElementById('category').value;
+    const tags = document.getElementById('tags').value.split(',').map(t=>t.trim()).filter(Boolean);
     const content = document.getElementById('content').value.trim();
 
     if(!title || !content){
@@ -277,9 +407,9 @@
 
     let error;
     if(id){
-      ({ error } = await supabase.from('posts').update({ title, category, content }).eq('id', id));
+      ({ error } = await supabase.from('posts').update({ title, category, tags, content }).eq('id', id));
     } else {
-      ({ error } = await supabase.from('posts').insert({ title, category, content }));
+      ({ error } = await supabase.from('posts').insert({ title, category, tags, content }));
     }
 
     if(error){

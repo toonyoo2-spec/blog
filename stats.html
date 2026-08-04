@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>통계 — 관's Log</title>
+<meta name="description" content="관's Log 방문자 추이, 카테고리 비중, 인기 글을 확인할 수 있는 통계 페이지입니다.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://toonyoo2-spec.github.io/blog/stats.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<style>
+  :root{
+    --paper:#F6F2EA; --paper-2:#EFE9DB; --paper-3:#E6DFCE;
+    --ink:#211D18; --muted:#8B8377; --line:#DDD5C6;
+    --accent:#2B4C7E; --it:#2B4C7E; --car:#A23E24; --food:#5C7A3D;
+    --radius:3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+
+  .utilitybar{background:var(--ink);color:var(--paper);}
+  .utilitybar-inner{max-width:1080px;margin:0 auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:38px;font-size:12.5px;font-family:'IBM Plex Mono',monospace;}
+  .utilitybar ul{list-style:none;display:flex;gap:18px;margin:0;padding:0;}
+  .utilitybar a{opacity:.78;transition:opacity .15s;}
+  .utilitybar a:hover{opacity:1;}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 24px 80px;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:32px;margin:0 0 36px;}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;}
+  .card{background:var(--paper-2);border:1px solid var(--line);border-radius:var(--radius);padding:24px;}
+  .card h2{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 18px;font-weight:600;}
+
+  .visit-stats{display:flex;gap:24px;margin-bottom:18px;font-family:'IBM Plex Mono',monospace;}
+  .visit-stats div b{display:block;font-size:24px;color:var(--ink);font-weight:600;}
+  .visit-stats div span{font-size:11px;color:var(--muted);}
+  .visit-bars{display:flex;align-items:flex-end;gap:4px;height:100px;overflow-x:auto;}
+  .visit-bar-col{flex:1;min-width:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;}
+  .visit-bar{width:100%;background:var(--it);border-radius:2px 2px 0 0;min-height:3px;}
+  .visit-bar-col .lbl{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);writing-mode:vertical-rl;}
+
+  .cat-stat-row{display:flex;align-items:center;gap:10px;font-size:13px;margin-bottom:14px;}
+  .cat-stat-row .label{width:44px;flex-shrink:0;font-weight:600;}
+  .cat-stat-row .bar-bg{flex:1;height:8px;background:var(--paper-3);border-radius:4px;overflow:hidden;}
+  .cat-stat-row .bar-fill{height:100%;border-radius:4px;}
+  .cat-stat-row .num{width:28px;text-align:right;font-family:'IBM Plex Mono',monospace;color:var(--muted);font-size:11.5px;}
+
+  .top-posts{list-style:none;margin:0;padding:0;}
+  .top-posts li{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;}
+  .top-posts li:last-child{border-bottom:none;}
+  .top-posts .rank{font-family:'IBM Plex Mono',monospace;color:var(--muted);width:20px;flex-shrink:0;}
+  .top-posts .title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:10px;}
+  .top-posts .views{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);flex-shrink:0;}
+
+  .loading, .empty{color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;padding:20px 0;}
+
+  @media (max-width:720px){ .grid{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<nav class="utilitybar" aria-label="블로그 관리 메뉴">
+  <div class="utilitybar-inner">
+    <ul>
+      <li><a href="/index.html">← 목록으로</a></li>
+      <li><a href="/write.html">글쓰기</a></li>
+      <li><a href="/tags.html">태그</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <h1>통계</h1>
+
+  <div class="grid">
+    <section class="card">
+      <h2>최근 30일 방문자</h2>
+      <div class="visit-stats">
+        <div><b id="todayVisit">–</b><span>오늘</span></div>
+        <div><b id="totalVisit">–</b><span>30일 합계</span></div>
+      </div>
+      <div class="visit-bars" id="visitBars"></div>
+    </section>
+
+    <section class="card">
+      <h2>카테고리 비중</h2>
+      <div id="catStats"><p class="loading">불러오는 중...</p></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>조회수 TOP 5</h2>
+    <ul class="top-posts" id="topPosts"><li class="loading">불러오는 중...</li></ul>
+  </section>
+</div>
+
+<script>
+  const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  const CAT_COLOR = { IT:'var(--it)', CAR:'var(--car)', '맛집':'var(--food)' };
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  async function loadVisits(){
+    const { data, error } = await supabase.rpc('get_recent_visits', { days_back: 30 });
+    const box = document.getElementById('visitBars');
+    if(error || !data){
+      box.innerHTML = `<span style="font-size:11px;color:var(--muted)">방문 기록을 불러올 수 없습니다.</span>`;
+      return;
+    }
+    const days = [];
+    for(let i=29;i>=0;i--){
+      const d = new Date();
+      d.setDate(d.getDate()-i);
+      const key = d.toISOString().slice(0,10);
+      const found = data.find(v=>v.visit_date===key);
+      days.push({ key, count: found ? Number(found.visit_count) : 0, date:d });
+    }
+    const max = Math.max(1, ...days.map(d=>d.count));
+    box.innerHTML = days.map(d=>{
+      const h = Math.max(3, Math.round((d.count/max)*80));
+      const lbl = `${d.date.getMonth()+1}/${d.date.getDate()}`;
+      return `<div class="visit-bar-col" title="${lbl}: ${d.count}"><div class="visit-bar" style="height:${h}px"></div><span class="lbl">${lbl}</span></div>`;
+    }).join('');
+    document.getElementById('todayVisit').textContent = days[days.length-1].count;
+    document.getElementById('totalVisit').textContent = days.reduce((a,d)=>a+d.count,0);
+  }
+
+  async function loadPostStats(){
+    const { data, error } = await supabase.from('posts').select('title,category,views').order('views',{ascending:false});
+    const catBox = document.getElementById('catStats');
+    const topBox = document.getElementById('topPosts');
+    if(error){
+      catBox.innerHTML = `<p class="empty">불러오지 못했습니다.</p>`;
+      topBox.innerHTML = `<li class="empty">불러오지 못했습니다.</li>`;
+      return;
+    }
+    const posts = data || [];
+    const cats = ['IT','CAR','맛집'];
+    const total = posts.length || 1;
+    catBox.innerHTML = cats.map(c=>{
+      const n = posts.filter(p=>p.category===c).length;
+      return `
+        <div class="cat-stat-row">
+          <div class="label" style="color:${CAT_COLOR[c]}">${c}</div>
+          <div class="bar-bg"><div class="bar-fill" style="width:${n/total*100}%;background:${CAT_COLOR[c]}"></div></div>
+          <div class="num">${n}</div>
+        </div>`;
+    }).join('');
+
+    const top = posts.slice(0,5);
+    topBox.innerHTML = top.length ? top.map((p,i)=>`
+      <li>
+        <span class="rank">${i+1}</span>
+        <span class="title">${escapeHtml(p.title)}</span>
+        <span class="views">조회 ${p.views}</span>
+      </li>
+    `).join('') : `<li class="empty">아직 글이 없습니다.</li>`;
+  }
+
+  loadVisits();
+  loadPostStats();
+</script>
+
+</body>
+</html>

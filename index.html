@@ -9,29 +9,25 @@
 <meta name="keywords" content="IT 블로그, 자동차 관리, 맛집 후기, 개인 블로그, 웹앱 개발기">
 <meta name="author" content="관">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://yourblog.com/">
+<link rel="canonical" href="https://toonyoo2-spec.github.io/blog/">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="관's Log">
 <meta property="og:title" content="관's Log — IT · 자동차 · 맛집 기록">
 <meta property="og:description" content="개인이 직접 만든 웹앱, 자동차 관리 팁, 다녀온 맛집을 기록하는 블로그.">
-<meta property="og:url" content="https://yourblog.com/">
-<meta property="og:image" content="https://yourblog.com/og-image.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://toonyoo2-spec.github.io/blog/">
 <meta property="og:locale" content="ko_KR">
 
-<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="관's Log — IT · 자동차 · 맛집 기록">
 <meta name="twitter:description" content="개인이 직접 만든 웹앱, 자동차 관리 팁, 다녀온 맛집을 기록하는 블로그.">
-<meta name="twitter:image" content="https://yourblog.com/og-image.png">
 
 <script type="application/ld+json" id="ldjson">
 {
   "@context": "https://schema.org",
   "@type": "Blog",
   "name": "관's Log",
-  "url": "https://yourblog.com/",
+  "url": "https://toonyoo2-spec.github.io/blog/",
   "description": "IT, 자동차, 맛집을 기록하는 개인 블로그",
   "inLanguage": "ko-KR",
   "author": { "@type": "Person", "name": "관" }
@@ -42,6 +38,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
+<script src="markdown.js"></script>
 <style>
   :root{
     --paper:#F6F2EA; --paper-2:#EFE9DB; --paper-3:#E6DFCE;
@@ -98,9 +95,20 @@
   .chip.CAR{background:var(--car);}
   .chip.맛집{background:var(--food);}
   .post-views{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);}
+  .post-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .tag-chip{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:2px 9px;cursor:pointer;}
+  .tag-chip:hover{border-color:var(--accent);color:var(--accent);}
+  .tag-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .active-filter{display:flex;align-items:center;gap:8px;margin:0 0 18px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--muted);}
+  .active-filter button{border:none;background:none;color:var(--accent);cursor:pointer;font-family:inherit;font-size:inherit;text-decoration:underline;}
   .post h2{font-family:'Fraunces',serif;font-weight:600;font-size:21px;margin:0 0 8px;letter-spacing:-.2px;cursor:pointer;}
   .post h2:hover{color:var(--accent);}
   .post p{margin:0;font-size:14px;line-height:1.6;color:#4B463D;white-space:pre-wrap;}
+  .post .markdown-body{white-space:normal;}
+  .post .markdown-body p{margin:0 0 14px;white-space:normal;}
+  .post .markdown-body h3,.post .markdown-body h4,.post .markdown-body h5{font-family:'Fraunces',serif;margin:20px 0 10px;}
+  .post .markdown-body img,.post .markdown-body video{margin:14px 0;}
+  .post .markdown-body a{color:var(--accent);text-decoration:underline;}
   .empty, .loading{padding:60px 0;text-align:center;color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:13px;}
 
   .sidebar{display:flex;flex-direction:column;gap:28px;}
@@ -150,9 +158,8 @@
   <div class="utilitybar-inner">
     <ul>
       <li><a href="/write.html">글쓰기</a></li>
-      <li><a href="/write.html">방명록</a></li>
-      <li><a href="/write.html">태그</a></li>
-      <li><a href="/write.html">통계</a></li>
+      <li><a href="/tags.html">태그</a></li>
+      <li><a href="/stats.html">통계</a></li>
     </ul>
     <ul class="auth">
       <li><a href="/write.html" id="navAuthLink">로그인</a></li>
@@ -181,6 +188,7 @@
 
 <div class="layout">
   <main>
+    <div id="activeFilter"></div>
     <section class="postlist" id="postlist" aria-label="블로그 글 목록">
       <p class="loading" id="loadingMsg">글을 불러오는 중...</p>
     </section>
@@ -231,6 +239,8 @@
       <h2>블로그 관리</h2>
       <ul class="manage-menu">
         <li><a href="/write.html">글쓰기 / 수정 <span class="arrow">›</span></a></li>
+        <li><a href="/tags.html">태그 보기 <span class="arrow">›</span></a></li>
+        <li><a href="/stats.html">통계 보기 <span class="arrow">›</span></a></li>
       </ul>
     </section>
   </aside>
@@ -242,6 +252,7 @@
   const supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   let allPosts = [];
   let currentCat = "all";
+  let currentTag = new URLSearchParams(location.search).get('tag') || null;
 
   const CAT_MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
@@ -284,9 +295,12 @@
     const list = document.getElementById('postlist');
     const filtered = allPosts.filter(p=>{
       const catOk = currentCat === 'all' || p.category === currentCat;
+      const tagOk = !currentTag || (p.tags||[]).includes(currentTag);
       const qOk = !q || p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q);
-      return catOk && qOk;
+      return catOk && tagOk && qOk;
     });
+
+    renderActiveFilter();
 
     if(!filtered.length){
       list.innerHTML = `<p class="empty">해당하는 글이 없습니다.</p>`;
@@ -297,7 +311,9 @@
       const d = new Date(p.created_at);
       const day = String(d.getDate()).padStart(2,'0');
       const month = CAT_MONTHS[d.getMonth()];
-      const excerpt = p.content.length > 90 ? p.content.slice(0,90)+'…' : p.content;
+      const plain = stripMarkdown(p.content);
+      const excerpt = plain.length > 90 ? plain.slice(0,90)+'…' : plain;
+      const tags = p.tags||[];
       return `
         <article class="post" data-id="${p.id}">
           <div class="post-date"><span class="day">${day}</span>${month}</div>
@@ -308,10 +324,25 @@
             </div>
             <h2 onclick="togglePost('${p.id}')">${escapeHtml(p.title)}</h2>
             <p class="excerpt" id="excerpt-${p.id}">${escapeHtml(excerpt)}</p>
+            ${tags.length ? `<div class="post-tags">${tags.map(t=>`<span class="tag-chip${t===currentTag?' active':''}" onclick="setTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join('')}</div>` : ''}
           </div>
         </article>
       `;
     }).join('');
+  }
+
+  function renderActiveFilter(){
+    const box = document.getElementById('activeFilter');
+    if(!currentTag){ box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="active-filter">태그 <strong>#${escapeHtml(currentTag)}</strong> 필터링 중 <button onclick="setTag(null)">전체 보기</button></div>`;
+  }
+
+  function setTag(tag){
+    currentTag = tag;
+    const url = new URL(location.href);
+    if(tag){ url.searchParams.set('tag', tag); } else { url.searchParams.delete('tag'); }
+    history.replaceState(null, '', url);
+    renderPosts();
   }
 
   function escapeHtml(str){
@@ -325,11 +356,14 @@
     const el = document.getElementById('excerpt-'+id);
     const isExpanded = el.classList.contains('expanded');
     if(isExpanded){
-      const excerpt = post.content.length > 90 ? post.content.slice(0,90)+'…' : post.content;
+      const plain = stripMarkdown(post.content);
+      const excerpt = plain.length > 90 ? plain.slice(0,90)+'…' : plain;
+      el.classList.remove('markdown-body');
       el.textContent = excerpt;
       el.classList.remove('expanded');
     } else {
-      el.textContent = post.content;
+      el.innerHTML = renderMarkdown(post.content);
+      el.classList.add('markdown-body');
       el.classList.add('expanded');
       bumpViews(id);
     }

@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /write.html
 
-Sitemap: https://yourblog.com/sitemap.xml
+Sitemap: https://toonyoo2-spec.github.io/blog/sitemap.xml
