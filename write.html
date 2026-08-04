@@ -123,8 +123,8 @@
   <div class="login-box" id="loginSection">
     <h1>로그인</h1>
     <div class="field">
-      <label for="email">이메일</label>
-      <input id="email" type="email" autocomplete="username">
+      <label for="email">아이디</label>
+      <input id="email" type="text" autocomplete="username" placeholder="kwanbora">
     </div>
     <div class="field">
       <label for="password">비밀번호</label>
@@ -311,7 +311,8 @@
   }
 
   async function login(){
-    const email = document.getElementById('email').value.trim();
+    let email = document.getElementById('email').value.trim();
+    if(email && !email.includes('@')) email += '@blog.local';
     const password = document.getElementById('password').value;
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if(error){
